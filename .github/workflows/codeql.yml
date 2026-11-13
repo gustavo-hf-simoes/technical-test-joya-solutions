@@ -1,0 +1,51 @@
+# Análise estática de segurança com CodeQL (HL-08).
+#
+# Linguagens analisadas hoje: os workflows do GitHub Actions e os scripts Python do CI.
+# `csharp` e `javascript-typescript` entram na matriz junto com o esqueleto do backend
+# e do frontend. Sem código-fonte, o CodeQL falha com "no code found".
+#
+# Segurança (skill gha-security-review): permissões mínimas por job, actions fixadas por SHA,
+# sem `pull_request_target`.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "27 6 * * 1" # segunda-feira, 03:27 BRT: pega vulnerabilidades novas sem push
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analisar:
+    name: CodeQL (${{ matrix.linguagem }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        linguagem: [actions, python]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.linguagem }}
+          build-mode: none
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:${{ matrix.linguagem }}
