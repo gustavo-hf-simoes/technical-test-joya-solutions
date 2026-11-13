@@ -91,7 +91,7 @@
   - `HL-06`: estratégia de commits.
 - **Modelo:** Opus 5.5.
 
-### E04 — Auditoria do ambiente, repositório e CI · 2026-11-13 20:05 → em andamento
+### E04 — Auditoria do ambiente, repositório e CI · 2026-11-13 20:05 → 20:25
 
 - **Pedido** ([prompt 4](prompts.md#prompt-4)). O desenvolvedor contestou a afirmação de que o git não estava instalado. Pediu:
   - investigar a causa;
@@ -129,6 +129,33 @@
 - **Gate:** o CI passou na primeira execução, run `43525593188`, em 18 s.
 - **Modelo:** Opus 5.5.
 
+### E05 — Diferenciais além do enunciado (`HL-08`) · 2026-11-13 20:29 → 20:45
+
+- **Pedido** ([prompt 5](prompts.md#prompt-5)). Das 8 sugestões da IA (4 recomendadas e 4 opcionais), o desenvolvedor escolheu as **4 recomendadas**.
+- **Verificação antes de adotar.** A IA conferiu o histórico no NuGet antes de colocar a biblioteca de testes de arquitetura no plano:
+  - o `NetArchTest.Rules`, que ela mesma tinha sugerido, não tem versão nova desde 2021-05-23;
+  - o `TngTech.ArchUnitNET` teve a versão 0.13.5 em 2026-10-26, sob Apache-2.0.
+  O plano ficou com o ArchUnitNET. A mudança está registrada na `HL-08`, e não como `CG`, porque foi pega antes de virar código.
+- **O que a IA fez:**
+  1. **Segurança da cadeia, no GitHub:**
+     - `main` protegida: PR obrigatório; checks exigidos `Configuração AI-first`, `CodeQL (actions)` e `CodeQL (python)`; branch atualizada antes do merge; conversas resolvidas; sem force-push nem exclusão; vale também para administradores;
+     - *secret scanning* com *push protection*;
+     - alertas e atualizações de segurança do Dependabot;
+     - relato privado de vulnerabilidades;
+     - [codeql.yml](../../.github/workflows/codeql.yml), com `security-extended` e uma execução semanal;
+     - [dependabot.yml](../../.github/dependabot.yml).
+     O C# e o TypeScript entram na matriz do CodeQL e no Dependabot junto com o esqueleto. Sem código, o CodeQL falha.
+  2. **Rastreabilidade:**
+     - [rastreabilidade.md](../esteira/rastreabilidade.md), com as regras e a tabela, que o PO preenche na etapa 1;
+     - [validar_rastreabilidade.py](../../.github/scripts/validar_rastreabilidade.py), que confere 6 regras, entre elas: toda linha do enunciado (75 não vazias) classificada, requisito obrigatório com teste, e teste e commit citados existentes de fato;
+     - 9 casos de teste do próprio validador em [testar_rastreabilidade.sh](../../.github/scripts/testar_rastreabilidade.sh);
+     - os agentes `product-owner` e `qa` e a skill `/esteira` passaram a usar a matriz.
+  3. **Testes de arquitetura:** a decisão e a justificativa da dependência estão na `HL-08`. As tarefas saem no backlog da etapa 1.
+  4. **Custo medido:** a skill `/esteira` passou a copiar os tokens de cada delegação para *Execuções de agentes*. A seção de custo do README sai dessa tabela.
+  - Junto: o runner do CI foi fixado em `ubuntu-24.04`, porque o GitHub avisou que `ubuntu-latest` vai migrar para o Ubuntu 26.
+- **Consequência para o processo.** Com a `main` protegida, a partir daqui **toda** mudança entra por PR, inclusive esta. O primeiro PR do repositório é o desta entrada.
+- **Modelo:** Opus 5.5.
+
 <!-- Próximas entradas: E05 — Etapa 1 (product-owner), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
@@ -137,9 +164,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 7 |
-| Erros da IA detectados e corrigidos (`CG`) | 2 |
-| Perguntas estruturadas da IA ao desenvolvedor | 9, em 3 rodadas |
+| Decisões humanas registradas (`HL`) | 8 |
+| Erros da IA detectados e corrigidos (`CG`) | 2, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
+| Perguntas estruturadas da IA ao desenvolvedor | 10, em 4 rodadas |
 | Compactações de contexto da sessão | 3 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | — (backlog ainda não gerado) |
 | Taxa de escalonamento de modelo | — |

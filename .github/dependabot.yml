@@ -1,0 +1,18 @@
+# Atualização de dependências (HL-08). Cada PR do Dependabot passa pelo mesmo CI e pela proteção da main.
+#
+# Hoje só existem actions. `nuget` (backend/) e `npm` (frontend/, e2e/) entram aqui junto com o esqueleto,
+# para não gerar erro de "manifesto não encontrado". `docker` entra com os Dockerfiles.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
