@@ -37,7 +37,7 @@ As etapas 1 e 2 são globais. As etapas 3 e 4 iteram pelas ondas do backlog, uma
 
 1. **Pré-condição.** Confira em `status.md` se o gate anterior está `Aprovado`. Se não estiver, diga o motivo e pare.
 2. **Delegue** pelo `Agent`, com `subagent_type` igual ao nome do agente e o prompt no **modelo de delegação** abaixo. Escolha `model` e `effort` pela seção **Roteamento de modelo**. Um agente por vez quando houver dependência. Os revisores (`arquiteto` REVISAO, `ciberseguranca` e `qa`) só leem código e podem rodar em paralelo entre si.
-3. **Confira o gate de forma independente.** Não aceite "passou" do relatório do implementador. Delegue os comandos do gate ao agente `verificador` (Haiku), que devolve só o veredito e as falhas. Se a saída for curta, você também pode rodar os comandos diretamente. Leia o artefato você mesmo. Se o ambiente não permitir rodar um comando (por exemplo, sem Docker), registre `Não verificado` e o motivo. Nunca registre `Aprovado` nesse caso.
+3. **Confira o gate de forma independente.** Não aceite "passou" do relatório do implementador. Delegue os comandos do gate ao agente `verificador` (Haiku), que devolve só o veredito e as falhas. Se a saída for curta, você também pode rodar os comandos diretamente. Leia o artefato você mesmo. Em todo gate, rode também `python3 .github/scripts/validar_rastreabilidade.py`. Se o ambiente não permitir rodar um comando (por exemplo, sem Docker), registre `Não verificado` e o motivo. Nunca registre `Aprovado` nesse caso.
 4. **Decisões humanas.** Use `AskUserQuestion` para:
    - cada `PROP-xx`, que é uma alteração da spec;
    - aceite de risco;
@@ -58,6 +58,9 @@ As etapas 1 e 2 são globais. As etapas 3 e 4 iteram pelas ondas do backlog, uma
 
    Atualize os "Números para a entrevista". Se houve prompt novo do desenvolvedor, copie-o sem edição para `docs/ia/prompts.md`.
 6. **Commit.** Ao fim de cada tarefa pronta, mostre o `git status` e o `git diff --stat` e proponha a mensagem que está no backlog. **Só faça o commit com a autorização explícita do desenvolvedor nesta conversa.** Um commit por tarefa, sem `--amend`, squash, rebase ou force-push. Termine a mensagem com a linha de coautoria indicada pelo ambiente.
+   - **Branch e PR (`HL-06`, `HL-08`).** A `main` é protegida: só recebe mudanças por PR, com o CI verde. Cada história tem a branch `us-xx-<resumo>`, e o trabalho de configuração fora do backlog usa `chore/<resumo>`. Abra o PR com `gh pr create` quando a história fechar e integre com merge commit, só com autorização.
+   - **Rastreabilidade (`HL-08`).** Antes de abrir o PR da história, preencha a coluna **Commits** de [rastreabilidade.md](../../../docs/esteira/rastreabilidade.md) com os hashes das tarefas, num commit `docs(esteira): rastreia US-xx`. O CI recusa hash ou teste que não existam.
+   - **Tokens (`HL-08`).** O resultado de cada `Agent` traz o uso de tokens. Copie o número para a coluna *Tokens* de **Execuções de agentes**. Ele alimenta o relatório de custo do README.
 
 ## Modelo de delegação
 

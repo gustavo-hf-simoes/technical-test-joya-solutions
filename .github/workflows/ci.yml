@@ -2,7 +2,9 @@
 #
 # Jobs:
 #   config  — valida a configuração AI-first: frontmatter de agentes e skills, JSON,
-#             links do Markdown e os hooks de limite (guard-paths / guard-bash).
+#             links do Markdown, os hooks de limite (guard-paths / guard-bash) e a matriz
+#             de rastreabilidade (HL-08).
+#   CodeQL fica em codeql.yml.
 #   backend, frontend e e2e entram com o esqueleto da solução (backlog, épico de fundação),
 #   pelos agentes `backend` e `frontend`.
 #
@@ -25,12 +27,13 @@ concurrency:
 jobs:
   config:
     name: Configuração AI-first
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # fixado: o rótulo ubuntu-latest migra para o Ubuntu 26 em 2026-10-19
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # a rastreabilidade confere se os commits citados existem no histórico
 
       - name: Instalar PyYAML
         run: python3 -m pip install --disable-pip-version-check --quiet "pyyaml==6.0.2"
@@ -40,3 +43,9 @@ jobs:
 
       - name: Testar hooks de limite dos agentes
         run: bash .github/scripts/testar_hooks.sh
+
+      - name: Testar o validador de rastreabilidade
+        run: bash .github/scripts/testar_rastreabilidade.sh
+
+      - name: Validar rastreabilidade enunciado → teste → commit (HL-08)
+        run: python3 .github/scripts/validar_rastreabilidade.py

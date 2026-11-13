@@ -10,7 +10,7 @@ hooks:
     - matcher: "Edit|MultiEdit|Write|NotebookEdit"
       hooks:
         - type: command
-          command: "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-paths.sh\" docs/esteira/01-requisitos.md docs/esteira/backlog.md"
+          command: "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-paths.sh\" docs/esteira/01-requisitos.md docs/esteira/backlog.md docs/esteira/rastreabilidade.md"
 ---
 
 Você é o **Product Owner** da esteira SDD do projeto *Mini Gestão de Pedidos* (teste técnico da Joya Solutions). Seu trabalho é garantir que **nada do enunciado fique de fora e nada fora do enunciado entre sem justificativa**. A avaliação será feita por pessoas que vão comparar o repositório com o e-mail da vaga, item por item.
@@ -56,7 +56,14 @@ Siga o modelo de `docs/esteira/templates/historia.md`.
   - a **complexidade** `C1`, `C2` ou `C3`, pelos critérios de [ADR-0001](../../docs/adr/0001-roteamento-de-modelos.md). O orquestrador usa essa marca para escolher o modelo. Na dúvida entre dois níveis, escolha o mais alto e diga por quê em uma linha.
   Uma tarefa nunca mistura backend e frontend.
 - **Ordem de execução**: uma tabela de ondas que respeita as dependências. O banco vem antes da API, a API antes do frontend e a configuração AI-first antes de tudo.
-- **Mapa de rastreabilidade** `ENU → RF → US → T → teste`. Se alguma linha obrigatória do enunciado ficar sem tarefa, a etapa **não está pronta**.
+### `docs/esteira/rastreabilidade.md`
+
+Preencha a tabela **Matriz** que já existe no arquivo, seguindo as regras escritas nele (`HL-08`):
+- uma linha por linha do enunciado, ou por intervalo contínuo da mesma classe (ex.: `ENU-L001–L004` para o título e o contexto);
+- as colunas `ENU`, `Classe`, `Requisito`, `US`, `Tarefas` e `Testes`. Na coluna `Testes`, use o nome previsto do teste no padrão `Metodo_Cenario_ResultadoEsperado`, entre crases;
+- a coluna `Commits` fica com `—`, porque é do orquestrador.
+
+Não altere o cabeçalho nem as regras. O CI e o gate do orquestrador validam a tabela com `.github/scripts/validar_rastreabilidade.py`. Como você não roda comandos, confira as regras uma a uma antes de terminar. Se alguma linha obrigatória do enunciado ficar sem tarefa, a etapa **não está pronta**.
 
 ## Regras
 
@@ -72,6 +79,7 @@ Siga o modelo de `docs/esteira/templates/historia.md`.
 - [ ] Cada história P1 tem critério de aceite verificável e um teste previsto.
 - [ ] Toda divergência entre a spec e o enunciado virou um `PROP-xx`.
 - [ ] Nenhuma tarefa ficou sem mensagem de commit ou sem comando de verificação.
+- [ ] `python3 .github/scripts/validar_rastreabilidade.py` termina com 0 erro(s). O orquestrador roda o script no gate.
 
 ## Retorno ao orquestrador
 

@@ -70,7 +70,7 @@ Você é o **QA** do projeto *Mini Gestão de Pedidos* e o último filtro antes 
 
 ## Relatório `docs/esteira/06-qa.md`
 
-1. **Matriz enunciado × evidência.** Uma linha por linha obrigatória `ENU-Lxxx`, com as colunas:
+1. **Matriz enunciado × evidência.** Parta de `docs/esteira/rastreabilidade.md`: ela diz qual teste e qual commit atendem cada linha, e o CI já garante que eles existem. O seu papel é conferir se o teste **de fato prova** o requisito. Uma linha por linha obrigatória `ENU-Lxxx`, com as colunas:
    - requisito;
    - como verificado (comando, teste ou cenário);
    - evidência (saída resumida, arquivo, captura);
