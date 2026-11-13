@@ -1,0 +1,43 @@
+# Configuração do DBHub (https://dbhub.ai) — servidor MCP que conecta o Claude Code
+# ao SQL Server do projeto. Carregado por .claude/mcp/dbhub.mjs (ver .mcp.json).
+#
+# Segurança em duas camadas:
+#   1. O login `claude_mcp` (database/02_seguranca.sql) só tem leitura e diagnóstico:
+#      db_datareader, VIEW DEFINITION, SHOWPLAN e VIEW DATABASE STATE.
+#   2. `readonly = true` abaixo. No SQL Server o DBHub aplica apenas um classificador
+#      de palavras-chave (não há transação somente leitura no engine), por isso a
+#      garantia real é a camada 1.
+#
+# As variáveis ${...} vêm do bloco "env" do .mcp.json, que define valores padrão de
+# desenvolvimento e aceita sobrescrita pelo ambiente.
+
+[[sources]]
+id = "joya"
+description = "SQL Server local (Docker Compose) do projeto Mini Gestão de Pedidos. Tabelas: Clientes, Produtos, Pedidos, ItensPedido."
+type = "sqlserver"
+host = "${MSSQL_HOST}"
+port = 1433
+database = "${MSSQL_DATABASE}"
+user = "${MCP_SQL_USER}"
+password = "${MCP_SQL_PASSWORD}"
+sslmode = "require"        # criptografado, sem validar o certificado autoassinado do contêiner
+lazy = true                # o servidor MCP sobe mesmo com o banco parado; o erro aparece na primeira consulta
+connection_timeout = 15
+query_timeout = 30
+
+# Consultas ad hoc: conferir dados, DMVs e Query Store.
+[[tools]]
+name = "execute_sql"
+source = "joya"
+readonly = true
+max_rows = 200
+
+# Inspeção de schema: tabelas, colunas, índices, constraints.
+[[tools]]
+name = "search_objects"
+source = "joya"
+
+# Plano de execução sem executar a consulta (usado na Parte 4).
+[[tools]]
+name = "explain_sql"
+source = "joya"
