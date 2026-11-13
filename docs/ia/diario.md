@@ -118,6 +118,15 @@
   - autor dos commits com o e-mail `noreply` do GitHub;
   - a IA instala o .NET e o desenvolvedor instala o Docker Desktop;
   - `HL-07`: este diário.
+- **O que a IA fez:**
+  - `.gitattributes` com LF obrigatório para os `.sh`. O git do Windows usa `core.autocrlf=true`, e com CRLF os hooks quebram no Linux;
+  - `.gitignore`;
+  - o workflow [ci.yml](../../.github/workflows/ci.yml), com o job `config`, que valida o frontmatter, os JSON, os links e 18 casos de teste dos hooks de limite. A action é fixada por SHA, com `permissions: contents: read`;
+  - um README inicial;
+  - `git init -b main` e 15 commits de bootstrap na ordem real de criação, com a data real (`HL-06`);
+  - a criação de [github.com/gustavo-hf-simoes/technical-test-joya-solutions](https://github.com/gustavo-hf-simoes/technical-test-joya-solutions), público;
+  - merge commit como único método de merge no GitHub, com squash e rebase desligados. Assim a `HL-06` é imposta pela plataforma, e não só combinada.
+- **Gate:** o CI passou na primeira execução, run `43525593188`, em 18 s.
 - **Modelo:** Opus 5.5.
 
 <!-- Próximas entradas: E05 — Etapa 1 (product-owner), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
