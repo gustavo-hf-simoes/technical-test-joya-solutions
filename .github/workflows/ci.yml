@@ -1,0 +1,42 @@
+# Integração contínua (HL-04: o CI existe desde o primeiro commit e roda em todo push e PR).
+#
+# Jobs:
+#   config  — valida a configuração AI-first: frontmatter de agentes e skills, JSON,
+#             links do Markdown e os hooks de limite (guard-paths / guard-bash).
+#   backend, frontend e e2e entram com o esqueleto da solução (backlog, épico de fundação),
+#   pelos agentes `backend` e `frontend`.
+#
+# Segurança (skill gha-security-review): permissões mínimas, actions fixadas por SHA,
+# sem `pull_request_target` e sem interpolar dados do evento em `run:`.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  config:
+    name: Configuração AI-first
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar PyYAML
+        run: python3 -m pip install --disable-pip-version-check --quiet "pyyaml==6.0.2"
+
+      - name: Validar agentes, skills, JSON e links
+        run: python3 .github/scripts/validar_config.py
+
+      - name: Testar hooks de limite dos agentes
+        run: bash .github/scripts/testar_hooks.sh
