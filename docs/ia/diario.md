@@ -1,0 +1,136 @@
+# Diário de bordo do trabalho com IA
+
+> Registro cronológico de **como** o projeto foi construído com o Claude Code: o que o desenvolvedor pediu, o que a IA produziu, o que foi corrigido ou rejeitado, e onde está a evidência. Este diário cobre a parte que não aparece no código. Os commits cobrem o resto.
+>
+> - Mantido pelo orquestrador (sessão principal), com uma entrada por interação relevante. A regra está na skill [`/esteira`](../../.claude/skills/esteira/SKILL.md), passo 5.
+> - Horários em BRT (UTC-3), tirados do log da sessão do Claude Code.
+> - Os prompts do desenvolvedor, na íntegra, estão em [prompts.md](prompts.md). O roteiro do vídeo de entrega está em [roteiro-video.md](roteiro-video.md).
+
+## Como ler
+
+| Coluna / termo | Significado |
+|---|---|
+| `HL-xx` | Decisão humana: o desenvolvedor discordou, ajustou ou acrescentou algo à proposta da IA ([plan.md](../plan.md), seção Human-in-the-Loop) |
+| `CG-xx` | Erro da IA detectado e corrigido ([plan.md](../plan.md), seção Correções em código gerado) |
+| `PROP-xx` | Proposta de mudança na spec levantada por um agente, que espera decisão humana |
+| Modelo | Modelo que executou a etapa. Na fase de configuração foi tudo na sessão principal (Opus 5.5). A partir da etapa 1, cada delegação também aparece em [status.md](../esteira/status.md), seção *Execuções de agentes* |
+
+## Linha do tempo
+
+### E01 — Especificação e configuração AI-first · 2026-11-13 11:47 → 12:00
+
+- **Pedido** ([prompt 1](prompts.md#prompt-1)). Analisar o enunciado e criar, sem código de implementação:
+  - `spec.md` e `plan.md`, este com a seção "Proposta Inicial da IA";
+  - `CLAUDE.md`;
+  - um hook de build e testes;
+  - a skill `/new-endpoint`;
+  - o MCP do SQL Server.
+- **O que a IA produziu:**
+  - [spec.md](../spec.md): regras `RN-xx`, contratos, modelo de dados e critérios `CA-xx` em BDD;
+  - [plan.md](../plan.md): fases 0–9 e as decisões `D1`…;
+  - [CLAUDE.md](../../CLAUDE.md): arquitetura, regras de ouro, nomenclatura e comandos;
+  - [settings.json](../../.claude/settings.json) e [post-edit.sh](../../.claude/hooks/post-edit.sh);
+  - [new-endpoint](../../.claude/skills/new-endpoint/SKILL.md);
+  - MCP com o DBHub ([.mcp.json](../../.mcp.json), [dbhub.toml](../../.claude/mcp/dbhub.toml)), com login só de leitura.
+- **Decisão técnica da IA, aceita:**
+  - o prompt pedia `.claude/mcp.json`, mas o Claude Code lê os servidores do projeto em `.mcp.json`, na raiz;
+  - foi criado um lançador em Node ([dbhub.mjs](../../.claude/mcp/dbhub.mjs)) para o mesmo `.mcp.json` funcionar em Windows, macOS e Linux.
+- **Modelo:** Opus 5.5, na sessão principal.
+
+### E02 — Da execução "numa pancada" para a esteira SDD · 2026-11-13 19:21 → 19:50
+
+- **Pedido** ([prompt 2](prompts.md#prompt-2)). O desenvolvedor rejeitou o plano executado de uma vez por uma única sessão. Pediu:
+  - uma esteira com papéis: PO → arquitetura → backend → frontend → segurança → QA;
+  - backlog épico → história → tarefa;
+  - achados que voltam ao dono e são re-revisados pelo mesmo revisor;
+  - pesquisa no skills.sh, no GitHub e no mercado antes de criar qualquer coisa do zero.
+- **Pesquisa feita pela IA:**
+  - comparou kits de convenção (GitHub Spec Kit, Kiro), frameworks de papéis (BMAD) e agentes e skills nativos do Claude Code;
+  - auditou skills oficiais (dotnet, testcontainers, angular, getsentry) antes de vendorizar.
+- **Pergunta ao desenvolvedor.** Abordagem: kit, framework ou híbrido? Resposta: **"Sim, híbrido"**.
+- **O que a IA produziu:**
+  - [esteira/README.md](../esteira/README.md), que inclui o ADR-0000 da abordagem;
+  - 6 agentes em [.claude/agents/](../../.claude/agents/);
+  - a skill [/esteira](../../.claude/skills/esteira/SKILL.md), em que o orquestrador é a sessão principal;
+  - os hooks [guard-paths.sh](../../.claude/hooks/guard-paths.sh) e [guard-bash.sh](../../.claude/hooks/guard-bash.sh), que impõem os limites de cada agente pelo harness e não só pelo prompt;
+  - 10 skills vendorizadas com procedência em [VENDORED.md](../../.claude/skills/VENDORED.md);
+  - [enunciado.md](../requisitos/enunciado.md) com as linhas numeradas (`ENU-Lxxx`), que servem de rastreabilidade;
+  - os templates e o [status.md](../esteira/status.md).
+- **Decisões humanas:**
+  - `HL-01`: esteira por etapas;
+  - `HL-02`: vendorizar skills oficiais em vez de criar genéricas;
+  - `HL-03`: autenticação fora do escopo, registrada como risco aceito.
+- **Erro da IA (`CG-01`).** A IA afirmou que subagentes não podem criar subagentes. Ela conferiu na documentação oficial e corrigiu: o aninhamento é permitido. O motivo real para o orquestrador ser a sessão principal é que só ela tem `AskUserQuestion`, de que os gates humanos dependem.
+- **Modelo:** Opus 5.5. A sessão teve o contexto compactado duas vezes nesta fase. Os documentos em `docs/` funcionaram como memória persistente, e é por isso que a spec é a fonte de verdade, e não a conversa.
+
+### E03 — Custo de IA, diferenciais e estratégia de commits · 2026-11-13 19:50 → 20:00
+
+- **Pedido** ([prompt 3](prompts.md#prompt-3)). O desenvolvedor pediu três coisas:
+  - modelo forte para análise e tarefas complexas e modelo barato para tarefas simples e bem documentadas, de forma visível ao avaliador;
+  - Playwright, GitHub Actions e deploy online como compromisso, e não "se sobrar tempo";
+  - um plano para os arquivos que ainda não tinham nenhum commit.
+- **Pesquisa feita pela IA:**
+  - preços oficiais por milhão de tokens: Haiku 5.5 custa 1/40 do Opus 5.5, e o Fable 5.2 custa o dobro do Opus;
+  - ordem de resolução de `model` e `effort` dos subagentes no Claude Code;
+  - requisito de memória do SQL Server 2022 (≥ 2 GB, x86-64) para o deploy.
+- **Perguntas ao desenvolvedor** (todas respondidas com a opção recomendada):
+  - deploy numa VM com compose e Caddy;
+  - roteamento em 3 níveis com escalonamento;
+  - cerca de 12 commits lógicos no bootstrap;
+  - uma branch por história, com PR.
+- **O que a IA produziu:**
+  - [ADR-0001](../adr/0001-roteamento-de-modelos.md), o roteamento de modelos:
+    - modelo padrão por agente no frontmatter;
+    - complexidade `C1`/`C2`/`C3` por tarefa do backlog, que escolhe Haiku, Sonnet ou Opus;
+    - escalonamento depois de 2 falhas de gate;
+  - o agente [verificador](../../.claude/agents/verificador.md), no Haiku, que roda os gates e mantém os logs longos fora do contexto do Opus;
+  - a tabela *Execuções de agentes* no [status.md](../esteira/status.md).
+- **Decisões humanas:**
+  - `HL-04`: os diferenciais viram compromisso, com CI logo depois do esqueleto e deploy cedo com CD;
+  - `HL-05`: roteamento de modelos;
+  - `HL-06`: estratégia de commits.
+- **Modelo:** Opus 5.5.
+
+### E04 — Auditoria do ambiente, repositório e CI · 2026-11-13 20:05 → em andamento
+
+- **Pedido** ([prompt 4](prompts.md#prompt-4)). O desenvolvedor contestou a afirmação de que o git não estava instalado. Pediu:
+  - investigar a causa;
+  - preparar o ambiente;
+  - criar o repositório e o GitHub Actions;
+  - criar este diário para a entrevista e o vídeo;
+  - validar se dá para iniciar e sugerir diferenciais.
+- **Erro da IA (`CG-02`).** Na primeira verificação do ambiente (11:50), o comando devolveu `git version 2.55.0.windows.5`, ou seja, o git estava instalado. A informação do ambiente "*Is a git repository: false*" dizia apenas que a **pasta** ainda não era um repositório. A IA confundiu "pasta sem repositório" com "git ausente" e repetiu isso no `status.md` e na resposta ao desenvolvedor. Os outros dois diagnósticos estavam certos:
+  - o .NET tinha só o runtime 10, sem SDK (`No .NET SDKs were found`);
+  - o Docker não estava instalado.
+- **Lição registrada:** cada afirmação sobre o ambiente precisa citar a saída do comando que a sustenta. É a mesma regra do gate da esteira, "sem evidência, `Não verificado`", aplicada à própria IA.
+- **Ambiente verificado, com o comando de cada linha:**
+
+  | Ferramenta | Estado | Evidência |
+  |---|---|---|
+  | git | 2.55.0, sem `user.name`/`user.email` global | `git --version`, `git config --show-origin --list` |
+  | GitHub CLI | 2.103.3, logado como `gustavo-hf-simoes`, escopos `repo` e `workflow` | `gh auth status` |
+  | .NET SDK | 8.0.428, **instalado nesta etapa** com autorização (`winget install Microsoft.DotNet.SDK.8`) | `dotnet --list-sdks` |
+  | Node / npm | 24.19.0 / 11.17.0 | `node -v`, `npm -v` |
+  | Docker | **ausente**; a distro Ubuntu do WSL 2 está quebrada (`ERROR_PATH_NOT_FOUND` no `.vhdx`) | `which docker`, `wsl -l -v` |
+
+- **Decisões humanas:**
+  - repositório público, `technical-test-joya-solutions`;
+  - autor dos commits com o e-mail `noreply` do GitHub;
+  - a IA instala o .NET e o desenvolvedor instala o Docker Desktop;
+  - `HL-07`: este diário.
+- **Modelo:** Opus 5.5.
+
+<!-- Próximas entradas: E05 — Etapa 1 (product-owner), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+
+## Números para a entrevista
+
+Atualize a cada etapa.
+
+| Métrica | Valor |
+|---|---|
+| Decisões humanas registradas (`HL`) | 7 |
+| Erros da IA detectados e corrigidos (`CG`) | 2 |
+| Perguntas estruturadas da IA ao desenvolvedor | 9, em 3 rodadas |
+| Compactações de contexto da sessão | 3 |
+| Tarefas por nível (`C1`/`C2`/`C3`) | — (backlog ainda não gerado) |
+| Taxa de escalonamento de modelo | — |
