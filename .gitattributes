@@ -1,0 +1,14 @@
+# Normaliza finais de linha no repositório (o git do Windows usa core.autocrlf=true).
+# Scripts de shell PRECISAM de LF: com CRLF, os hooks do Claude Code e o CI quebram.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+*.sln  text eol=crlf
+
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.woff2 binary
