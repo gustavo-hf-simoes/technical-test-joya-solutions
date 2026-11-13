@@ -51,3 +51,4 @@
 |---|---|---|---|
 | 2026-11-13 | 0 | Validação de YAML e JSON, `bash -n` nos hooks, testes manuais de `guard-paths.sh` e `guard-bash.sh` | Configuração válida; build e testes indisponíveis nesta máquina |
 | 2026-11-13 | 0 (rodada 2) | `python .github/scripts/validar_config.py`, `bash .github/scripts/testar_hooks.sh` (local e no CI, run `43525593188`); `dotnet --list-sdks` → 8.0.428 | Aprovado: CI verde em 18 s. Docker ausente: bloqueia a etapa 3, mas não as etapas 1 e 2 |
+| 2026-11-13 | 0 (rodada 3, `HL-08`) | `bash .github/scripts/testar_rastreabilidade.sh` (9/9), `python3 .github/scripts/validar_rastreabilidade.py` (0 erros, matriz vazia), `gh api …/branches/main/protection` | Proteção da `main`, secret scanning e Dependabot ativos. O gate é o CI e o CodeQL no primeiro PR |

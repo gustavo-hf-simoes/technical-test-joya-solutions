@@ -83,3 +83,10 @@
 - Qual nome terá o repositório? → **technical-test-joya-solutions**
 - Qual e-mail vai como autor dos commits? Hoje não existe user.name/user.email global no git; vou configurar só neste repositório, com o nome 'Gustavo Henrique Ferreira Simões'. → **noreply do GitHub (Recomendado)**
 - Faltam o .NET 8 SDK (a máquina só tem o runtime 10) e o Docker (não instalado; a distro Ubuntu do WSL está quebrada, com o disco .vhdx ausente). Como seguimos? → **Eu instalo o .NET via winget**
+
+## Prompt 5
+<a id="prompt-5"></a>
+
+**2026-11-13 20:29**. Resposta, por botão, à pergunta "Quais diferenciais eu registro como HL-08 antes da etapa 1?". A IA tinha proposto 4 diferenciais recomendados e 4 opcionais.
+
+> Os 4 recomendados
