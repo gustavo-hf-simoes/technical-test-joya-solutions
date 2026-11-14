@@ -233,7 +233,19 @@
   - CA1707 desligado só em `tests/**`, pela convenção `Metodo_Cenario_Resultado`.
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium`; `verificador` no Haiku (teste de ambiente).
 
-<!-- Próximas entradas: E09 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E09 — Etapa 3: US-03, parte 1, CI e testes de arquitetura (`backend`) · 2026-11-13 22:40 → 22:50
+
+- **Pedido** ([prompt 21](prompts.md#prompt-21)): integrar o PR #4 (US-02, merge `a0a29ce` com o CI verde) e seguir para a US-03.
+- **Escopo:** só a T-03.1 e a T-03.2. A T-03.3 depende da US-04, a T-03.4 da US-14 e a T-03.5 da US-16. Foram numa delegação só (`HL-24`).
+- **Delegação ao `backend`** (Sonnet `medium`, 5 min):
+  - job `backend` no `ci.yml`, com as actions fixadas por SHA, `persist-credentials: false` e `permissions: contents: read`;
+  - 9 testes de arquitetura com ArchUnitNET e reflexão (`HL-08`).
+- **Regras sem alvo:** as regras que ainda não têm tipos para verificar usam `WithoutRequiringPositiveResults()` com comentário. Duas só entram em vigor quando os tipos nascerem: setter das entidades e `CancellationToken` nos `*Async`.
+- **Prova do critério de aceite:** o agente pôs EF Core no Core, viu a regra falhar e reverteu.
+- **Gate (rodado pelo orquestrador):** aprovado na rodada 1. O orquestrador conferiu o SHA do `setup-dotnet` contra a tag e leu os testes para descartar asserção vazia.
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium`.
+
+<!-- Próximas entradas: E10 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -246,4 +258,4 @@ Atualize a cada etapa.
 | Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
 | Compactações de contexto da sessão | 5 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 6 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 7 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

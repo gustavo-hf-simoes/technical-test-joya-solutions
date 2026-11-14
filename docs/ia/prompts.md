@@ -218,3 +218,17 @@
 **2026-11-13**. Resposta, por botão, à pergunta "Posso fazer os 4 commits da US-02 e abrir o PR?".
 
 > Sim, commits e PR
+
+## Prompt 21
+<a id="prompt-21"></a>
+
+**2026-11-13**. Resposta, por botão, à pergunta "Integro o PR #4 quando o CI ficar verde e sigo para a US-03?".
+
+> Sim, merge e US-03
+
+## Prompt 22
+<a id="prompt-22"></a>
+
+**2026-11-13**. Resposta, por botão, à pergunta "Posso fazer os commits da US-03 e abrir o PR?".
+
+> Sim, commits e PR
