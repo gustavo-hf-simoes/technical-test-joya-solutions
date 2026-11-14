@@ -1,5 +1,5 @@
 # API .NET 8 (T-13.1). Contexto de build: backend/. Execução sem root (usuário "app" da imagem aspnet, uid 1654).
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props ./
 COPY src/Joya.Pedidos.Core/Joya.Pedidos.Core.csproj src/Joya.Pedidos.Core/
