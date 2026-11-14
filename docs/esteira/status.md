@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**PR da US-16** (`us-16-e2e` → `main`: E2E com Playwright, T-16.1), só com autorização. Em seguida, pela `HL-26` e no Sonnet (`HL-27`): US-11, US-17 e US-12. A T-18.6 (links do vídeo e do deploy) e a T-18.7 (roteiro) fecham quando o vídeo e o deploy existirem. Gates de integração com `--filter "Categoria!=Medicao"`. Pendências: o nome do serviço do frontend (`web` na arquitetura, `frontend` no compose; dono: `arquiteto`); os comandos dos itens BE-23 e BE-15 do checklist (`arquiteto`); `Proxy__ForwardedLimit=2` no deploy; `CreatedAtAction` na T-11.1; o MCP `mssql` com `AUTH_FAILED` (`CG-05`); a T-03.5 (E2E no CI).
+**Commits da correção dos achados** (branch `chore/achados-revisao-1`, sobre a `us-03-ci`), só com autorização: um por achado e um de docs. Antes, o **merge do PR #20** (CI de integração, frontend e E2E; os 8 checks verdes). Depois: QA final (etapa 6, agente `qa`), US-17 e US-12, e a T-11.2 (`HL-28`). Pendências: `Proxy__ForwardedLimit=2`, `ASPNETCORE_ENVIRONMENT=Production` e `/api/swagger` com 404 no deploy (US-17); reavaliar a base Alpine antes do deploy (`HL-30`); MCP `mssql` com `AUTH_FAILED` (`CG-05`); T-18.6 e T-18.7.
 
 ## Etapas
 
@@ -14,9 +14,9 @@
 | 1 | Requisitos e backlog | product-owner | Concluída | 1 (tentativa 2) | Aprovado: matriz com 0 erro, configuração válida, 7 PROPs decididas (`HL-10` a `HL-16`) | 2026-11-13 |
 | 2 | Arquitetura | arquiteto | Concluída | 1 | Aprovado: checklist com 55 itens verificáveis, 4 ADRs (0002 a 0005), matriz com 0 erro, configuração válida, 6 PROPs e o ADR-0004 decididos (`HL-17` a `HL-23`) | 2026-11-13 |
 | 3 | Backend, por história | backend | Em andamento (US-02, US-03 parte 1, US-04 e US-05 integradas; US-06 pronta) | 1 (US-06) | US-06 aprovada: 0 aviso, 64/64 unitários, 77/77 de integração (2 execuções), com 1 correção do orquestrador na T-06.6 (`CG-06`). US-05 aprovada na rodada 1: 0 aviso, 19/19 unitários, 35/35 de integração. US-04 aprovada na rodada 2: 0 aviso, 19/19 unitários, 21/21 de integração contra SQL Server 2022 real, compose com `db` saudável e `db-init` com saída 0. Rodada 1 reprovada por collation (`CG-04`). US-02 aprovada na rodada 2: build com 0 aviso, 10/10 testes unitários, `dotnet format` sem mudanças, matriz com 0 erro, configuração válida. Rodada 1 reprovada por `default!` (BE-07, `CG-03`). Integração: não há testes ainda | 2026-11-13 |
-| 4 | Frontend, por história | frontend | Pendente | — | — | — |
-| 4b | Revisão de arquitetura | arquiteto | Pendente | — | — | — |
-| 5 | Segurança | ciberseguranca | Pendente | — | — | — |
+| 4 | Frontend, por história | frontend | US-14, US-15 e US-16 integradas | 1 (US-16 na rodada 2) | US-16 aprovada: E2E 1/1 três vezes contra o compose | 2026-11-14 |
+| 4b | Revisão de arquitetura | arquiteto | Concluída (`HL-28`: antes da US-17 e da US-12) | 3 | Aprovado: 4 achados (ARQ-01 a ARQ-04), todos Resolvidos; ARQ-02 precisou de 2 rodadas de correção, com prova de mutação repetida pelo orquestrador | 2026-11-14 |
+| 5 | Segurança | ciberseguranca | Concluída (`HL-28`) | 3 | Aprovado: 0 Crítico/Alto; SEC-02 a SEC-04 e SEC-06 a SEC-08 Resolvidos; SEC-01 e SEC-05 aceitos (`HL-29`); resíduo da base Alpine aceito (`HL-30`) | 2026-11-14 |
 | 6 | QA final | qa | Pendente | — | — | — |
 
 ## Histórias
@@ -25,7 +25,7 @@
 |---|---|---|---|---|
 | US-01 Fundação SDD e rastreabilidade | orquestrador | Concluída (PR #2) | 3 / 3 | 501ae41, 125952a, abf8b91 |
 | US-02 Esqueleto da solução .NET | backend | Concluída (PR #4) | 2 / 2 | 088ea5b, 3d2ebe9 |
-| US-03 Qualidade automatizada: CI e testes de arquitetura | backend | Em andamento: T-03.1 e T-03.2 integradas (PR #5); T-03.3 a T-03.5 dependem das US-04, US-14 e US-16 | 2 / 5 | 8b0384e, 86f7b47 |
+| US-03 Qualidade automatizada: CI e testes de arquitetura | backend | T-03.1 e T-03.2 integradas (PR #5); T-03.3 a T-03.5 no PR #20, CI verde (integração com 128 testes, E2E contra o compose) | 5 / 5 | 8b0384e, 86f7b47, 5503aa1, c5ebbaa, 181d359 |
 | US-04 Banco de dados com schema, índices, logins e carga | backend | Concluída (PR #6) | 5 / 5 | 027a0ff, 75b834d, 97a88c1, d2c6c85, 994e5c0 |
 | US-05 Base HTTP da API | backend | Concluída (PR #7) | 3 / 3 | 17b4a14, b786353, 09f0eb6 |
 | US-06 Criar pedido com baixa atômica de estoque | backend | Concluída (PR #8) | 7 / 7 | 10d064c, 4f33672, 1b6564d, dac6332, 0506fe7, 22132a4, f969a53 |
@@ -33,12 +33,12 @@
 | US-08 Listar pedidos com filtros e paginação | backend | Concluída (PR #9) | 2 / 2 | 8b98d09, 59eae2d |
 | US-09 Relatório de top 5 clientes | backend | Concluída (PR #9) | 2 / 2 | 15ae8c8, 9caca95 |
 | US-10 Parte 4: debug e otimização da query | backend | Concluída (PR #15) | 3 / 3 | f37e391, 894a406, 9eb76b7 |
-| US-11 Consultar pedido por id | backend | Pendente | 0 / 2 | — |
+| US-11 Consultar pedido por id | backend | T-11.1 integrada (PR #19, merge `fa235a0`); T-11.2 depois da US-12 (`HL-28`) | 1 / 2 | a586754 |
 | US-12 Idempotência na criação | backend | Pendente | 0 / 2 | — |
 | US-13 Aplicação completa com um comando | backend | Concluída (PR #15) | 2 / 2 | ba65994, ffca2da |
 | US-14 Tela de listagem de pedidos | frontend | Concluída (PR #9; contrato da T-14.2 a conferir na T-11.2) | 5 / 5 | 1779aa4, 9c9d50c, d1318ef, fe9cb83 |
 | US-15 Tela de criação de pedido | frontend | Concluída (PR #9) | 3 / 3 | c757543, 32bc744 |
-| US-16 Teste end to end com Playwright | frontend | Commitada, PR pendente | 1 / 1 | b292800 |
+| US-16 Teste end to end com Playwright | frontend | Concluída (PR #17, merge `2b58763`) | 1 / 1 | b292800 |
 | US-17 Deploy online | backend | Pendente | 0 / 2 | — |
 | US-18 README e entrega | orquestrador | Integrada (PR #16, merge `287eb42`); T-18.6 e T-18.7 abertas | 5 / 7 | 2a47d6e, 061162b, e48c12e, 2e88278, 8e7c669 |
 
@@ -46,7 +46,7 @@
 
 | ID | Severidade | Dono | Rodada | Status | Resumo |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| — | — | — | — | — | Nenhum aberto. Revisões 4b e 5 fechadas em 2026-11-14: ver [arquitetura-1.md](revisoes/arquitetura-1.md) e [05-seguranca.md](05-seguranca.md) |
 
 ## Decisões humanas pendentes
 
@@ -86,6 +86,16 @@
 | 2026-11-14 | Etapa 3, US-13, T-13.1 e T-13.2 (com 1 rodada de CORRECAO: erro 904 do db-init na recuperação do banco) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 58.799 |
 | 2026-11-14 | Etapa 3, US-10, T-10.1 a T-10.3 (41 min: 21,5 min em testes com carga de 800 mil linhas; ver `HL-27`) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 111.236 |
 | 2026-11-14 | Etapa 4, US-16, T-16.1 (com 1 rodada de CORRECAO: quantidade 1 → 2 unidades do CA-30, erro da instrução do orquestrador) | C2 | frontend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 86.031 (42.127 + 43.904) |
+| 2026-11-14 | Etapa 3, US-11, T-11.1 | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 67.691 |
+| 2026-11-14 | Etapa 3, US-03, T-03.3 a T-03.5 (jobs de CI, `HL-28`) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1; provado no CI do PR #20 | Não | 45.637 |
+| 2026-11-14 | Etapa 4b, REVISAO rodada 1 (`HL-28`) | — | arquiteto | opus | high | 1 | 4 achados (1 Médio, 3 Baixos), nenhum Alto | Não | 54.172 |
+| 2026-11-14 | Etapa 5, revisão de segurança (`HL-28`) | — | ciberseguranca | opus | high | 1 | 7 achados (2 Médios, 5 Baixos), nenhum Crítico ou Alto | Não | 144.414 |
+| 2026-11-14 | CORRECAO rodada 1: ARQ-03, ARQ-04, SEC-02, SEC-07 (`HL-29`) | C2 | frontend | sonnet | medium | 1 | Aprovado no gate do orquestrador | Não | 51.587 |
+| 2026-11-14 | CORRECAO rodada 1: ARQ-02, SEC-03, SEC-04 (`HL-29`) | C2 | backend | sonnet | medium | 1 | Aprovado no gate do orquestrador | Não | 77.451 |
+| 2026-11-14 | Etapa 4b, re-revisão rodadas 2 e 3 (ARQ-01 a ARQ-04; ajustes de texto na ADR-0002 e no desenho) | — | arquiteto | opus | high | 1 | Rodada 2: ARQ-02 Parcial (Baixa → Média). Rodada 3: todos Resolvidos | Não | 105.382 (cumulativo da mesma instância; 87.701 na rodada 2) |
+| 2026-11-14 | CORRECAO rodada 2: ARQ-02 (seletores do ArchUnitNET) | C2 | backend | sonnet | medium | 2 | Aprovado; mutação repetida pelo orquestrador | Não | 88.025 (cumulativo da instância da rodada 1) |
+| 2026-11-14 | Etapa 5, re-revisão rodadas 2 e 3 (SEC-01 a SEC-08) | — | ciberseguranca | opus | high | 1 | Rodada 2: SEC-02 Parcial e SEC-08 novo (Média). Rodada 3: todos Resolvidos ou aceitos | Não | 120.271 (cumulativo da mesma instância; inclui a troca para "Aceito (HL-30)") |
+| 2026-11-14 | CORRECAO rodada 2: SEC-02 (teste de cabeçalhos), SEC-08 (Nginx 1.30) e remoção do `curl` (`HL-30`) | C2 | frontend | sonnet | medium | 2 | Aprovado no gate do orquestrador | Não | 57.357 (cumulativo da instância da rodada 1) |
 
 ## Log de gates
 
@@ -122,3 +132,7 @@
 | 2026-11-14 | 3, US-13 (T-13.1 e T-13.2) | `docker compose config -q`, `docker compose up -d`, `curl` em 8 rotas de `:4200` (inclusive o proxy `/api`) e `:8080/swagger`, `id -u` nos contêineres, `docker compose down` sem `-v` | Rodada 1: `db-init` falhou com erro 904 (banco em recuperação), devolvido. Rodada 2: aprovado; `db`, `api` e `frontend` saudáveis, `db-init` com saída 0, 8/8 rotas com 200, uid 1654 (api) e 101 (frontend) |
 | 2026-11-14 | 3, US-10 com US-13 (T-10.1 a T-10.3) | Os do backend, com a integração inteira (inclui a medição) | Aprovado: 0 aviso; 109/109 e 126/126 (6 min 24 s, dos quais 2 a 3 min da medição); format sem mudanças; busca limpa; matriz com 0 erro; configuração válida. MCP não verificado (`CG-05`); planos colhidos com o login `claude_mcp` no Testcontainers |
 | 2026-11-14 | 4, US-16 (T-16.1) | `docker compose up -d`, `npm --prefix e2e test` três vezes seguidas sem limpar o banco, `docker compose down` sem `-v`, matriz e configuração | Aprovado: 1/1 nas três execuções (3,4 s na última); matriz com 0 erro; configuração válida. Lint, build e testes do frontend não rodados: `frontend/` não mudou |
+| 2026-11-14 | 3, US-11 (T-11.1) | Os do backend, com integração `Categoria!=Medicao` (`HL-27`), e `git grep CreatedAtAction` | Aprovado: 0 aviso, busca limpa; 111/111 e 128/128 (contagem do log do CI do PR #20, que já inclui a T-11.1) |
+| 2026-11-14 | 3, US-03 (T-03.3 a T-03.5) | SHAs de `setup-node` e `upload-artifact` conferidos pela API do GitHub; `gh pr checks 20` e log do job de integração | Aprovado: os 8 checks verdes; o job de integração rodou 128 testes (32 s); E2E contra o compose em 1 min 54 s |
+| 2026-11-14 | Correção de achados, rodada 1 (`HL-29`) | Backend completo; frontend (lint, build, testes, `tsc` do e2e); `docker compose up -d --build --wait frontend`; `curl -D -` em `/`, `/pedidos`, `/api/clientes`, `/api/pedidos?dataFim=9999-12-31` e `main-*.js`; `docker compose ps`; `npm --prefix e2e test`; console do navegador | Aprovado: 0 aviso; 113/113 e 130/130; format e busca limpos; matriz com 0 erro; lint limpo, 27/27; os 4 cabeçalhos e a CSP em todas as respostas; `dataFim=9999-12-31` → 400; portas só em 127.0.0.1; E2E 1/1; nenhuma violação de CSP e CSS sem `media=print` |
+| 2026-11-14 | Correção de achados, rodada 2 (ARQ-02, SEC-02, SEC-08, `HL-30`) | Build, unitários, format, busca; mutação independente (controller temporário dependendo do `PedidosDbContext`); `docker compose build --pull frontend` e `up --wait`; `nginx -t`, `nginx -v`, `id -u`, `command -v curl` no contêiner; `npm --prefix e2e test`; `docker scout cves --only-severity critical,high` | Aprovado: 0 aviso, 113/113; regra dos controllers vermelha com a mutação e verde sem ela; nginx 1.30.6, uid 101, sem `curl`, healthy; E2E 2/2 (CA-30 e cabeçalhos); resíduo crítico/alto só em brotli, expat, libxml2, libxslt, musl e zlib (aceito, `HL-30`) |

@@ -311,7 +311,30 @@
 - **Gate (rodado pelo orquestrador):** aprovado. E2E 1/1 três vezes seguidas contra o compose, sem limpar o banco; matriz com 0 erro; configuração válida. Cada execução consome 2 unidades de estoque da carga.
 - **Modelo:** orquestrador no Opus 5.5; `frontend` no Sonnet `medium` (`HL-27`).
 
-<!-- Próximas entradas: E17 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E17 — US-11 e CI: `GET /pedidos/{id}` e jobs de integração, frontend e E2E (backend) · 2026-11-14
+
+- **Pedido** ([prompts 41 a 47](prompts.md#prompt-41)): seguir a US-11, mostrar a aplicação rodando e, pela `HL-28`, antecipar os jobs de CI e as revisões.
+- **Produzido pelo `backend`:** T-11.1 (`a586754`), uma projeção única com `AsNoTracking` e itens aninhados, 200/404 por `Result`. Em seguida, os jobs `integracao` (`5503aa1`), `frontend` (`c5ebbaa`) e `e2e` (`181d359`) no `ci.yml`, com os SHAs das actions conferidos pela API do GitHub.
+- **Gate:** T-11.1 aprovada na rodada 1. No PR #20, os 8 checks ficaram verdes. O orquestrador conferiu no log que o job de integração rodou de fato 128 testes, porque 1 min 9 s parecia rápido demais.
+- **HL:** `HL-28` (ordem: CI e revisões antes da US-17 e da US-12).
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium`.
+
+### E18 — Revisões 4b e 5 (arquiteto e ciberseguranca) · 2026-11-14
+
+- **Pedido:** `HL-28`. As duas revisões rodaram em paralelo, só com leitura.
+- **Produzido:** `revisoes/arquitetura-1.md` (ARQ-01 a ARQ-04, nenhum Alto) e `05-seguranca.md` (SEC-01 a SEC-07, nenhum Crítico ou Alto), com 5 riscos de contexto.
+- **Decisão humana:** `HL-29` ([prompt 48](prompts.md#prompt-48)): corrigir os 9 achados baratos agora; aceitar SEC-01 (Angular 19), SEC-05 e os riscos de contexto. Os aceites entraram em "Limitações" no README.
+- **Modelo:** `arquiteto` e `ciberseguranca` no Opus (frontmatter).
+
+### E19 — Correção dos achados, 2 rodadas (frontend, backend, orquestrador) · 2026-11-14
+
+- **Rodada 1:** o `frontend` corrigiu ARQ-03, ARQ-04 (UUID sem contexto seguro), SEC-02 (cabeçalhos em todas as `location`, CSP, `inlineCritical:false`) e SEC-07 (Playwright 1.65.1). O `backend` corrigiu SEC-03 (`dataFim=9999-12-31` → 400), SEC-04 (portas no loopback) e ARQ-02. O orquestrador corrigiu ARQ-01 (texto do desenho) e SEC-06 (Dependabot para NuGet, npm e Docker; CodeQL para C# e TS).
+- **Erro da IA pego na re-revisão:** o `backend` alegou que uma regra negativa do ArchUnitNET "nunca gera resultado positivo" e manteve `WithoutRequiringPositiveResults()`. O `arquiteto` provou que a causa era `ResideInNamespace` com regex selecionando 0 tipos, e que a regra dos controllers não pegava uma dependência proibida. O revisor também corrigiu o próprio veredito da rodada 1. Corrigido na rodada 2, com prova de mutação repetida pelo orquestrador.
+- **Achado novo na re-revisão:** SEC-08, a imagem `nginx-unprivileged:1.28-alpine` parada no registro, com CVEs críticas. Foi trocada pela `1.30-alpine`. Depois, `HL-30` ([prompt 49](prompts.md#prompt-49)): remover o `curl` e aceitar o resto da base.
+- **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; lint limpo e 27/27; E2E 2/2 (CA-30 e o teste novo de cabeçalhos); cabeçalhos e CSP conferidos por `curl` e no console do navegador.
+- **Modelo:** `frontend` e `backend` no Sonnet `medium`; revisores no Opus.
+
+<!-- Próximas entradas: E20 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -319,9 +342,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 27 |
-| Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
-| Perguntas estruturadas da IA ao desenvolvedor | 27, em 9 rodadas |
-| Compactações de contexto da sessão | 9 |
+| Decisões humanas registradas (`HL`) | 30 |
+| Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 alegação técnica falsa do `backend` derrubada pelo revisor com teste de mutação (ARQ-02), mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
+| Perguntas estruturadas da IA ao desenvolvedor | 30, em 12 rodadas |
+| Compactações de contexto da sessão | 10 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
 | Taxa de escalonamento de modelo | 0 de 23 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

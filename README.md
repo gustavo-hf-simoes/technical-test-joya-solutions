@@ -194,7 +194,10 @@ O problema nunca foi a falta de índice, e sim a função sobre a coluna, que im
 - **MCP `mssql`:** a conexão falhou com `AUTH_FAILED` na sessão da Parte 4 (`CG-05`). As evidências foram colhidas com o mesmo login, por teste.
 - **Medição da Parte 4 fora do gate** (`HL-27`). Ela leva de 2 a 3 minutos e roda sob demanda. Uma regressão de desempenho na query só aparece se alguém rodá-la.
 - **Corpo *chunked* acima do limite:** o 413 foi testado com `Content-Length`, mas não com corpo *chunked* contra o Kestrel real.
-- **Senhas padrão do compose** são de desenvolvimento. Em produção, viriam de um cofre de segredos.
+- **Senhas padrão do compose** são de desenvolvimento. Em produção, viriam de um cofre de segredos. O mesmo vale para o `TrustServerCertificate=True` da API e para o MCP, que conectam sem validar o certificado do SQL Server local (`HL-29`).
+- **Angular 19 e .NET 8 fora de suporte** (`SEC-01`, `HL-29`). A linha 19 do Angular não recebe mais correções, e os advisories publicados só são corrigidos na 22; nenhum deles é explorável no código atual. O .NET 8 saiu do suporte em 2026-11-10. As duas atualizações de versão major ficam para depois da entrega.
+- **Permissões do `joya_app`:** o login da API tem `UPDATE` e `INSERT` nas tabelas que a criação de pedido altera, conforme a spec 6.5 (`SEC-05`, aceito na `HL-29`).
+- **Limite de taxa só no `POST /pedidos`** e relatório sem período máximo ([ADR-0002](docs/adr/0002-limites-contra-abuso.md)). Uma consulta de período longo é cara, mas não altera dados (`HL-29`).
 - **Histórias opcionais** (E2E com Playwright, contrato OpenAPI conferido no CI, deploy e idempotência) entram na ordem da `HL-26`, conforme o prazo. O estado de cada uma está em [status.md](docs/esteira/status.md).
 
 ## Custo medido da esteira

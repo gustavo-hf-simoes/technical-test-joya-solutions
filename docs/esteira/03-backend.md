@@ -928,3 +928,24 @@ Nenhum índice novo, de acordo com a arquitetura Q12.
 **Riscos:** `--wait` exige healthcheck na API e no frontend (existem); se o `db-init` (one-shot) atrapalhar o `--wait` no compose do runner, trocar por `up -d` e uma espera explícita. O filtro pressupõe o Trait `Categoria`, como em `InvestigacaoTests`.
 
 **Desvios da spec:** nenhum, sem PROP.
+
+### Resposta a achados (correção, rodada 1: ARQ-02, SEC-03, SEC-04)
+
+HL-29: SEC-05 é risco aceito (logins não alterados). HL-27: só unitários rodaram; os testes de integração novos foram escritos mas não executados nesta rodada.
+
+| Achado | O que foi feito | Onde | Teste que prova |
+|---|---|---|---|
+| SEC-03 | `dataFim = 9999-12-31` vira erro `DataFim` no validator (o dia seguinte não é representável); `Periodo.Criar` também devolve `Error.Validation` em vez de estourar `AddDays(1)` | `Core/Common/PeriodoRegras.cs`, `Core/Common/Periodo.cs` | Unit: `ListarPedidosQueryValidatorTests.Validate_DataFimNoMaximoDoCalendario_RetornaErroNoCampoDataFim`, `TopClientesQueryValidatorTests.Validate_DataFimNoMaximoDoCalendario_RetornaErroNoCampoDataFim`. Integração (não executados): caso `dataFim=9999-12-31` em `GetPedidosTests.GetPedidos_ParametrosInvalidos_Retorna400` e `?dataInicio=0001-01-01&dataFim=9999-12-31` em `GetTopClientesTests.GetTopClientes_SemPeriodo_Retorna400` |
+| SEC-04 | Frontend publicado em `127.0.0.1:4200:8080`; comentário do cabeçalho atualizado. Nenhum outro serviço alterado | `docker-compose.yml` | `docker compose config -q` OK (sem subir nem derrubar). Para a US-17: deploy com `ASPNETCORE_ENVIRONMENT=Production` (sem Swagger) |
+| ARQ-02 | Removido `WithoutRequiringPositiveResults()` de controllers e de "classes são sealed". Nas três regras `NotDependOnAny` ele é inerente ao ArchUnitNET (regra negativa não gera resultado positivo, o erro aparece mesmo com tipos existentes): mantido, com comentário correto e afirmação explícita de que os conjuntos avaliados têm tipos. Teste de entidades varre Core e Infrastructure e exige as quatro (Pedido, ItemPedido, Cliente, Produto); comentários desatualizados corrigidos | `UnitTests/Arquitetura/RegrasDeArquiteturaTests.cs` | Os 9 testes de arquitetura passam; o de entidades falha se alguma das quatro não for encontrada |
+
+Verificações: `dotnet build` 0 avisos; unitários 113 verdes; `dotnet format --verify-no-changes` limpo; `docker compose config -q` OK.
+Sem PROP (a faixa de datas não mudou a spec: só rejeita o valor não representável).
+
+#### ARQ-02, rodada 2
+
+A alegação da rodada 1 estava errada: na ArchUnitNET 0.13.x `ResideInNamespace` compara nome exato, então o seletor por regex estava vazio. Correção em `RegrasDeArquiteturaTests.cs`:
+- Todos os seletores usam `ResideInNamespaceOrBelow`; removido o helper `Regex`.
+- Removido `WithoutRequiringPositiveResults()` das três regras; removidas as asserções `ShouldNotBeEmpty` redundantes; comentário XML corrigido.
+- Regra dos controllers: `NotDependOnAnyTypesThat()` para Infrastructure e, com `AndShould`, para `Microsoft.EntityFrameworkCore`. O assembly do EF Core agora é carregado no modelo.
+- Prova de mutação: arquivo temporário `Api/Controllers/MutacaoTempController.cs` com propriedade do tipo `Infrastructure.Clientes.Cliente`. Resultado: `Controllers_Dependencias_NaoAcessamDbContext` vermelho ("MutacaoTempController does depend on ...Cliente"). Arquivo removido; 113 testes unitários verdes e `dotnet format` limpo.
