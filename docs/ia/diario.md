@@ -190,7 +190,30 @@
   O `CLAUDE.md` passou a usar `docker compose up` sem flags (`HL-15`). O código `LIMITE_DE_TAXA` do `429` foi nomeado pelo orquestrador ao aplicar a PROP-03, e isso está registrado na `HL-12`.
 - **Modelo:** orquestrador no Opus 5.5 (esforço high); `product-owner` no Opus, `high` na tentativa 1 e `medium` na tentativa 2. Tokens em [status.md](../esteira/status.md), *Execuções de agentes*.
 
-<!-- Próximas entradas: E07 — Etapa 2 (arquiteto), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E07 — Integração da etapa 1 e etapa 2: arquitetura (`arquiteto`) · 2026-11-13 21:36 → 22:12
+
+- **Pedido** ([prompts 12 a 14](prompts.md#prompt-12)): autorizar os commits e o PR da etapa 1, integrar o PR, seguir para a etapa 2 e, no fim, autorizar os commits e o PR dela.
+- **Etapa 1 integrada:**
+  - 6 commits, um por tarefa. A `HL-09` foi separada do `plan.md` por staging parcial com `git apply --cached`;
+  - o commit `docs(esteira): rastreia US-01` preencheu a coluna Commits (`HL-08`);
+  - o PR #2 passou no CI (CodeQL e Configuração AI-first) e foi integrado com merge commit (`97196cd`).
+- **Delegação ao `arquiteto`** (Opus, `high`). A lição da `HL-09` foi aplicada sem mudar o esforço: lista fechada de entradas e escrita incremental. Em 18,6 min, ele gravou:
+  - [02-arquitetura.md](../esteira/02-arquitetura.md), com as restrições da vaga, o C4 nível 2, as camadas com 9 testes de arquitetura, a sequência do `POST /pedidos`, os contratos, os índices com o operador esperado e um checklist de 55 itens, cada um com o comando que o verifica;
+  - os ADRs [0002](../adr/0002-limites-contra-abuso.md) (32 KiB e 10 `POST`s a cada 10 s por IP), [0003](../adr/0003-banco-real-nos-testes-de-integracao.md) (o mesmo `init.sh` no compose e no Testcontainers), [0004](../adr/0004-unidade-de-trabalho-sem-retentativa.md) (sem *retry* automático) e [0005](../adr/0005-contrato-openapi-versionado.md) (contrato OpenAPI versionado).
+- **Gate (rodado pelo orquestrador):** li o documento e o checklist. Os dois validadores passaram. O próprio orquestrador respondeu a pergunta sobre a permissão de `docs/contratos/` lendo o `guard-paths.sh` do `backend`, que já cobre o caminho.
+- **Decisões humanas:** 8 perguntas em 2 rodadas, todas aceitas na opção recomendada:
+  - as PROP-08 a PROP-13 e o ADR-0004 viraram as `HL-17` a `HL-23`. O ADR-0004 revê a tarefa 3.2 e uma linha de risco do plano, que usavam `CreateExecutionStrategy`;
+  - o orquestrador aplicou o texto na spec (RNF-02, RN-13, §5.1, §5.5, RNF-06 e §8.4) e no `plan.md`;
+  - a oitava pergunta mandou os ajustes do backlog para o `product-owner`.
+- **Ajuste do backlog** (`product-owner`, Opus `medium`, 3 min):
+  - tarefa nova T-11.2 (contrato), agora com 57 tarefas;
+  - T-03.2 com as 9 regras de arquitetura; o `init.sh` foi para a T-04.1;
+  - T-06.4 sem *retry*, T-05.3 sem a condição, T-15.2 com a `Idempotency-Key`;
+  - testes novos para as `HL-18` a `HL-20`;
+  - numa segunda passada, as marcas de PROP já decididas viraram referências às `HL`.
+- **Modelo:** orquestrador no Opus 5.5; `arquiteto` no Opus `high`; `product-owner` no Opus `medium`. Tokens em [status.md](../esteira/status.md).
+
+<!-- Próximas entradas: E08 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -198,9 +221,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 16 |
+| Decisões humanas registradas (`HL`) | 23 |
 | Erros da IA detectados e corrigidos (`CG`) | 2, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
-| Perguntas estruturadas da IA ao desenvolvedor | 17, em 6 rodadas |
+| Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
 | Compactações de contexto da sessão | 4 |
-| Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 34 / 15 (56 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 2 delegações. O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
+| Taxa de escalonamento de modelo | 0 de 4 delegações. O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

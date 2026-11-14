@@ -28,7 +28,7 @@
 | ENU-L014 | Obrigatório | ENT-02 | US-01 | T-01.3 | Manual: docs/plan.md tem a proposta do plan mode e a seção Human-in-the-Loop preenchida | abf8b91 |
 | ENU-L015 | Contexto | — | — | — | — | — |
 | ENU-L017 | Obrigatório | ENT-07 | US-01, US-18 | T-01.1, T-18.2 | Manual: git ls-files .claude CLAUDE.md lista agentes, hooks e skills versionados | 501ae41 |
-| ENU-L019 | Obrigatório | ENT-03, RNF-03 | US-02, US-03, US-18 | T-02.1, T-03.2, T-18.2 | `Core_Dependencias_NaoReferenciaEfAspNetNemSqlClient`, `Dtos_Declaracao_SaoSealedRecord`, `Controllers_Dependencias_NaoAcessamDbContext` | — |
+| ENU-L019 | Obrigatório | ENT-03, RNF-03 | US-02, US-03, US-18 | T-02.1, T-03.2, T-18.2 | `Core_Dependencias_NaoReferenciaEfAspNetNemSqlClient`, `Core_Dependencias_NaoReferenciaInfrastructureNemApi`, `Infrastructure_Dependencias_NaoReferenciaApi`, `Controllers_Dependencias_NaoAcessamDbContext`, `Dtos_Declaracao_SaoSealedRecord`, `Entidades_Propriedades_NaoTemSetterPublico`, `MetodosAsync_Assinatura_RecebemCancellationTokenPorUltimo`, `Classes_Declaracao_SaoSealed`, `TestesDeRegra_Dependencias_NaoUsamInfrastructureNemApi` | — |
 | ENU-L020 | Obrigatório | ENT-04 | US-18 | T-18.2 | Manual: editar um arquivo do backend dispara post-edit.sh, que roda build e testes unitários | — |
 | ENU-L021 | Obrigatório | ENT-05 | US-06, US-18 | T-06.6, T-18.2 | Manual: T-06.6 e T-07.1 feitas com a skill new-endpoint, registradas no diário | — |
 | ENU-L022 | Obrigatório | ENT-06 | US-04, US-10, US-18 | T-04.3, T-10.3, T-18.2 | `LoginMcp_TentaEscrever_PermissaoNegada` | — |
@@ -41,8 +41,8 @@
 | ENU-L032 | Obrigatório | RF-02 | US-08 | T-08.1, T-08.2 | `GetPedidos_FiltroCliente_RetornaSoDoCliente`, `GetPedidos_FiltroPeriodo_IncluiAsDuasPontas`, `GetPedidos_PercorreTodasAsPaginas_NaoRepeteNemOmite` | — |
 | ENU-L033 | Obrigatório | RF-03 | US-09 | T-09.1, T-09.2 | `GetTopClientes_OitoClientes_RetornaCincoEmOrdemDecrescente`, `GetTopClientes_PedidosForaDoPeriodo_NaoContam`, `GetTopClientes_Homonimos_NaoSomaNomesIguais` | — |
 | ENU-L034 | Obrigatório | RNF-09 | US-14 | T-14.1 | `AppComponent_Inicializacao_UsaLocalePtBr` | — |
-| ENU-L036 | Obrigatório | RF-05, RNF-08 | US-14 | T-14.2, T-14.3, T-14.4 | `PedidoListaComponent_FiltrosAplicados_AtualizaQueryString`, `PedidoListaComponent_FalhaNaApi_MostraErroComTentarNovamente` | — |
-| ENU-L037 | Obrigatório | RF-06, RF-10 | US-07, US-15 | T-07.1, T-15.1, T-15.2, T-15.3 | `PedidoFormComponent_Confirmar_RedirecionaParaListagemComSucesso`, `PedidoFormComponent_Resposta409_DestacaItensEPreservaDados`, `GetProdutos_FiltroAtivo_RetornaSoAtivosOrdenadosPorNome` | — |
+| ENU-L036 | Obrigatório | RF-05, RNF-08 | US-14 | T-14.2, T-14.3, T-14.4 | `PedidoListaComponent_FiltrosAplicados_AtualizaQueryString`, `PedidoListaComponent_FalhaNaApi_MostraErroComTentarNovamente`, `Contrato_ModelosDoFrontend_IgualAoOpenApiVersionado` | — |
+| ENU-L037 | Obrigatório | RF-06, RF-10 | US-07, US-15 | T-07.1, T-15.1, T-15.2, T-15.3 | `PedidoFormComponent_Confirmar_RedirecionaParaListagemComSucesso`, `PedidoFormComponent_Resposta409_DestacaItensEPreservaDados`, `PedidoFormComponent_Reenvio_ReutilizaIdempotencyKey`, `GetProdutos_FiltroAtivo_RetornaSoAtivosOrdenadosPorNome`, `GetProdutos_AtivoInvalido_Retorna400` | — |
 | ENU-L038 | Contexto | — | — | — | — | — |
 | ENU-L040 | Obrigatório | RF-04, RNF-02, ENT-14 | US-10, US-18 | T-10.1, T-10.2, T-10.3, T-18.4 | `QueryCorrigida_Ranking2026_CoincideComTopClientes` | — |
 | ENU-L042–L048 | Obrigatório | RF-04 | US-10 | T-10.1, T-10.2 | `QueryOriginal_ClientesHomonimos_SomaIndevidamente`, `QueryOriginal_Ordenacao_RetornaMenorTotalPrimeiro`, `QueryCorrigida_Ranking2026_CoincideComTopClientes` | — |
@@ -53,7 +53,7 @@
 | ENU-L058 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
 | ENU-L059 | Contexto | — | — | — | — | — |
 | ENU-L061 | Obrigatório | RNF-04 | US-04, US-13 | T-04.5, T-13.1, T-13.2 | Manual: num clone limpo, docker compose up sobe db, api e frontend saudáveis a partir do docker-compose.yml da raiz | — |
-| ENU-L063 | Obrigatório | RNF-04, RF-08 | US-04 | T-04.4, T-04.5 | Manual: docker compose up aplica schema e carga pelo db-init sem passo manual, e subir de novo não duplica a carga | — |
+| ENU-L063 | Obrigatório | RNF-04, RF-08 | US-04 | T-04.1, T-04.4, T-04.5 | Manual: docker compose up aplica schema e carga pelo db-init sem passo manual, e subir de novo não duplica a carga | — |
 | ENU-L064 | Obrigatório | RNF-04 | US-13 | T-13.1 | Manual: serviço api do compose responde 200 em /health/ready | — |
 | ENU-L065 | Obrigatório | RNF-04 | US-13, US-14 | T-14.5, T-13.2 | Manual: serviço frontend do compose abre a listagem em localhost:4200 | — |
 | ENU-L066–L068 | Obrigatório | RNF-04 | US-13 | T-13.2 | Manual: docker compose down -v e depois docker compose up, sem flags e sem .env, sobem a aplicação completa | — |
