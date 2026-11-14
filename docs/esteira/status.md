@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**Commits e PR da US-05** (`us-05-base-http` → `main`; T-05.1 a T-05.3), depois de autorizados. Em seguida, **US-06** (criar pedido com baixa atômica). A T-06.4 liga a política `criar-pedido` ao `POST /pedidos` pelo roteiro de [03-backend.md](03-backend.md), e o comando do item BE-23 do checklist precisa aceitar a constante `LimitesHttp.PoliticaCriarPedido` (dono: `arquiteto`). O deploy (T-17.x) precisa de `Proxy__ForwardedLimit=2`. Para o MCP `mssql`, reinicie o Claude Code com o banco de pé (`CG-05`).
+**CI e merge do PR da US-06** (`us-06-criar-pedido` → `main`), o merge só com autorização. A ENU-L055 fica sem commit até existirem os testes `GetPedidos_*` e `GetTopClientes_*` (US-08 e US-09). Em seguida, **US-07** (catálogo de clientes e produtos). Pendências: o comando do item BE-23 do checklist precisa aceitar `LimitesHttp.PoliticaCriarPedido` e o do BE-15 tem falsos positivos (dono: `arquiteto`); o deploy (T-17.x) precisa de `Proxy__ForwardedLimit=2`; o `Location` do 201 passa a `CreatedAtAction` na T-08.2; para o MCP `mssql`, reinicie o Claude Code com o banco de pé (`CG-05`).
 
 ## Etapas
 
@@ -13,7 +13,7 @@
 | 0 | Configuração AI-first (spec, plano, CLAUDE.md, hooks, skills, MCP, agentes) | orquestrador | Concluída | 2 | Configuração validada no CI (`config`). Build e testes .NET ainda sem código; Docker ausente na máquina (ver diário E04) | 2026-11-13 |
 | 1 | Requisitos e backlog | product-owner | Concluída | 1 (tentativa 2) | Aprovado: matriz com 0 erro, configuração válida, 7 PROPs decididas (`HL-10` a `HL-16`) | 2026-11-13 |
 | 2 | Arquitetura | arquiteto | Concluída | 1 | Aprovado: checklist com 55 itens verificáveis, 4 ADRs (0002 a 0005), matriz com 0 erro, configuração válida, 6 PROPs e o ADR-0004 decididos (`HL-17` a `HL-23`) | 2026-11-13 |
-| 3 | Backend, por história | backend | Em andamento (US-02, US-03 parte 1 e US-04 integradas; US-05 pronta) | 1 (US-05) | US-05 aprovada na rodada 1: 0 aviso, 19/19 unitários, 35/35 de integração. US-04 aprovada na rodada 2: 0 aviso, 19/19 unitários, 21/21 de integração contra SQL Server 2022 real, compose com `db` saudável e `db-init` com saída 0. Rodada 1 reprovada por collation (`CG-04`). US-02 aprovada na rodada 2: build com 0 aviso, 10/10 testes unitários, `dotnet format` sem mudanças, matriz com 0 erro, configuração válida. Rodada 1 reprovada por `default!` (BE-07, `CG-03`). Integração: não há testes ainda | 2026-11-13 |
+| 3 | Backend, por história | backend | Em andamento (US-02, US-03 parte 1, US-04 e US-05 integradas; US-06 pronta) | 1 (US-06) | US-06 aprovada: 0 aviso, 64/64 unitários, 77/77 de integração (2 execuções), com 1 correção do orquestrador na T-06.6 (`CG-06`). US-05 aprovada na rodada 1: 0 aviso, 19/19 unitários, 35/35 de integração. US-04 aprovada na rodada 2: 0 aviso, 19/19 unitários, 21/21 de integração contra SQL Server 2022 real, compose com `db` saudável e `db-init` com saída 0. Rodada 1 reprovada por collation (`CG-04`). US-02 aprovada na rodada 2: build com 0 aviso, 10/10 testes unitários, `dotnet format` sem mudanças, matriz com 0 erro, configuração válida. Rodada 1 reprovada por `default!` (BE-07, `CG-03`). Integração: não há testes ainda | 2026-11-13 |
 | 4 | Frontend, por história | frontend | Pendente | — | — | — |
 | 4b | Revisão de arquitetura | arquiteto | Pendente | — | — | — |
 | 5 | Segurança | ciberseguranca | Pendente | — | — | — |
@@ -27,8 +27,8 @@
 | US-02 Esqueleto da solução .NET | backend | Concluída (PR #4) | 2 / 2 | 088ea5b, 3d2ebe9 |
 | US-03 Qualidade automatizada: CI e testes de arquitetura | backend | Em andamento: T-03.1 e T-03.2 integradas (PR #5); T-03.3 a T-03.5 dependem das US-04, US-14 e US-16 | 2 / 5 | 8b0384e, 86f7b47 |
 | US-04 Banco de dados com schema, índices, logins e carga | backend | Concluída (PR #6) | 5 / 5 | 027a0ff, 75b834d, 97a88c1, d2c6c85, 994e5c0 |
-| US-05 Base HTTP da API | backend | Pronta, sem commit | 3 / 3 | — |
-| US-06 Criar pedido com baixa atômica de estoque | backend | Pendente | 0 / 7 | — |
+| US-05 Base HTTP da API | backend | Concluída (PR #7) | 3 / 3 | 17b4a14, b786353, 09f0eb6 |
+| US-06 Criar pedido com baixa atômica de estoque | backend | Commitada, PR aberto | 7 / 7 | 10d064c, 4f33672, 1b6564d, dac6332, 0506fe7, 22132a4, f969a53 |
 | US-07 Catálogo de clientes e produtos para as telas | backend | Pendente | 0 / 1 | — |
 | US-08 Listar pedidos com filtros e paginação | backend | Pendente | 0 / 2 | — |
 | US-09 Relatório de top 5 clientes | backend | Pendente | 0 / 2 | — |
@@ -74,6 +74,10 @@
 | 2026-11-13 | Etapa 3, US-04, T-04.4 (C1) e T-04.5 (C2) (delegação 2 de 2) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1; PROP-04-01 era configuração, resolvida pelo orquestrador (`CG-05`) | Não | 91.113 |
 | 2026-11-13 | Etapa 3, US-05, T-05.1 e T-05.2 (delegação 1 de 2) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 84.048 |
 | 2026-11-13 | Etapa 3, US-05, T-05.3 (delegação 2 de 2) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 113.288 |
+| 2026-11-14 | Etapa 3, US-06, T-06.1 a T-06.3 (delegação 1 de 4) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 125.657 |
+| 2026-11-14 | Etapa 3, US-06, T-06.4 e T-06.5 (delegação 2 de 4) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 123.092 |
+| 2026-11-14 | Etapa 3, US-06, T-06.6 (delegação 3 de 4, com 1 rodada de CORRECAO, `CG-06`) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 113.804 |
+| 2026-11-14 | Etapa 3, US-06, T-06.7 (delegação 4 de 4) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 99.429 |
 
 ## Log de gates
 
@@ -97,3 +101,8 @@
 | 2026-11-13 | 3, US-04 (PR #6) | `gh pr checks 6`: backend, CodeQL (actions, python) e configuração | Aprovado; integrado com merge commit `4162800` |
 | 2026-11-13 | 3, US-05 (T-05.1 e T-05.2) | `dotnet build`, `dotnet test` (unit e integração), `dotnet format --verify-no-changes`, os 2 validadores, busca por silenciamento, pacotes contra a lista do BE-17 | Aprovado: 0 aviso; 19/19 e 28/28; pacotes novos (Swashbuckle, Mvc.Testing, EF SqlServer) todos na lista |
 | 2026-11-13 | 3, US-05 (T-05.3) | Os mesmos | Aprovado: 0 aviso; 19/19 e 35/35; nenhum pacote novo. O 413 de corpo *chunked* contra o Kestrel real fica para o QA |
+| 2026-11-13 | 3, US-05 (PR #7) | `gh pr checks 7` | Aprovado; integrado com merge commit `ecef84b` |
+| 2026-11-14 | 3, US-06 (T-06.1 a T-06.3) | `dotnet build`, `dotnet test` unitários, `dotnet format --verify-no-changes`, busca por silenciamento, rastreabilidade | Aprovado: 0 aviso; 64/64 (inclui arquitetura) |
+| 2026-11-14 | 3, US-06 (T-06.4 e T-06.5) | Os mesmos, mais integração | Aprovado: 0 aviso; 64/64 e 59/59. MCP não verificado (`AUTH_FAILED`, `CG-05`) |
+| 2026-11-14 | 3, US-06 (T-06.6) | Os mesmos | Rodada 1: testes verdes (74/74), mas `title` fora da spec 5.2 (`CG-06`), devolvido. Rodada 2: aprovado, 0 aviso; 64/64 e 74/74 |
+| 2026-11-14 | 3, US-06 (T-06.7) | Os mesmos, integração 2 vezes, e `validar_config.py` | Aprovado: 0 aviso; 64/64 e 77/77 nas 2 execuções |

@@ -383,3 +383,354 @@ Observação para o revisor de arquitetura: o checklist BE-23 procura o literal 
 ### Resposta a achados (US-05, delegação 2)
 
 Nenhum achado recebido.
+
+## Rodada 1 — 2026-11-13 — US-06 (delegação 1: T-06.1, T-06.2 e T-06.3, só o Core)
+
+### Tarefas
+
+| Tarefa | Status | Mensagem de commit prevista | Arquivos principais |
+|---|---|---|---|
+| T-06.1 | Pronta | `feat(core): modela pedido e itens com valor total em decimal (RN-11)` | `Core/Pedidos/{Pedido,ItemPedido}.cs`, `UnitTests/Pedidos/PedidoTests.cs` |
+| T-06.2 | Pronta | `feat(core): valida estrutura do pedido (RN-01 a RN-04)` | `Core/Pedidos/{CriarPedidoRequest,CriarPedidoItemRequest,CriarPedidoValidator}.cs`, `Core/Joya.Pedidos.Core.csproj` (FluentValidation 11.11.0), `UnitTests/Pedidos/CriarPedidoValidatorTests.cs` |
+| T-06.3 | Pronta | `feat(core): orquestra a criação do pedido (RN-05 a RN-08, RN-13)` | `Core/Pedidos/{PedidoService,IPedidoService,PedidoErrors,IPedidoRepository,PedidoResponse,PedidoItemResponse,ItemSemEstoque}.cs`, `Core/Clientes/*`, `Core/Produtos/*`, `Core/Estoque/IEstoqueRepository.cs`, `Core/Common/IUnitOfWork.cs`, `UnitTests/Apoio/*`, `UnitTests/Pedidos/PedidoServiceTests.cs` |
+
+Arquivos de mais de uma tarefa: nenhum. Dependência de ordem: o validator (T-06.2) usa as constantes `Pedido.MaximoItens` e `ItemPedido.QuantidadeMinima/Maxima` (T-06.1), então a T-06.2 só compila depois da T-06.1. O `csproj` do Core é só da T-06.2. Os arquivos de teste de cada tarefa são separados.
+
+### Portas definidas no Core (contrato para T-06.4 e T-06.5)
+
+| Porta (namespace) | Método | Devolve |
+|---|---|---|
+| `IClienteRepository` (`Core.Clientes`) | `ObterAsync(int id, ct)` | `ClienteResumo?` (`Id`, `Nome`, `Ativo`); `null` se não existir |
+| `IProdutoRepository` (`Core.Produtos`) | `ObterAtivosAsync(IReadOnlyCollection<int> ids, ct)` | `IReadOnlyList<ProdutoResumo>` (`Id`, `Nome`), só ativos |
+| `IProdutoRepository` | `ObterEstoquesAsync(IReadOnlyCollection<int> ids, ct)` | `IReadOnlyDictionary<int,int>` (id para estoque atual), só para a mensagem do 409 |
+| `IEstoqueRepository` (`Core.Estoque`) | `TentarBaixarAsync(int produtoId, int quantidade, ct)` | `decimal?`: preço do `OUTPUT inserted.Preco`, ou `null` com 0 linhas |
+| `IPedidoRepository` (`Core.Pedidos`) | `AdicionarAsync(Pedido pedido, ct)` | `Result<int>` com o id gerado; `PedidoErrors.ChaveIdempotenciaDuplicada()` na violação de `UX_Pedidos_ChaveIdempotencia` |
+| `IUnitOfWork` (`Core.Common`) | `ExecutarEmTransacaoAsync<T>(Func<CancellationToken, Task<Result<T>>> operacao, ct)` com `where T : notnull` | o `Result<T>` da operação; commit em `Success`, rollback em `Failure` |
+
+Notas de design:
+- `IPedidoService.CriarAsync(CriarPedidoRequest request, CancellationToken ct)` devolve `Result<PedidoResponse>`. Sem `chaveIdempotencia` e sem `ResultadoCriacao`: a idempotência é a T-12.1, que estende a assinatura. `Pedido` já tem `ChaveIdempotencia` (coluna do schema) e `Pedido.Criar(..., Guid? chaveIdempotencia = null)`.
+- Pedido e itens são gravados pelo `AdicionarAsync`; o service monta o `PedidoResponse` em memória (id vem do `Result<int>`, nomes de `ClienteResumo`/`ProdutoResumo`). Itens da resposta saem em ordem crescente de `ProdutoId`.
+- Fluxo do 409: dentro da transação o service tenta todas as baixas (spec 4.3 item 4), acumula as falhas e devolve `Failure` (rollback). Depois do rollback lê `ObterEstoquesAsync` e monta `ItemSemEstoque` (`ProdutoId`, `ProdutoNome`, `QuantidadeSolicitada`, `EstoqueDisponivel`). Extensões do `Error`: `produtoIds` (422) e `itens` (409), como na spec 5.2.
+- `ClienteResumo`/`ProdutoResumo` são `sealed record`; não se chamam `Cliente`/`Produto` para não cair na regra "entidade sem setter público" dos testes de arquitetura.
+- Entidades: `Pedido.Criar`/`ItemPedido.Criar` lançam `ArgumentException` se violados os invariantes (erro de programação, a validação estrutural vem antes). `DataPedido` é truncada em ms e UTC dentro de `Pedido.Criar`. `ItemPedido.Subtotal` é calculada (a T-06.4 deve ignorá-la no mapeamento EF). Não há construtor sem parâmetros: a T-06.4 mapeia por construtor privado ou por campo (`_itens`); `DataPedido` lida do banco volta com `Kind=Unspecified` (ajustar com conversor).
+- Relógio de teste: `UnitTests/Apoio/RelogioFalso` (subclasse de `TimeProvider`) em vez de `FakeTimeProvider`, para não acrescentar o pacote `Microsoft.Extensions.TimeProvider.Testing` (fora da lista). `UnidadeDeTrabalhoFalsa` executa a operação e conta commits e rollbacks.
+- O registro do service em DI não foi feito: a regra de arquitetura proíbe `Microsoft.Extensions.DependencyInjection` no Core (a skill citava `Core/DependencyInjection.cs`). Fica para a T-06.4/T-06.6, na Api/Infrastructure.
+- `PedidoErrors.ChaveIdempotenciaDuplicada()` foi antecipada (`Conflict`, `CHAVE_IDEMPOTENCIA_DUPLICADA`) porque a porta `AdicionarAsync` a cita (arquitetura, fluxo de criação); o tratamento (reapresentação) é da T-12.1/T-12.2.
+- `FluentValidation` 11.11.0 no Core (BE-17, aprovado). Nenhum outro pacote novo.
+
+### Testes criados ou alterados
+
+| Teste | Tipo | Cobre |
+|---|---|---|
+| `Criar_ItensValidos_CalculaValorTotalEmDecimal` | unit | RN-11, CA-01 (359,70) |
+| `Criar_PrecosComCentavos_SomaSemErroDeBinario`, `Criar_InstanteComTicks_TruncaDataEmMilissegundosEmUtc`, `Criar_InstanteComOffset_ConverteParaUtc` | unit | RN-11, RN-13 |
+| `Criar_SemItens_Lanca`, `Criar_MaisDeCinquentaItens_Lanca`, `Criar_CinquentaItens_Aceita`, `Criar_ProdutoRepetido_Lanca`, `Criar_ClienteNaoPositivo_Lanca`, `CriarItem_*` | unit | invariantes de RN-01 a RN-04 |
+| `Validate_ItensVazios_RetornaErroNoCampoItens`, `Validate_ItensAusentes_RetornaErroNoCampoItens` | unit | CA-02, RN-01 |
+| `Validate_QuantidadeForaDoLimite_RetornaErroNaQuantidade` (0, -5, 10001), `Validate_QuantidadeNosLimites_NaoTemErros` | unit | CA-03, RN-02 |
+| `Validate_ProdutoRepetido_RetornaErroDeDuplicidade` | unit | CA-04, RN-03 |
+| `Validate_MaisDeCinquentaItens_RetornaErroNoCampoItens`, `Validate_CinquentaItens_NaoTemErros` | unit | RN-01 |
+| `Validate_ClienteNaoPositivo_*`, `Validate_ProdutoNaoPositivo_*`, `Validate_PedidoValido_NaoTemErros` | unit | RN-04 |
+| `CriarAsync_PedidoValido_RetornaPedidoComPrecoDoBancoETotal` | unit | CA-01, RN-09, RN-11 |
+| `CriarAsync_ClienteInexistente_RetornaClienteNaoEncontrado` | unit | CA-05 |
+| `CriarAsync_ClienteInativo_RetornaClienteInativo` | unit | CA-06 |
+| `CriarAsync_ProdutosInvalidos_RetornaTodosOsIdsInvalidos` | unit | CA-07 |
+| `CriarAsync_EstoqueInsuficiente_RetornaConflitoSemGravar`, `CriarAsync_VariosItensSemEstoque_ListaTodosOsItens` | unit | CA-08, spec 4.3 item 4 |
+| `CriarAsync_ItensForaDeOrdem_BaixaEmOrdemCrescenteDeProdutoId` (`Received.InOrder`) | unit | spec 4.3 item 3 |
+| `CriarAsync_PedidoValido_UsaDataDoTimeProviderEmUtc`, `CriarAsync_RelogioComTicks_TruncaDataPedidoEmMilissegundos` | unit | RN-13, HL-20 |
+| `CriarAsync_ClienteInexistenteEProdutoInvalido_...Primeiro`, `CriarAsync_ClienteInativoEProdutoInvalido_...Primeiro`, `CriarAsync_ProdutoInvalido_NaoTentaBaixarEstoque` | unit | ordem da spec 4.2 |
+| `CriarAsync_AdicionarFalha_RepassaOErroEFazRollback`, `CriarAsync_TokenInformado_RepassaParaAsPortas` | unit | ADR-0004, regra de ouro 3 |
+
+Os testes de arquitetura `Entidades_Propriedades_NaoTemSetterPublico` e `MetodosAsync_Assinatura_...` agora têm alvos reais (Pedido, ItemPedido e os métodos `*Async` do Core) e passam.
+
+### Verificações executadas
+
+| Comando | Resultado | Resumo da saída |
+|---|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | Passou | `0 Aviso(s) 0 Erro(s)` |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | Passou | `Aprovado: 64, Falha: 0` (inclui arquitetura) |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` | Passou | `Aprovado: 35` (sem testes novos: nada de HTTP ou banco nesta delegação) |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | Passou | código 0 |
+
+### Evidência no banco (MCP `mssql`)
+
+Não se aplica: só o Core, sem I/O.
+
+### Desvios em relação à spec
+
+Nenhum. PROP: nenhuma.
+
+### Bloqueios e perguntas
+
+- Nenhum.
+
+### Resposta a achados (US-06, delegação 1)
+
+Nenhum achado recebido.
+
+## Rodada 1 — 2026-11-14 — US-06 (delegação 2: T-06.4 e T-06.5, Infrastructure)
+
+### Tarefas
+
+| Tarefa | Status | Mensagem de commit prevista | Arquivos principais |
+|---|---|---|---|
+| T-06.4 | Pronta | `feat(infra): mapeia o schema existente com EF Core` | `Infrastructure/Persistencia/{PedidosDbContext,UnitOfWork,ConversorDataUtc}.cs`, `Infrastructure/Persistencia/Configuracoes/{Cliente,Produto,Pedido,ItemPedido}Configuracao.cs`, `Infrastructure/Clientes/{Cliente,ClienteRepository}.cs`, `Infrastructure/Produtos/{Produto,ProdutoRepository}.cs`, `Infrastructure/Pedidos/PedidoRepository.cs`, `Infrastructure/Saude/VerificadorDeBanco.cs`, `Infrastructure/DependencyInjection.cs`, `IntegrationTests/Persistencia/{InfraestruturaReal,Arranjo,MapeamentoTests,UnitOfWorkTests,LeiturasTests}.cs` |
+| T-06.5 | Pronta | `feat(infra): debita estoque com instrução atômica (RN-08, RN-09)` | `Infrastructure/Estoque/EstoqueRepository.cs`, `IntegrationTests/Persistencia/EstoqueRepositoryTests.cs` |
+
+**Separação por tarefa (HL-24).** Trechos de uma tarefa em arquivo de outra, todos marcados com o comentário `// T-06.x`:
+
+| Arquivo | Dono | Trecho de outra tarefa | Efeito se o trecho for commitado junto |
+|---|---|---|---|
+| `Core/Pedidos/Pedido.cs` (sem commit, da T-06.1) | T-06.1 | `// T-06.4`: construtor privado de 4 parâmetros `(clienteId, dataPedido, chaveIdempotencia, valorTotal)` | Inofensivo para a T-06.1: é privado e não muda invariante nem teste. O EF Core não liga parâmetro de construtor a navegação, então a materialização precisa de um construtor sem a lista de itens, e os itens entram pelo campo `_itens`. Sugestão: commitar junto com a T-06.1, ou tirar as 6 linhas do commit da T-06.1 e devolvê-las no da T-06.4. |
+| `Infrastructure/DependencyInjection.cs` | T-06.4 | `// T-06.5`: os dois `using ...Estoque` e o registro `IEstoqueRepository → EstoqueRepository` | **Retirar obrigatoriamente do commit da T-06.4**: sem o `EstoqueRepository.cs`, o build quebra. |
+| `Infrastructure/Persistencia/PedidosDbContext.cs` | T-06.4 | `// T-06.5`: `DefaultTypeMapping<decimal>().HasPrecision(18, 2)` (tipo do escalar `OUTPUT inserted.Preco`) | Inofensivo na T-06.4: só define o mapeamento padrão dos escalares `decimal`. |
+| `IntegrationTests/Persistencia/Arranjo.cs` | T-06.4 | `EstoqueAsync`, usado só pelos testes da T-06.5 | Inofensivo. |
+
+**Registros adiados para a T-06.6 (Api).** O `AddInfrastructure` registra, todos como `Scoped`:
+- o `PedidosDbContext`;
+- o `IUnitOfWork`;
+- os quatro repositórios;
+- o `IVerificadorDeBanco`.
+
+Ele **não** registra o `IPedidoService` nem o `TimeProvider.System`. Os dois ficam no `Program.cs` da Api, como pedem a arquitetura (§3, item 6) e o BE-08, que espera exatamente um `TimeProvider.System` em `backend/src/Joya.Pedidos.Api`.
+
+Notas de design:
+- **Contexto.** O `PedidosDbContext` usa `UseSqlServer`, e a connection string `ConnectionStrings:Default` só é lida quando o contexto é criado, porque o `ApiFactory` injeta a configuração depois. Não há repetição automática no provedor nem estratégia de execução (ADR-0004, HL-23, BE-22).
+- **Mapeamento sobre o schema.** Foi escrito à mão sobre `database/01-schema.sql`:
+  - nomes de tabela, PK e FK iguais aos do banco (`PK_*`, `FK_ItensPedido_Pedidos`, `FK_ItensPedido_Produtos`, `FK_Pedidos_Clientes`), com `OnDelete(NoAction)`;
+  - tamanho e unicode de cada coluna iguais aos do banco, com `decimal(18,2)` e `datetime2(3)`;
+  - nenhum índice declarado no modelo (BE-18): os índices vivem só em `02-indices.sql`;
+  - `Clientes.CriadoEm` e `Produtos.CriadoEm` ficam fora do mapeamento, porque têm `DEFAULT` e a aplicação não as lê.
+- **ItemPedido.** `PedidoId` é propriedade de sombra, já que a entidade do Core não conhece o pai. `Subtotal` é ignorada. `Itens` usa `PropertyAccessMode.Field` sobre `_itens`.
+- **ConversorDataUtc.** Todo `DateTime` lido volta com `Kind = Utc` (spec 6.4, JSON com `Z`). Na gravação o valor não muda, porque a entidade já o truncou em milissegundos (HL-20).
+- **Entidades da Infrastructure.** `Cliente` e `Produto` existem só para mapear FK e consultas, com setters privados. O Core continua só com `ClienteResumo` e `ProdutoResumo`.
+- **Leituras.** Usam `AsNoTracking()` e projetam direto para o DTO do Core (BE-12, regra de ouro 10). `ObterAtivosAsync` e `ObterEstoquesAsync` passam os ids num único parâmetro JSON (`OPENJSON`, EF 8), o que dá um plano único para qualquer quantidade de itens.
+- **UnitOfWork.** Abre a transação com `BeginTransactionAsync(ReadCommitted)`, com RCSI ligado no banco.
+  - `Success`: `CommitAsync`.
+  - `Failure`: `RollbackAsync` e depois `ChangeTracker.Clear()`.
+  - Exceção: `ChangeTracker.Clear()` e propaga; o `DisposeAsync` da transação desfaz o que foi feito.
+- **PedidoRepository.AdicionarAsync.** Grava pedido e itens num único `SaveChanges`. Só vira `PedidoErrors.ChaveIdempotenciaDuplicada()` a `DbUpdateException` cuja `SqlException` tem número 2601 ou 2627 e cita `UX_Pedidos_ChaveIdempotencia` (ADR-0004, item 3). Qualquer outra falha de banco continua sendo exceção.
+- **VerificadorDeBanco.** Usa o mesmo `PedidosDbContext` (`Database.CanConnectAsync`), sem conexão ADO.NET própria. O CA-36 continua verde.
+- **EstoqueRepository.TentarBaixarAsync (T-06.5).**
+  - Chama `Database.SqlQuery<decimal>` com `FormattableString`: cada `{valor}` vira um parâmetro `@pN`.
+  - O texto é exatamente o da spec 4.3, com `OUTPUT inserted.Preco AS Value`, materializado por `ToListAsync` sem composição.
+  - Roda no `DbContext` do escopo e, portanto, na transação corrente do `IUnitOfWork`.
+  - Tem duas guardas contra erro de programação: quantidade ≤ 0 lança `ArgumentOutOfRangeException` (uma quantidade negativa somaria estoque), e baixa fora de transação lança `InvalidOperationException` (RN-10).
+
+### Testes criados ou alterados
+
+Todos os testes são de integração, contra o SQL Server do Testcontainers:
+- a Infrastructure é montada pelo próprio `AddInfrastructure`, com `ValidateOnBuild`;
+- a aplicação usa o login de menor privilégio `joya_app`;
+- o Arrange e o Assert usam `sa`, com SQL parametrizado.
+
+| Teste | Tipo | Cobre |
+|---|---|---|
+| `Mapeamento_ModeloEf_ColunasIguaisAoSchema` | integração | spec 6.2: modelo relacional do EF (tabela, coluna, tipo, nulidade e nomes de PK e FK) igual ao catálogo, exceto as duas colunas `CriadoEm` |
+| `Mapeamento_PedidoGravado_LeIgualAoSchema` | integração | spec 6.4, RN-11, RN-13 e HL-20: grava pelo EF, confere pelo SQL puro (`2026-11-14T12:34:56.123`, `40.99`, chave e itens) e relê pelo EF (`Kind = Utc`, itens e subtotais) |
+| `AdicionarAsync_ChaveIdempotenciaRepetida_RetornaChaveIdempotenciaDuplicada` | integração | RN-14, ADR-0004 item 3 |
+| `AdicionarAsync_SemChaveIdempotencia_GravaVariosPedidos` | integração | RN-14 (índice filtrado) |
+| `AdicionarAsync_OutraFalhaDeBanco_ContinuaExcecao` | integração | ADR-0004 item 3 (violação de FK, erro 547, continua exceção) |
+| `ExecutarEmTransacaoAsync_OperacaoSucesso_ConfirmaAlteracoes` | integração | RN-10 |
+| `ExecutarEmTransacaoAsync_OperacaoFalha_DesfazAlteracoes` | integração | RN-10 (o INSERT já enviado é desfeito e o `ChangeTracker` fica vazio) |
+| `ExecutarEmTransacaoAsync_OperacaoLanca_DesfazEPropaga` | integração | RN-10 |
+| `ExecutarEmTransacaoAsync_DepoisDeFalha_MesmoEscopoGravaDeNovo` | integração | RN-10 (sem o `Clear()`, o pedido desfeito seria reenviado) |
+| `ObterAsync_ClienteExistente_RetornaResumoComAtivo`, `ObterAsync_ClienteInexistente_RetornaNulo` | integração | RN-05, RN-06 |
+| `ObterAtivosAsync_AtivosInativosEInexistentes_RetornaSoAtivosOrdenados` | integração | RN-07 |
+| `ObterEstoquesAsync_Ids_RetornaEstoqueAtualInclusiveDeInativo` | integração | spec 5.2 (corpo do 409) |
+| `TentarBaixarAsync_EstoqueSuficiente_DebitaERetornaPreco` | integração | RN-08, RN-09 |
+| `TentarBaixarAsync_EstoqueInsuficiente_NaoDebita` | integração | RN-08, CA-08 (no nível do repositório) |
+| `TentarBaixarAsync_ConsomeTodoEstoque_ZeraEstoque` | integração | CA-09 (no nível do repositório) |
+| `TentarBaixarAsync_ProdutoInativo_NaoDebita`, `TentarBaixarAsync_ProdutoInexistente_RetornaNulo` | integração | RN-07 garantida pela própria instrução |
+| `TentarBaixarAsync_PrecoDeTabelaAlterado_RetornaPrecoVigente` | integração | RN-09, CA-11 (no nível do repositório) |
+| `TentarBaixarAsync_TransacaoDesfeita_EstoqueVolta` | integração | RN-10 |
+| `TentarBaixarAsync_ForaDeTransacao_LancaENaoDebita` | integração | RN-10 |
+| `TentarBaixarAsync_QuantidadeNaoPositiva_LancaENaoAlteraEstoque` (0 e -3) | integração | RN-02 (defesa em profundidade) |
+| `TentarBaixarAsync_BaixasConcorrentes_NuncaDebitaAlemDoEstoque` | integração | spec 4.3, RN-08: 20 baixas paralelas (20 contextos e 20 transações) sobre estoque 5 resultam em 5 preços, 15 nulos e estoque 0. O CA-10 via HTTP é da T-06.7. |
+
+Separação: `EstoqueRepositoryTests.cs` pertence só à T-06.5, e os demais arquivos de teste, à T-06.4.
+
+### Verificações executadas
+
+| Comando | Resultado | Resumo da saída |
+|---|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | Passou | `0 Aviso(s) 0 Erro(s)` |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | Passou | `Aprovado: 64, Falha: 0`, incluindo os testes de arquitetura (classes `sealed`, `CancellationToken` por último, Infrastructure sem ASP.NET Core) |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` | Passou | `Aprovado: 59, Falha: 0` (35 anteriores e 24 novos). `HealthTests` (CA-36) verdes com o verificador novo |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | Passou | código 0 |
+
+Greps do checklist (arquitetura §8), com `git grep --untracked`:
+
+| Item | Resultado |
+|---|---|
+| BE-06, BE-07 (pragma/NoWarn/SuppressMessage e `!`), BE-08 (`DateTime.Now/UtcNow`), BE-09, BE-10, BE-11 (`CancellationToken.None` em `src`), BE-13 (`.Include(` em `src`), BE-14b (`*Raw`), BE-18, BE-19, BE-22a | vazio |
+| BE-12 | só `Infrastructure/Estoque/EstoqueRepository.cs`, como esperado: o `SqlQuery` não rastreia |
+| BE-14a | só `Infrastructure/Estoque/EstoqueRepository.cs` |
+| BE-15 | **3 linhas, todas falso positivo.** `EstoqueRepository.cs:30` e `:34` são o próprio SQL da instrução atômica (`SET Estoque = Estoque - {quantidade}` e `AND Estoque >= {quantidade}`), executado pelo SQL Server e não pelo C#. `Core/Pedidos/PedidoErrors.cs:23` casa com `ItemSemEstoque>` (arquivo da delegação 1). Sugestão ao arquiteto: excluir `EstoqueRepository.cs` do grep e usar `\bEstoque\s*(...)`. |
+| BE-17 | só pacotes da lista; nenhum pacote novo nesta delegação |
+| BE-22b | só `Pedidos/PedidoRepository.cs` |
+
+### Evidência no banco (MCP `mssql`)
+
+**Não executada.** O MCP respondeu `AUTH_FAILED` ("Authentication failed for source 'joya'") em `explain_sql` e em `search_objects`, embora o contêiner `joya-pedidos-db-1` estivesse saudável. A senha do login `claude_mcp` que o MCP usa não confere com a do banco local. A correção depende do arquivo de variáveis de ambiente local, que este agente não lê.
+
+Consultas previstas para quando o acesso voltar:
+
+```sql
+-- Q7: baixa atômica. Esperado: Clustered Index Update com Seek em PK_Produtos (Id), predicado residual Ativo/Estoque.
+UPDATE dbo.Produtos SET Estoque = Estoque - 1 OUTPUT inserted.Preco AS Value WHERE Id = 1 AND Ativo = 1 AND Estoque >= 1;
+-- Q9: cliente. Esperado: Clustered Index Seek em PK_Clientes.
+SELECT Id, Nome, Ativo FROM dbo.Clientes WHERE Id = 1;
+-- Q10: produtos ativos. Esperado: OPENJSON + Nested Loops com Seek em PK_Produtos.
+SELECT p.Id, p.Nome FROM dbo.Produtos p WHERE p.Id IN (SELECT CAST([value] AS int) FROM OPENJSON(N'[1,2,3]')) AND p.Ativo = 1 ORDER BY p.Id;
+```
+
+Até lá, o efeito real no banco fica provado pelos testes de integração acima: contagens, estoque e linhas gravadas conferidos por SQL com `sa`.
+
+### Desvios em relação à spec
+
+Nenhum. PROP: nenhuma.
+
+### Bloqueios e perguntas
+
+- O MCP `mssql` responde `AUTH_FAILED` (ver acima). O desenvolvedor precisa conferir a senha do `claude_mcp` na configuração local do compose e do MCP.
+- O commit da T-06.4 precisa sair sem as linhas `// T-06.5` do `DependencyInjection.cs` (ver a tabela de separação).
+
+### Resposta a achados (US-06, delegação 2)
+
+Nenhum achado recebido.
+
+---
+
+## Rodada 1 — 2026-11-14 — US-06 (delegação 3: T-06.6, `POST /pedidos`)
+
+### Tarefa concluída
+
+| Tarefa | Mensagem de commit prevista |
+|---|---|
+| T-06.6 | `feat(api): expõe POST /pedidos` |
+
+### Arquivos
+
+- Novos: `Api/Controllers/PedidosController.cs`, `Api/Erros/ProblemasHttp.cs` (`Error.ToProblem` e 400 `VALIDACAO`), `Api/Erros/ValidationFilter.cs`, `IntegrationTests/Pedidos/PostPedidosTests.cs`.
+- Alterados: `Api/Program.cs` (filtro global, `InvalidModelStateResponseFactory`, `TimeProvider.System`, `IPedidoService`, `IValidator<CriarPedidoRequest>`), `IntegrationTests/Api/LimitesHttpTests.cs`, `IntegrationTests/Api/RotasDeTesteController.cs` (action `CriarPedido` removida; `eco` e `excecao` mantidas).
+
+### Testes (nome → CA)
+
+`PostPedidos_PedidoValido_Retorna201ComLocationEDebitaEstoque` → CA-01; `_SemItens_Retorna400SemGravar` → CA-02; `_QuantidadeInvalida_Retorna400` (0, -1, 10001) → CA-03; `_ProdutoRepetido_Retorna400` → CA-04; `_ClienteInexistente_Retorna422` → CA-05; `_ClienteInativo_Retorna422` → CA-06; `_ProdutosInvalidos_Retorna422ComIds` → CA-07; `_EstoqueInsuficiente_Retorna409SemGravarNada` → CA-08; `_ConsomeTodoEstoque_Retorna201EZeraEstoque` → CA-09; `_PrecoNoCorpo_IgnoraEUsaPrecoDeTabela` → CA-12; `_RegrasEmConflito_Retorna400Primeiro` → CA-14; extras: `_JsonMalformado_Retorna400`, `_TipoInvalidoNoCorpo_Retorna400`. Cada um confere status, `Content-Type`, `code`, `traceId` e o estado no banco (pedidos, itens, estoque) por SQL com `sa`.
+
+`LimitesHttpTests` agora mira `/pedidos` com `CriarPedidoRequest` válido. Como o banco é inalcançável nesses testes, a fábrica troca o `IPedidoService` por um dublê NSubstitute que aceita o pedido (esperam `201` no lugar de `200`). O corpo de exatamente 32 KiB é um pedido válido com propriedade extra de preenchimento.
+
+### Verificações
+
+| Comando | Resultado |
+|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | 0 aviso, 0 erro |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | 64 aprovados |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` | 74 aprovados (59 anteriores + 15 casos de `PostPedidos`) |
+| `dotnet format ... --verify-no-changes` | limpo (após um `dotnet format` que ajustou espaços) |
+
+### Evidência no banco (MCP `mssql`)
+
+Não consultado (CG-05, `AUTH_FAILED` conhecido). O efeito real fica provado pelos testes de integração, que leem `dbo.Pedidos`, `dbo.ItensPedido` e `dbo.Produtos` como `sa` depois de cada requisição.
+
+### Pontos de atenção e desvios
+
+1. **`ValidationFilter` e `ToProblem` não existiam.** O pedido dizia "ValidationFilter existente", mas só havia o desenho na arquitetura. Criei os dois (`Api/Erros/`), sem pacote novo: o filtro resolve `IValidator<T>` pelo DI e o validator é registrado à mão em `Program.cs` (`AddValidatorsFromAssemblyContaining` exigiria o pacote `FluentValidation.DependencyInjectionExtensions`). Cada novo request com validator precisa de uma linha de registro.
+2. **`Location` sem `CreatedAtAction`.** O `GET /pedidos/{id}` só chega na T-08.2. O controller usa `Created("/pedidos/{id}", pedido)`, igual à spec 5.2. Quando a T-08.2 existir, pode trocar por `CreatedAtAction`.
+3. **Problem Details pelo `IProblemDetailsService`.** O `[Produces("application/json")]` do controller sobrescrevia o tipo de mídia de um `ObjectResult`; por isso `ToProblem` devolve um `IActionResult` que escreve pelo serviço (`application/problem+json` e `traceId`, como os handlers de exceção). O `errors` do 400 vai como extensão de um `ProblemDetails` simples, porque o serviço não serializa a subclasse `ValidationProblemDetails`.
+4. **Tipo `type`/`title`.** `type` é `/erros/<code-em-kebab>` e `title` é genérico por tipo de erro; a spec mostra títulos específicos (ex.: "Estoque insuficiente"). O `code` e o `detail` seguem a spec. Se o título específico for exigido, vira PROP (o `Error` não tem título).
+5. `Idempotency-Key` não está ligado: `IPedidoService.CriarAsync` ainda não recebe a chave (US-12).
+6. Swagger real e `docs/contratos/openapi.json` ficam para a T-11.2; não conferi o JSON publicado nesta rodada.
+
+PROP-xx: nenhuma.
+
+### Resposta a achados (US-06, delegação 3)
+
+| Achado | O que foi feito | Onde | Teste que prova |
+|---|---|---|---|
+| Correção do orquestrador: item 4 (`title`) contraria a spec 5.2 | Mapa `code` → `title` em `ProblemasHttp` (`PRODUTO_NAO_ENCONTRADO`, `ESTOQUE_INSUFICIENTE`, `CLIENTE_NAO_ENCONTRADO`, `CLIENTE_INATIVO`, `CHAVE_IDEMPOTENCIA_DUPLICADA`); o título genérico por tipo fica de fallback. O item 4 acima está superado. | `Api/Erros/ProblemasHttp.cs` | asserções de `title` e `type` nos `PostPedidos_*` de 409 e 422 |
+| Nomes das extensões `produtoIds` e `itens` | Já saíam em camelCase; agora o teste de CA-08 confere a ordem e os nomes exatos `produtoId, produtoNome, quantidadeSolicitada, estoqueDisponivel`, e o de CA-07 confere `produtoIds`. Antes só se lia cada propriedade por nome. | `PostPedidosTests` | `PostPedidos_EstoqueInsuficiente_Retorna409SemGravarNada`, `PostPedidos_ProdutosInvalidos_Retorna422ComIds` |
+
+---
+
+## Rodada 1 — 2026-11-14 — US-06 (delegação 4: T-06.7, concorrência)
+
+### Tarefas
+
+| Tarefa | Status | Mensagem de commit prevista | Arquivos principais |
+|---|---|---|---|
+| T-06.7 | Pronta | `test(api): prova que o estoque não fica negativo sob concorrência (CA-10)` | `backend/tests/Joya.Pedidos.IntegrationTests/Pedidos/ConcorrenciaTests.cs` (único arquivo da tarefa, novo) |
+
+Nenhum arquivo de produção mudou nesta delegação (HL-24: o commit da T-06.7 leva só o arquivo de teste).
+
+### Como a simultaneidade é garantida (largada real)
+
+Duas barreiras, uma em cada camada:
+
+1. **Aplicação.** As 20 tarefas são criadas paradas num `TaskCompletionSource` e soltas juntas por um único `SetResult()`. Um `HttpClient` do `ApiFactory`; o `TestServer` processa cada requisição no *thread pool*.
+2. **Banco.** Antes da largada, o teste abre uma transação como `sa` e segura `SELECT … WITH (UPDLOCK, ROWLOCK)` na linha do produto (ou dos dois produtos). Só solta (`ROLLBACK`) quando conta, em `sys.dm_exec_requests` + `sys.dm_exec_sessions`, **20** requisições do login `joya_app` em espera `LCK_M_*`. O teste afirma `enfileiradas == 20`.
+
+Consequência: as 20 requisições já passaram pelas leituras (cliente, catálogo, sob `READ_COMMITTED_SNAPSHOT`) e estão dentro da própria transação, paradas no mesmo `UPDATE`, antes de qualquer baixa. A disputa pela linha é total e não depende da sorte do agendador. Uma implementação *check-then-act* vende acima do estoque de forma determinística nesse arranjo (ver mutação 2). Os prazos não são "timeout às cegas": 15 s para enfileirar (abaixo do timeout de comando do EF, 30 s) e 60 s de teto só para a suíte nunca travar; o observado é ~0,3 s por cenário.
+
+### Testes criados
+
+| Teste | Tipo | Cobre |
+|---|---|---|
+| `PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(5, 1, 5, 0)` | integração | CA-10 literal: estoque 5, 20 × 1 unidade → 5 × `201`, 15 × `409 ESTOQUE_INSUFICIENTE`, estoque final 0, 5 pedidos com o produto |
+| `PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(7, 2, 3, 1)` | integração | CA-10 com sobra: 20 × 2 unidades sobre estoque 7 → 3 × `201`, 17 × `409` com `estoqueDisponivel` 1, estoque final 1 |
+| `PostPedidos_DoisProdutosEmOrdensOpostas_SemDeadlockNemEstoqueNegativo` | integração | CA-10 + spec 4.3 itens 2, 3 e 4: metade dos corpos `[A, B]`, metade `[B, A]`; A (estoque 5) é o gargalo, B (estoque 8) sobra → 5 × `201`, 15 × `409` listando só A com saldo 0, A = 0, B = 3, 10 itens, zero `500` |
+
+Asserções de cada cenário: `enfileiradas == 20`; todo status é `201` ou `409` (nenhum `500`); contagem exata de `201` e `409`; `estoqueInicial − estoqueFinal == aceitos × quantidade`; estoque final igual ao esperado e `≥ 0`; cada `409` é `application/problem+json`, `code` `ESTOQUE_INSUFICIENTE`, um item com `produtoId`, `quantidadeSolicitada` e `estoqueDisponivel` corretos; cada `201` é `application/json` com `valorTotal = quantidade × preço`. No banco, como `sa`: os ids de `dbo.Pedidos` são exatamente os ids devolvidos nos `201`; `dbo.ItensPedido` tem uma linha por aceite com produto, quantidade e preço de tabela (RN-09); nenhum pedido com `ValorTotal` diferente da soma dos itens (RN-11) nem sem itens; no cenário de dois produtos, todo pedido tem exatamente 2 itens e o estoque de B só caiu pelos aceites (RN-10: as baixas de B dos recusados foram desfeitas).
+
+### Prova de que o teste pega a regressão (mutações temporárias, revertidas)
+
+Cada mutação foi aplicada, o filtro `ConcorrenciaTests` rodado e o arquivo restaurado (conferido por `diff` contra a cópia). Nenhuma ficou no código.
+
+| Mutação | Onde | Resultado do teste |
+|---|---|---|
+| 1. Tirar `AND Estoque >= {quantidade}` do `UPDATE` | `EstoqueRepository` | 3/3 falham: a 6ª baixa viola `CK_Produtos_Estoque` → `500` ("respostas … should satisfy 201 ou 409") |
+| 2. *Check-then-act*: `SELECT Estoque`, compara em C#, `UPDATE SET Estoque = @novo` | `EstoqueRepository` | 3/3 falham: `aceitos.Count should be 5 but was 20` e `should be 3 but was 20` (venda de 20 unidades com estoque 5, sem a CHECK perceber) |
+| 3. Ignorar a ordem por `ProdutoId` (`OrderBy(_ => 0)`) | `PedidoService` | `DoisProdutosEmOrdensOpostas` falha: 5 vítimas de *deadlock* (SqlException 1205, sessões 63, 64, 69, 70 e 72) viram `500`, sem *retry* (ADR-0004). Os dois cenários de um produto continuam verdes, como esperado |
+
+### Verificações executadas
+
+| Comando | Resultado | Resumo da saída |
+|---|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | Passou | `0 Aviso(s) 0 Erro(s)` |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | Passou | 64 aprovados |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` (3 execuções seguidas) | Passou 3/3 | 77 aprovados em cada (74 anteriores + 3 casos novos); 9 s, 20 s, 21 s |
+| `dotnet test … --filter "FullyQualifiedName~ConcorrenciaTests"` (5 execuções extras) | Passou 5/5 | cenários de um produto 237–358 ms; dois produtos ~2 s (primeiro da classe, inclui subir o host) |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | Passou | exit 0 (após renomear as constantes privadas para `_requisicoes` e `_preco`, IDE1006) |
+
+### Evidência no banco (MCP `mssql`)
+
+Não consultado (CG-05, `AUTH_FAILED` conhecido; e o cenário roda no contêiner do Testcontainers, não no banco do compose que o MCP enxerga). A evidência de banco está dentro do próprio teste, lida como `sa` no SQL Server real:
+
+```sql
+-- largada: sessões da API paradas no lock, antes de soltá-lo (afirmado = 20)
+SELECT COUNT(*) FROM sys.dm_exec_requests AS r
+JOIN sys.dm_exec_sessions AS s ON s.session_id = r.session_id
+WHERE s.login_name = N'joya_app' AND r.wait_type LIKE N'LCK[_]M[_]%';
+
+-- coerência: pedidos gravados = ids dos 201; total = soma dos itens
+SELECT STRING_AGG(CAST(Id AS varchar(12)), ',') WITHIN GROUP (ORDER BY Id) FROM dbo.Pedidos;
+SELECT COUNT(*) FROM dbo.Pedidos AS p
+WHERE p.ValorTotal <> ISNULL((SELECT SUM(i.Quantidade * i.PrecoUnitario) FROM dbo.ItensPedido AS i WHERE i.PedidoId = p.Id), -1);
+```
+
+Resultado: 20 sessões enfileiradas em todas as execuções; estoque final 0 (CA-10), 1 (sobra) e A = 0 / B = 3 (dois produtos); zero divergências.
+
+### Desvios em relação à spec
+
+| PROP | Texto atual da spec | Proposta | Motivo |
+|---|---|---|---|
+| — | — | — | Nenhum. O comportamento bate com a spec 4.3 e o CA-10; nenhum *deadlock* nem `500` com o código atual. |
+
+### Bloqueios e perguntas
+
+- Nenhum bloqueio.
+- Observação para QA/segurança: o arranjo usa `sa` só para Arrange/Assert e para a trava de largada, como os demais testes; a API continua como `joya_app`.
+
+### Resposta a achados (US-06, delegação 4)
+
+Nenhum achado recebido.

@@ -265,7 +265,16 @@
 - **Gate (rodado pelo orquestrador):** aprovado na rodada 1 nas duas delegações.
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (C2) e no Opus `high` (C3).
 
-<!-- Próximas entradas: E12 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E12 — Etapa 3: US-06, criar pedido com baixa atômica (`backend`) · 2026-11-14
+
+- **Pedido** ([prompt 26](prompts.md#prompt-26) e [prompt 27](prompts.md#prompt-27)): commits e PR da US-05; depois, integrar o PR #7 (`ecef84b`) e rodar a US-06.
+- **Quatro delegações, uma por nível e na ordem das dependências** (`HL-24`): T-06.1 a T-06.3 no Core (Sonnet `medium`), T-06.4 e T-06.5 na Infrastructure (Opus `high`), T-06.6 na Api (Sonnet `medium`) e T-06.7, concorrência (Opus `high`).
+- **Entregas:** entidades com total em `decimal`, validator RN-01 a RN-04, `PedidoService.CriarAsync` com baixa em ordem de `ProdutoId`, mapeamento EF sobre o schema sem migrations, `UnitOfWork` sem retry (`HL-23`), `UPDATE … OUTPUT inserted.Preco` atômico, `POST /pedidos` com 201, 400, 409, 413, 422 e 429 e o teste de 20 requisições simultâneas (CA-10). O agente provou o teste com três mutações (sem `Estoque >= q`, *check-then-act*, sem ordenação), todas detectadas.
+- **Correção do orquestrador (`CG-06`):** na T-06.6 o `title` dos erros saía genérico, fora da spec 5.2. O agente sugeriu PROP; o orquestrador recusou o desvio e devolveu a tarefa, resolvida na Api sem mudar a spec.
+- **Gate (rodado pelo orquestrador):** aprovado. 0 aviso, 64/64 unitários e 77/77 de integração. MCP `mssql` não verificado (`CG-05`, falta reiniciar).
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (C2) e no Opus `high` (C3).
+
+<!-- Próximas entradas: E13 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -274,8 +283,8 @@ Atualize a cada etapa.
 | Métrica | Valor |
 |---|---|
 | Decisões humanas registradas (`HL`) | 24 |
-| Erros da IA detectados e corrigidos (`CG`) | 5, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
+| Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
 | Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
-| Compactações de contexto da sessão | 6 |
+| Compactações de contexto da sessão | 7 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 12 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 16 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
