@@ -1,0 +1,169 @@
+<section aria-labelledby="titulo-novo-pedido">
+  <h1 id="titulo-novo-pedido" class="mb-4 text-2xl font-semibold">Novo pedido</h1>
+
+  <div aria-live="polite">
+    @switch (estadoApoio()) {
+      @case ('carregando') {
+        <p class="py-8 text-center text-slate-700" role="status">Carregando clientes e produtos…</p>
+      }
+      @case ('erro') {
+        <div role="alert" class="rounded border border-red-300 bg-red-50 p-4 text-red-900">
+          <p class="mb-3">Não foi possível carregar clientes e produtos.</p>
+          <button
+            type="button"
+            (click)="carregarApoio()"
+            class="rounded bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800 focus:outline-2 focus:outline-offset-2 focus:outline-red-700"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  @if (estadoApoio() === 'pronto') {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="confirmar()"
+      class="grid gap-6 rounded-lg border border-slate-200 bg-white p-4"
+    >
+      @if (erroServidor(); as erro) {
+        <div
+          #resumoErro
+          tabindex="-1"
+          role="alert"
+          class="rounded border border-red-300 bg-red-50 p-4 text-red-900 focus:outline-2 focus:outline-red-700"
+        >
+          <p class="font-medium">{{ erro.titulo }}</p>
+          <p>{{ erro.detalhe }}</p>
+        </div>
+      }
+
+      <div class="flex flex-col gap-1">
+        <label for="pedido-cliente" class="text-sm font-medium text-slate-800">Cliente</label>
+        <select
+          id="pedido-cliente"
+          formControlName="clienteId"
+          [attr.aria-invalid]="erroCliente() ? 'true' : null"
+          [attr.aria-describedby]="erroCliente() ? 'erro-cliente' : null"
+          class="rounded border border-slate-400 bg-white px-2 py-2 text-slate-900"
+        >
+          <option value="">Selecione um cliente</option>
+          @for (cliente of clientes(); track cliente.id) {
+            <option [value]="cliente.id">{{ cliente.nome }}</option>
+          }
+        </select>
+        @if (erroCliente(); as msg) {
+          <p id="erro-cliente" class="text-sm text-red-700">{{ msg }}</p>
+        }
+      </div>
+
+      <fieldset class="grid gap-4">
+        <legend class="mb-2 text-sm font-medium text-slate-800">Itens do pedido</legend>
+
+        @if (form.controls.itens.length === 0) {
+          <p class="text-sm text-slate-700">Nenhum item adicionado.</p>
+        }
+
+        <div formArrayName="itens" class="grid gap-4">
+          @for (item of form.controls.itens.controls; track item; let i = $index) {
+            <div
+              [formGroupName]="i"
+              class="grid gap-3 rounded border border-slate-200 p-3 sm:grid-cols-[2fr_1fr_auto] sm:items-start"
+            >
+              <div class="flex flex-col gap-1">
+                <label [for]="'item-produto-' + i" class="text-sm font-medium text-slate-800">
+                  Produto (item {{ i + 1 }})
+                </label>
+                <select
+                  [id]="'item-produto-' + i"
+                  formControlName="produtoId"
+                  [attr.aria-invalid]="erroProduto(item) ? 'true' : null"
+                  [attr.aria-describedby]="erroProduto(item) ? 'erro-produto-' + i : null"
+                  class="rounded border border-slate-400 bg-white px-2 py-2 text-slate-900"
+                >
+                  <option value="">Selecione um produto</option>
+                  @for (produto of produtos(); track produto.id) {
+                    <option [value]="produto.id">
+                      {{ produto.nome }} — {{ produto.preco | currency: 'BRL' }} (estoque {{ produto.estoque }})
+                    </option>
+                  }
+                </select>
+                @if (erroProduto(item); as msg) {
+                  <p [id]="'erro-produto-' + i" class="text-sm text-red-700">{{ msg }}</p>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label [for]="'item-quantidade-' + i" class="text-sm font-medium text-slate-800">
+                  Quantidade (item {{ i + 1 }})
+                </label>
+                <input
+                  [id]="'item-quantidade-' + i"
+                  type="number"
+                  inputmode="numeric"
+                  [min]="qtdMin"
+                  [max]="qtdMax"
+                  step="1"
+                  formControlName="quantidade"
+                  [attr.aria-invalid]="erroQuantidade(item) ? 'true' : null"
+                  [attr.aria-describedby]="erroQuantidade(item) ? 'erro-quantidade-' + i : null"
+                  class="rounded border border-slate-400 px-2 py-2 text-slate-900"
+                />
+                @if (erroQuantidade(item); as msg) {
+                  <p [id]="'erro-quantidade-' + i" class="text-sm text-red-700">{{ msg }}</p>
+                }
+              </div>
+
+              <button
+                type="button"
+                (click)="removerItem(i)"
+                class="rounded border border-slate-500 bg-white px-3 py-2 text-slate-900 hover:bg-slate-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 sm:mt-6"
+              >
+                Remover<span class="sr-only"> item {{ i + 1 }}</span>
+              </button>
+            </div>
+          }
+        </div>
+
+        <div>
+          <button
+            type="button"
+            (click)="adicionarItem()"
+            [disabled]="form.controls.itens.length >= maxItens"
+            class="rounded border border-blue-700 bg-white px-4 py-2 font-medium text-blue-800 hover:bg-blue-50 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-50"
+          >
+            Adicionar item
+          </button>
+        </div>
+      </fieldset>
+
+      <p class="text-slate-900">
+        Total estimado: <strong>{{ totalEstimado() | currency: 'BRL' }}</strong>
+        <span class="block text-sm text-slate-700">
+          Valor informativo. O preço final é definido pelo servidor ao confirmar.
+        </span>
+      </p>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          [disabled]="form.invalid || enviando()"
+          [attr.aria-describedby]="motivoBloqueio() ? 'motivo-bloqueio' : null"
+          class="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-50"
+        >
+          {{ enviando() ? 'Enviando…' : 'Confirmar pedido' }}
+        </button>
+        <a
+          routerLink="/pedidos"
+          class="rounded border border-slate-500 bg-white px-4 py-2 font-medium text-slate-900 hover:bg-slate-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
+        >
+          Cancelar
+        </a>
+        @if (motivoBloqueio(); as motivo) {
+          <p id="motivo-bloqueio" class="text-sm text-slate-800">{{ motivo }}</p>
+        }
+      </div>
+    </form>
+  }
+</section>
