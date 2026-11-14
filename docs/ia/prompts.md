@@ -330,3 +330,24 @@
 **2026-11-14**. Depois de o CI do PR #15 passar, com o README escrito e sem commit.
 
 > Sim, merge
+
+## Prompt 37
+<a id="prompt-37"></a>
+
+**2026-11-14**. Depois dos commits do README.
+
+> Sim, push e PR
+
+## Prompt 38
+<a id="prompt-38"></a>
+
+**2026-11-14**. Depois de o CI do PR #16 passar, com a US-16 delegada ao agente `frontend`.
+
+> Sim, merge
+
+## Prompt 39
+<a id="prompt-39"></a>
+
+**2026-11-14**. Depois de o gate do E2E da US-16 passar.
+
+> Sim, commit

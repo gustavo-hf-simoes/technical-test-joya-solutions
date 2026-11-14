@@ -50,7 +50,7 @@
 | ENU-L054 | Obrigatório | RNF-07 | US-06 | T-06.2, T-06.3 | `CriarAsync_ClienteInexistente_RetornaClienteNaoEncontrado`, `CriarAsync_EstoqueInsuficiente_RetornaConflitoSemGravar`, `Validate_ItensVazios_RetornaErroNoCampoItens` | 4f33672, 1b6564d |
 | ENU-L055 | Obrigatório | RNF-07 | US-04, US-06, US-08, US-09 | T-04.1, T-06.6, T-08.2, T-09.2 | `PostPedidos_SemItens_Retorna400SemGravar`, `GetPedidos_SemFiltro_RetornaPrimeiraPaginaOrdenada`, `GetTopClientes_SemPeriodo_Retorna400` | 027a0ff, 22132a4, 59eae2d, 9caca95 |
 | ENU-L056 | Contexto | — | — | — | — | — |
-| ENU-L058 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
+| ENU-L058 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | b292800 |
 | ENU-L059 | Contexto | — | — | — | — | — |
 | ENU-L061 | Obrigatório | RNF-04 | US-04, US-13 | T-04.5, T-13.1, T-13.2 | Manual: num clone limpo, docker compose up sobe db, api e frontend saudáveis a partir do docker-compose.yml da raiz | 994e5c0, ba65994, ffca2da |
 | ENU-L063 | Obrigatório | RNF-04, RF-08 | US-04 | T-04.1, T-04.4, T-04.5 | Manual: docker compose up aplica schema e carga pelo db-init sem passo manual, e subir de novo não duplica a carga | 027a0ff, d2c6c85, 994e5c0 |
@@ -70,7 +70,7 @@
 | ENU-L081 | Obrigatório | ENT-17 | US-01, US-18 | T-01.1, T-18.3 | Manual: git log da main mostra um merge por história, um commit por tarefa e nenhum squash ou force-push | 501ae41, e48c12e |
 | ENU-L082 | Obrigatório | ENT-18 | US-18 | T-18.6, T-18.7 | Manual: vídeo de até 10 minutos com o fluxo no Claude Code, com link no README | — |
 | ENU-L083 | Contexto | — | — | — | — | — |
-| ENU-L085 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
+| ENU-L085 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | b292800 |
 | ENU-L086 | Diferencial | ENT-20 | US-03 | T-03.1, T-03.3, T-03.4, T-03.5 | Manual: workflow do GitHub Actions verde em push e em pull request | 8b0384e |
 | ENU-L087 | Diferencial | ENT-21 | US-17, US-18 | T-17.1, T-17.2, T-18.6 | Manual: a URL do README abre a aplicação via HTTPS | — |
 | ENU-L088–L100 | Contexto | — | — | — | — | — |
