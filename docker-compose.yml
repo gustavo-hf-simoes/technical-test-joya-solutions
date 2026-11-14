@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml — banco (US-04) e API (US-13).
+# docker-compose.yml — banco (US-04), API e frontend (US-13).
 #
 #   db       SQL Server 2022, dados em volume nomeado, publicado só no loopback
 #            (MCP e `dotnet run`). Healthcheck real: só fica saudável com todos os bancos ONLINE
@@ -9,6 +9,7 @@
 #            (ADR-0003). Só começa com o db saudável e sai com 0.
 #   api      ASP.NET Core sem root (backend/Dockerfile). Conecta como joya_app (nunca sa),
 #            só depois do db-init concluir. Swagger só no loopback (127.0.0.1:8080).
+#   frontend Nginx sem root (frontend/Dockerfile): SPA em http://localhost:4200 e proxy /api -> api.
 #
 # Senhas: valores padrão de DESENVOLVIMENTO, sobrescrevíveis por variável de
 # ambiente ou por um .env local (modelo em .env.example). Em produção, nunca
@@ -75,6 +76,16 @@ services:
       ConnectionStrings__Default: Server=db,1433;Database=JoyaPedidos;User Id=joya_app;Password=${APP_SQL_PASSWORD:-Pedidos_Api_2026};Encrypt=True;TrustServerCertificate=True;
     ports:
       - "127.0.0.1:8080:8080"
+
+  frontend:
+    build: ./frontend
+    image: joya-pedidos-frontend:local
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "4200:8080"
 
 volumes:
   sqlserver-data:
