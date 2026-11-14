@@ -246,3 +246,10 @@
 **2026-11-13**. Depois de o disco C: encher durante o *pull* da imagem do SQL Server e o Docker parar.
 
 > Liberei espaço no disco C, pode prosseguir
+
+## Prompt 25
+<a id="prompt-25"></a>
+
+**2026-11-13**. Depois de aberto o PR #6, com o CI ainda rodando.
+
+> Siga a sequência da esteira, qual é o problema atual? é só aguardar o CI? se for o caso acompanhe e prossiga.

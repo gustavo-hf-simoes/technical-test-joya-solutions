@@ -256,7 +256,16 @@
 - **Gate (rodado pelo orquestrador):** reprovado na rodada 1 e aprovado na rodada 2.
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Opus `high` (C3) e no Sonnet `medium` (C1/C2).
 
-<!-- Próximas entradas: E11 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E11 — Etapa 3: US-05, base HTTP da API (`backend`) · 2026-11-13
+
+- **Pedido** ([prompt 25](prompts.md#prompt-25)): acompanhar o CI do PR #6 e seguir a esteira. O CI passou, e o orquestrador integrou o PR (`4162800`).
+- **Duas delegações em sequência**, porque as três tarefas mexem no `Program.cs`. T-05.1 e T-05.2 (C2) foram no Sonnet `medium`; a T-05.3 (C3) foi no Opus `high`. Cada bloco do `Program.cs` foi marcado com a tarefa, para um commit por tarefa (`HL-24`).
+- **Entregas:** Problem Details com `code` e `traceId`, 500 sem stack trace (CA-38), 415, Swagger, health checks `live` e `ready` com 503 quando o banco cai (CA-36), limite de corpo (413) e de taxa (429) por IP, configurável (`HL-12`, `HL-19`).
+- **Desenho sem PROP:** o `POST /pedidos` só nasce na US-06. O `backend` aplicou a política nomeada a uma rota só de teste e deixou o roteiro para a T-06.4. O TestServer não aplica o limite do Kestrel; por isso o 413 sai de um filtro global (opção 2 do ADR-0002), e o caso *chunked* fica para o QA.
+- **Gate (rodado pelo orquestrador):** aprovado na rodada 1 nas duas delegações.
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (C2) e no Opus `high` (C3).
+
+<!-- Próximas entradas: E12 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -269,4 +278,4 @@ Atualize a cada etapa.
 | Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
 | Compactações de contexto da sessão | 6 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 10 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 12 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
