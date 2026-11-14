@@ -113,7 +113,7 @@ Nível de isolamento: `READ COMMITTED` com `READ_COMMITTED_SNAPSHOT ON`. Leitore
 | **RN-10** | **Atomicidade.** Pedido, itens e baixas de estoque são gravados em uma única transação. |
 | **RN-11** | **Valor total.** `Pedidos.ValorTotal = Σ (Quantidade × PrecoUnitario)` dos itens, calculado pelo servidor e gravado junto com o pedido. Aritmética em `decimal`, sem `double`/`float` em nenhuma camada. |
 | **RN-12** | **Pedido imutável.** Após criado, pedido e itens não são alterados nem removidos (não há endpoint de `PUT`/`PATCH`/`DELETE`; o login da aplicação não precisa de `DELETE`). É o que torna segura a desnormalização de `ValorTotal`. |
-| **RN-13** | **Data do pedido.** `DataPedido` é atribuída pelo servidor (relógio injetável, `TimeProvider`), em **UTC**. O cliente não informa data. |
+| **RN-13** | **Data do pedido.** `DataPedido` é atribuída pelo servidor (relógio injetável, `TimeProvider`), em **UTC**, com precisão de milissegundos, truncada antes de gravar, de modo que o `201` e as leituras posteriores devolvem o mesmo instante (`HL-20`). O cliente não informa data. |
 | **RN-14** | **Idempotência (opcional para o chamador).** Se o cabeçalho `Idempotency-Key` (UUID) for enviado e já existir um pedido com essa chave, a API **não cria outro pedido nem debita estoque de novo**: devolve o pedido original. Protege contra duplo clique e *retry* após timeout de rede. **Corrida (`HL-14`):** se duas requisições com a mesma chave chegarem ao mesmo tempo e a gravação violar `UX_Pedidos_ChaveIdempotencia`, a transação da segunda é desfeita (o estoque volta) e a API devolve `200` com o pedido original e `Idempotent-Replayed: true`. |
 
 ### 4.5 Regras de consulta
@@ -136,7 +136,7 @@ Nível de isolamento: `READ COMMITTED` com `READ_COMMITTED_SNAPSHOT ON`. Leitore
 | Datas | Instantes: ISO 8601 UTC com sufixo `Z` (`2026-11-13T14:32:07.123Z`). Filtros: data pura `yyyy-MM-dd`. |
 | Erros | **RFC 9457 Problem Details**, `Content-Type: application/problem+json`, com as extensões `code` (estável, legível por máquina) e `traceId`. |
 | Cancelamento | Toda requisição propaga `CancellationToken` até o banco. |
-| Documentação | OpenAPI/Swagger em `/swagger` (ambiente Development e Docker). |
+| Documentação | OpenAPI/Swagger em `/swagger` (Development, Docker e ambiente de teste de integração). O documento publicado fica versionado em `docs/contratos/openapi.json` e é conferido por teste no backend e no frontend ([ADR-0005](adr/0005-contrato-openapi-versionado.md), `HL-21`). |
 
 **Cabeçalhos**
 
@@ -437,6 +437,8 @@ Schema:
 | `GET /health/live` | `200` | Processo no ar |
 | `GET /health/ready` | `200` / `503` | Verifica conexão com o SQL Server |
 
+O parâmetro `ativo` é opcional (`true`/`false`). Sem ele, a resposta traz todos os registros; valor que não é booleano → `400 VALIDACAO` (`HL-18`).
+
 Sem paginação em clientes e produtos: a carga de exemplo tem dezenas de linhas. Com catálogo real, seria busca incremental (typeahead) com paginação — registrado como evolução, não implementado.
 
 ## 6. Modelo de dados
@@ -598,11 +600,11 @@ CREATE NONCLUSTERED INDEX IX_ItensPedido_ProdutoId
 | ID | Requisito |
 |---|---|
 | **RNF-01** | **Integridade.** Nenhum cenário de concorrência resulta em estoque negativo ou venda acima do saldo (verificado por teste de integração com requisições paralelas). |
-| **RNF-02** | **Consultas indexadas.** Listagem e ranking resolvem com *index seek* nos índices da seção 6.3, sem *key lookup* e sem *scan* de `Pedidos`. Nenhuma consulta com N+1. |
+| **RNF-02** | **Consultas indexadas (`HL-17`).** Listagem **com filtro** e ranking resolvem com *index seek* nos índices da seção 6.3, sem *key lookup*. A listagem **sem filtro** é um *scan* ordenado de `IX_Pedidos_DataPedido` limitado por `TOP`, e o total dela é um *scan* do índice mais estreito de `Pedidos`. Nenhuma consulta com N+1. |
 | **RNF-03** | **Build limpo.** Zero warnings (`TreatWarningsAsErrors`), nullable reference types habilitado, analisadores do .NET ativos. |
 | **RNF-04** | **Um comando.** `docker compose up` sobe banco (com schema e carga), API e frontend sem passo manual e sem arquivo `.env` obrigatório. Subir de novo não falha nem duplica a carga (scripts idempotentes). Num clone limpo, `docker compose up`, sem flags, constrói as imagens e sobe tudo. `--build` só é necessário para reconstruir depois de mudar o código, e o README usa este mesmo texto (`HL-15`). |
 | **RNF-05** | **Observabilidade mínima.** Log estruturado em console; todo erro traz `traceId`; health checks de *liveness* e *readiness*. |
-| **RNF-06** | **Segurança básica.** Somente consultas parametrizadas; nenhuma mensagem de exceção ou stack trace exposta; contêineres da API e do frontend sem root; a aplicação não usa `sa`. **Limites contra abuso (`HL-12`):** tamanho máximo do corpo da requisição, com valor definido na arquitetura (`413`), e limite de taxa por IP no `POST /pedidos` com o *rate limiter* nativo do ASP.NET Core, sem dependência nova (`429 LIMITE_DE_TAXA` em Problem Details). |
+| **RNF-06** | **Segurança básica.** Somente consultas parametrizadas; nenhuma mensagem de exceção ou stack trace exposta; contêineres da API e do frontend sem root; a aplicação não usa `sa`. **Limites contra abuso (`HL-12`):** tamanho máximo do corpo da requisição, com valor definido na arquitetura (`413`), e limite de taxa por IP no `POST /pedidos` com o *rate limiter* nativo do ASP.NET Core, sem dependência nova (`429 LIMITE_DE_TAXA` em Problem Details). Valores no [ADR-0002](adr/0002-limites-contra-abuso.md). Os testes de integração rodam com o limite de taxa elevado por configuração, para que os cenários de concorrência (CA-10, CA-37) não esbarrem nele; o limite em si é provado por `PostPedidos_RajadaAcimaDoLimite_Retorna429`, com um limite baixo (`HL-19`). |
 | **RNF-07** | **Testabilidade.** Regras de negócio testáveis sem banco (portas no Core); relógio injetável; testes de integração contra SQL Server real aplicando os mesmos scripts de `database/`. |
 | **RNF-08** | **Acessibilidade e `pt-BR` (`HL-13`).** Moeda como `R$ 1.234,56` e datas como `dd/MM/yyyy`, em `pt-BR`; todo campo com `label` associado; mensagens de erro ligadas ao campo; formulários navegáveis por teclado; contraste legível. Vale para os CA-28 a CA-32. |
 
@@ -875,6 +877,8 @@ Funcionalidade: Telas de pedidos
     E os dados digitados são preservados para correção
     E a lista de produtos é recarregada com o estoque atual
 ```
+
+A tela de criação envia `Idempotency-Key` gerada ao abrir o formulário e a reutiliza em todo reenvio do mesmo formulário (RN-14, `HL-22`). Um formulário novo, depois de um pedido criado, gera outra chave.
 
 ### 8.5 Endpoints de apoio e convenções (`HL-11`)
 
