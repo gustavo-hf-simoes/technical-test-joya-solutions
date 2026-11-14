@@ -113,7 +113,8 @@ npm --prefix frontend run build
 npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless
 
 # Aplicação completa (banco com schema e carga, API e frontend)
-docker compose up --build        # http://localhost:4200 · API em http://localhost:8080/swagger
+docker compose up                # http://localhost:4200 · API em http://localhost:8080/swagger
+docker compose up --build        # só para reconstruir as imagens depois de mudar o código (HL-15)
 
 # Somente o banco (para rodar a API pelo dotnet e para o MCP)
 docker compose up -d db db-init

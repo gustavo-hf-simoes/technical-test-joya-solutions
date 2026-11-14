@@ -114,7 +114,7 @@ Nível de isolamento: `READ COMMITTED` com `READ_COMMITTED_SNAPSHOT ON`. Leitore
 | **RN-11** | **Valor total.** `Pedidos.ValorTotal = Σ (Quantidade × PrecoUnitario)` dos itens, calculado pelo servidor e gravado junto com o pedido. Aritmética em `decimal`, sem `double`/`float` em nenhuma camada. |
 | **RN-12** | **Pedido imutável.** Após criado, pedido e itens não são alterados nem removidos (não há endpoint de `PUT`/`PATCH`/`DELETE`; o login da aplicação não precisa de `DELETE`). É o que torna segura a desnormalização de `ValorTotal`. |
 | **RN-13** | **Data do pedido.** `DataPedido` é atribuída pelo servidor (relógio injetável, `TimeProvider`), em **UTC**. O cliente não informa data. |
-| **RN-14** | **Idempotência (opcional para o chamador).** Se o cabeçalho `Idempotency-Key` (UUID) for enviado e já existir um pedido com essa chave, a API **não cria outro pedido nem debita estoque de novo**: devolve o pedido original. Protege contra duplo clique e *retry* após timeout de rede. |
+| **RN-14** | **Idempotência (opcional para o chamador).** Se o cabeçalho `Idempotency-Key` (UUID) for enviado e já existir um pedido com essa chave, a API **não cria outro pedido nem debita estoque de novo**: devolve o pedido original. Protege contra duplo clique e *retry* após timeout de rede. **Corrida (`HL-14`):** se duas requisições com a mesma chave chegarem ao mesmo tempo e a gravação violar `UX_Pedidos_ChaveIdempotencia`, a transação da segunda é desfeita (o estoque volta) e a API devolve `200` com o pedido original e `Idempotent-Replayed: true`. |
 
 ### 4.5 Regras de consulta
 
@@ -155,10 +155,12 @@ Nível de isolamento: `READ COMMITTED` com `READ_COMMITTED_SNAPSHOT ON`. Leitore
 | 400 | `VALIDACAO` | Corpo malformado, tipos inválidos, RN-01…04, parâmetros de consulta inválidos, RN-15 |
 | 404 | `PEDIDO_NAO_ENCONTRADO` | `GET /pedidos/{id}` com id inexistente |
 | 409 | `ESTOQUE_INSUFICIENTE` | RN-08 |
+| 413 | — | Corpo da requisição acima do limite (RNF-06, `HL-12`) |
 | 415 | — | `Content-Type` não suportado |
 | 422 | `CLIENTE_NAO_ENCONTRADO` | RN-05 |
 | 422 | `CLIENTE_INATIVO` | RN-06 |
 | 422 | `PRODUTO_NAO_ENCONTRADO` | RN-07 |
+| 429 | `LIMITE_DE_TAXA` | Limite de requisições por IP no `POST /pedidos` excedido (RNF-06, `HL-12`). Traz `Retry-After` |
 | 500 | `ERRO_INTERNO` | Falha não prevista. Nunca expõe stack trace nem mensagem de exceção. |
 
 **Por que `422` e não `404` para cliente inexistente no `POST`.** `404` significa que o recurso da URL (`/pedidos`) não existe, o que é falso. O corpo é sintaticamente válido, mas referencia uma entidade que não existe: é exatamente o caso de `422 Unprocessable Content`. **Por que `409` para estoque.** A requisição é válida e pode ter sucesso mais tarde sem nenhuma alteração; ela conflita com o estado atual do recurso — semântica de `409 Conflict`.
@@ -598,10 +600,11 @@ CREATE NONCLUSTERED INDEX IX_ItensPedido_ProdutoId
 | **RNF-01** | **Integridade.** Nenhum cenário de concorrência resulta em estoque negativo ou venda acima do saldo (verificado por teste de integração com requisições paralelas). |
 | **RNF-02** | **Consultas indexadas.** Listagem e ranking resolvem com *index seek* nos índices da seção 6.3, sem *key lookup* e sem *scan* de `Pedidos`. Nenhuma consulta com N+1. |
 | **RNF-03** | **Build limpo.** Zero warnings (`TreatWarningsAsErrors`), nullable reference types habilitado, analisadores do .NET ativos. |
-| **RNF-04** | **Um comando.** `docker compose up` sobe banco (com schema e carga), API e frontend sem passo manual e sem arquivo `.env` obrigatório. Subir de novo não falha nem duplica a carga (scripts idempotentes). |
+| **RNF-04** | **Um comando.** `docker compose up` sobe banco (com schema e carga), API e frontend sem passo manual e sem arquivo `.env` obrigatório. Subir de novo não falha nem duplica a carga (scripts idempotentes). Num clone limpo, `docker compose up`, sem flags, constrói as imagens e sobe tudo. `--build` só é necessário para reconstruir depois de mudar o código, e o README usa este mesmo texto (`HL-15`). |
 | **RNF-05** | **Observabilidade mínima.** Log estruturado em console; todo erro traz `traceId`; health checks de *liveness* e *readiness*. |
-| **RNF-06** | **Segurança básica.** Somente consultas parametrizadas; nenhuma mensagem de exceção ou stack trace exposta; contêineres da API e do frontend sem root; a aplicação não usa `sa`. |
+| **RNF-06** | **Segurança básica.** Somente consultas parametrizadas; nenhuma mensagem de exceção ou stack trace exposta; contêineres da API e do frontend sem root; a aplicação não usa `sa`. **Limites contra abuso (`HL-12`):** tamanho máximo do corpo da requisição, com valor definido na arquitetura (`413`), e limite de taxa por IP no `POST /pedidos` com o *rate limiter* nativo do ASP.NET Core, sem dependência nova (`429 LIMITE_DE_TAXA` em Problem Details). |
 | **RNF-07** | **Testabilidade.** Regras de negócio testáveis sem banco (portas no Core); relógio injetável; testes de integração contra SQL Server real aplicando os mesmos scripts de `database/`. |
+| **RNF-08** | **Acessibilidade e `pt-BR` (`HL-13`).** Moeda como `R$ 1.234,56` e datas como `dd/MM/yyyy`, em `pt-BR`; todo campo com `label` associado; mensagens de erro ligadas ao campo; formulários navegáveis por teclado; contraste legível. Vale para os CA-28 a CA-32. |
 
 ## 8. Critérios de aceite (BDD)
 
@@ -703,8 +706,8 @@ Funcionalidade: Criar pedido
 
   # CA-13
   Cenário: Repetir a requisição com a mesma Idempotency-Key não duplica o pedido
-    Dado que enviei POST /pedidos com Idempotency-Key "K" e recebi 201 com o pedido 1042
-    Quando eu envio novamente POST /pedidos com Idempotency-Key "K"
+    Dado que enviei POST /pedidos com Idempotency-Key "3f2b8c1e-7a4d-4e9f-9b21-5c6d8e0f1a2b" e recebi 201 com o pedido 1042
+    Quando eu envio novamente POST /pedidos com Idempotency-Key "3f2b8c1e-7a4d-4e9f-9b21-5c6d8e0f1a2b"
     Então a resposta é 200 com o pedido 1042 e o cabeçalho Idempotent-Replayed: true
     E o estoque foi debitado uma única vez
 
@@ -712,6 +715,18 @@ Funcionalidade: Criar pedido
   Cenário: Ordem de avaliação das regras
     Quando eu envio POST /pedidos para o cliente 9999 com 99999 unidades do produto 8888
     Então a resposta é 400 (quantidade fora do limite), e não 422 nem 409
+
+  # CA-37 (HL-14)
+  Cenário: Chave de idempotência inválida
+    Quando eu envio POST /pedidos com Idempotency-Key "K"
+    Então a resposta é 400 com code "VALIDACAO"
+
+  # CA-37 (HL-14)
+  Cenário: Duas requisições simultâneas com a mesma Idempotency-Key
+    Quando eu envio ao mesmo tempo dois POST /pedidos iguais com Idempotency-Key "3f2b8c1e-7a4d-4e9f-9b21-5c6d8e0f1a2b"
+    Então uma resposta é 201 e a outra é 200 com o mesmo pedido e Idempotent-Replayed: true
+    E existe um único pedido com essa chave
+    E o estoque foi debitado uma única vez
 ```
 
 ### 8.2 Listagem de pedidos
@@ -809,9 +824,21 @@ Funcionalidade: Top 5 clientes por valor
   Cenário: O relatório concorda com a soma dos itens
     Quando eu peço o ranking de 2026
     Então o valorTotal de cada cliente é igual a SUM(Quantidade * PrecoUnitario) dos itens dos seus pedidos de 2026
+
+  # CA-33 (HL-10)
+  Cenário: Query da Parte 4 corrigida
+    Dado a carga de exemplo
+    Quando executo a query corrigida da Parte 4 (arquivo em database/)
+    Então ela devolve o ranking completo dos clientes com compra em 2026, em ordem decrescente de total, com desempate pelo menor Id
+    E há uma linha por ClienteId, de modo que clientes homônimos aparecem separados
+    E clientes sem compra em 2026 não aparecem
+    E os 5 primeiros coincidem com GET /relatorios/top-clientes?dataInicio=2026-01-01&dataFim=2026-12-31
+    E o plano de execução não tem scan de Pedidos nem função sobre DataPedido
 ```
 
 ### 8.4 Frontend
+
+Todos os cenários desta seção seguem a RNF-08 (acessibilidade e `pt-BR`, `HL-13`).
 
 ```gherkin
 Funcionalidade: Telas de pedidos
@@ -849,7 +876,40 @@ Funcionalidade: Telas de pedidos
     E a lista de produtos é recarregada com o estoque atual
 ```
 
+### 8.5 Endpoints de apoio e convenções (`HL-11`)
+
+```gherkin
+Funcionalidade: Endpoints de apoio e convenções HTTP
+
+  # CA-34
+  Cenário: Consultar pedido por id
+    Dado o pedido 1042 com 2 itens
+    Quando eu envio GET /pedidos/1042
+    Então a resposta é 200 com o pedido e seus 2 itens
+    E GET /pedidos/999999 responde 404 com code "PEDIDO_NAO_ENCONTRADO"
+
+  # CA-35
+  Cenário: Catálogo para os seletores
+    Dado clientes e produtos ativos e inativos na carga
+    Quando eu envio GET /clientes?ativo=true e GET /produtos?ativo=true
+    Então cada resposta é 200 só com os registros ativos, ordenados por nome
+
+  # CA-36
+  Cenário: Health checks
+    Quando eu envio GET /health/live
+    Então a resposta é 200
+    E GET /health/ready responde 200 com o banco disponível e 503 sem o banco
+
+  # CA-38
+  Cenário: Content-Type não suportado e falha inesperada
+    Quando eu envio POST /pedidos com Content-Type text/plain
+    Então a resposta é 415
+    E uma falha não prevista responde 500 com code "ERRO_INTERNO" em Problem Details, sem stack trace
+```
+
 ## 9. Rastreabilidade
+
+Esta tabela é um resumo. A matriz oficial, validada no CI, é [docs/esteira/rastreabilidade.md](esteira/rastreabilidade.md) (`HL-16`).
 
 | Requisito do enunciado | Regras | Critérios | Teste |
 |---|---|---|---|
@@ -860,9 +920,13 @@ Funcionalidade: Telas de pedidos
 | `GET /pedidos` com filtros e paginação | RN-15, RN-16 | CA-15…CA-20 | Integração |
 | `GET /relatorios/top-clientes` | RN-17 | CA-21…CA-27 | Integração |
 | Tabelas, PKs, FKs, índices | Seção 6 | RNF-02 | Integração (aplica `database/*.sql`) + inspeção via MCP |
-| Parte 4 — debug da query | RN-15, RN-17 | CA-22, CA-23 | Script comparativo em `database/` + README |
+| Parte 4 — debug da query | RN-15, RN-17 | CA-22, CA-23, CA-33 | Script comparativo em `database/` + README |
 | Frontend: listagem e criação | — | CA-28…CA-32 | E2E Playwright (CA-30) + testes de componente |
 | Docker com um comando | RNF-04 | — | Verificação manual + job de CI |
+| Idempotência | RN-14 | CA-13, CA-37 | Integração (inclui a corrida) |
+| Endpoints de apoio e convenções | — | CA-34, CA-35, CA-36, CA-38 | Integração |
+| Limites contra abuso | RNF-06 | — | Integração (`413`, `429`) |
+| Acessibilidade e `pt-BR` | RNF-08 | CA-28…CA-32 | Testes de componente + E2E |
 
 ## 10. Premissas e pontos em aberto
 
@@ -876,3 +940,4 @@ Decisões tomadas por falta de definição no enunciado. Qualquer uma pode ser r
 | P4 | `Idempotency-Key` é opcional e não valida o corpo. | Tornar obrigatório ou gravar hash do corpo para devolver `422` em reuso com corpo diferente. |
 | P5 | Limites de 50 itens por pedido e 10 000 unidades por item. | Ajuste de constantes. |
 | P6 | Relatório é fixo em 5 posições. | Adicionar parâmetro `limite` com teto. |
+| P7 | A query corrigida da Parte 4 devolve o **ranking completo** dos clientes com compra em 2026, e não só 5, porque a original não tem `TOP` (`HL-10`). | Acrescentar `TOP 5` ao script; o CA-33 continua válido nos 5 primeiros. |

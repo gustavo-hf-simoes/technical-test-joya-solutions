@@ -3,7 +3,7 @@ name: product-owner
 description: Etapa 1 da esteira. Analisa o enunciado da vaga e a spec, produz a análise de requisitos funcionais e não funcionais rastreada linha a linha e o backlog épico → histórias → tarefas. Use no início da esteira ou quando o enunciado, a spec ou o escopo mudarem. Não escreve código.
 tools: Read, Grep, Glob, Write, Edit
 model: opus
-effort: high
+effort: medium
 color: purple
 hooks:
   PreToolUse:
