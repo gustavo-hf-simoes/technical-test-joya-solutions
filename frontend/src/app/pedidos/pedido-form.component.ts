@@ -31,6 +31,7 @@ import { ClientesApi } from '../core/api/clientes-api';
 import { ClienteResponse } from '../core/api/clientes.models';
 import { PedidosApi } from '../core/api/pedidos-api';
 import { CriarPedidoRequest } from '../core/api/pedidos.models';
+import { gerarUuid } from '../core/uuid';
 import { ProblemaApi } from '../core/api/problema-api.model';
 import { ProdutosApi } from '../core/api/produtos-api';
 import { ProdutoResponse } from '../core/api/produtos.models';
@@ -90,7 +91,7 @@ export class PedidoFormComponent {
   readonly maxItens = MAX_ITENS;
 
   /** HL-22 / RN-14: gerada uma vez ao abrir o formulário e reutilizada em todo reenvio. */
-  private readonly idempotencyKey = crypto.randomUUID();
+  private readonly idempotencyKey = gerarUuid();
 
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly produtos = signal<ProdutoResponse[]>([]);
