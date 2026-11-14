@@ -1,0 +1,148 @@
+<section aria-labelledby="titulo-pedidos">
+  <h1 id="titulo-pedidos" class="mb-4 text-2xl font-semibold">Pedidos</h1>
+
+  <!-- T-14.3: filtros -->
+  <form
+    [formGroup]="filtros"
+    (ngSubmit)="aplicar()"
+    class="mb-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-4 sm:items-end"
+  >
+    <div class="flex flex-col gap-1">
+      <label for="filtro-cliente" class="text-sm font-medium text-slate-800">Cliente</label>
+      <select
+        id="filtro-cliente"
+        formControlName="clienteId"
+        class="rounded border border-slate-400 bg-white px-2 py-2 text-slate-900"
+      >
+        <option value="">Todos os clientes</option>
+        @for (cliente of clientes(); track cliente.id) {
+          <option [value]="cliente.id">{{ cliente.nome }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="filtro-data-inicio" class="text-sm font-medium text-slate-800">Data inicial</label>
+      <input
+        id="filtro-data-inicio"
+        type="date"
+        formControlName="dataInicio"
+        [attr.aria-invalid]="periodoInvalido()"
+        [attr.aria-describedby]="periodoInvalido() ? 'erro-periodo' : null"
+        class="rounded border border-slate-400 px-2 py-2 text-slate-900"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="filtro-data-fim" class="text-sm font-medium text-slate-800">Data final</label>
+      <input
+        id="filtro-data-fim"
+        type="date"
+        formControlName="dataFim"
+        [attr.aria-invalid]="periodoInvalido()"
+        [attr.aria-describedby]="periodoInvalido() ? 'erro-periodo' : null"
+        class="rounded border border-slate-400 px-2 py-2 text-slate-900"
+      />
+    </div>
+
+    <div class="flex gap-2">
+      <button
+        type="submit"
+        class="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
+      >
+        Aplicar
+      </button>
+      <button
+        type="button"
+        (click)="limpar()"
+        class="rounded border border-slate-500 bg-white px-4 py-2 font-medium text-slate-900 hover:bg-slate-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
+      >
+        Limpar
+      </button>
+    </div>
+
+    <p id="erro-periodo" role="alert" class="text-sm text-red-700 sm:col-span-4">
+      @if (periodoInvalido()) {
+        A data final deve ser igual ou posterior à data inicial.
+      }
+    </p>
+  </form>
+
+  <!-- T-14.4: estados (carregando, erro, vazio) e T-14.3: sucesso com tabela -->
+  <div aria-live="polite" [attr.aria-busy]="estado().tipo === 'carregando'">
+    @switch (estado().tipo) {
+      @case ('carregando') {
+        <p class="py-8 text-center text-slate-700" role="status">Carregando pedidos…</p>
+      }
+      @case ('erro') {
+        <div role="alert" class="rounded border border-red-300 bg-red-50 p-4 text-red-900">
+          <p class="mb-3">Não foi possível carregar os pedidos.</p>
+          <button
+            type="button"
+            (click)="tentarNovamente()"
+            class="rounded bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800 focus:outline-2 focus:outline-offset-2 focus:outline-red-700"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      }
+    }
+
+    @if (estado(); as e) {
+      @if (e.tipo === 'sucesso') {
+        @if (e.pagina.items.length === 0) {
+          <p class="py-8 text-center text-slate-700">Nenhum pedido encontrado</p>
+        } @else {
+          <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+            <table class="w-full text-left text-sm">
+              <caption class="sr-only">
+                Lista de pedidos
+              </caption>
+              <thead class="bg-slate-100 text-slate-800">
+                <tr>
+                  <th scope="col" class="px-4 py-3">Data</th>
+                  <th scope="col" class="px-4 py-3">Cliente</th>
+                  <th scope="col" class="px-4 py-3 text-right">Itens</th>
+                  <th scope="col" class="px-4 py-3 text-right">Valor total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pedido of e.pagina.items; track pedido.id) {
+                  <tr class="border-t border-slate-200">
+                    <td class="px-4 py-3">{{ pedido.dataPedido | date: 'dd/MM/yyyy' }}</td>
+                    <th scope="row" class="px-4 py-3 font-normal">{{ pedido.clienteNome }}</th>
+                    <td class="px-4 py-3 text-right">{{ pedido.quantidadeItens }}</td>
+                    <td class="px-4 py-3 text-right">{{ pedido.valorTotal | currency: 'BRL' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <nav aria-label="Paginação" class="mt-4 flex items-center justify-between">
+            <button
+              type="button"
+              (click)="irParaPagina(e.pagina.page - 1)"
+              [disabled]="e.pagina.page <= 1"
+              class="rounded border border-slate-500 bg-white px-4 py-2 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <p>
+              Página {{ e.pagina.page }} de {{ e.pagina.totalPages }} ({{ e.pagina.totalItems }}
+              {{ e.pagina.totalItems === 1 ? 'pedido' : 'pedidos' }})
+            </p>
+            <button
+              type="button"
+              (click)="irParaPagina(e.pagina.page + 1)"
+              [disabled]="e.pagina.page >= e.pagina.totalPages"
+              class="rounded border border-slate-500 bg-white px-4 py-2 disabled:opacity-50"
+            >
+              Próxima
+            </button>
+          </nav>
+        }
+      }
+    }
+  </div>
+</section>
