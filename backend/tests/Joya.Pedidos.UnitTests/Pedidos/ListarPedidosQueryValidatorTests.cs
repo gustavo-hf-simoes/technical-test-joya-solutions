@@ -81,6 +81,12 @@ public sealed class ListarPedidosQueryValidatorTests
         Campos(resultado).ShouldBe(["DataFim"]);
     }
 
+    [Fact] // SEC-03, RN-15
+    public void Validate_DataFimNoMaximoDoCalendario_RetornaErroNoCampoDataFim()
+    {
+        Campos(_validator.Validate(new ListarPedidosQuery(DataFim: "9999-12-31"))).ShouldBe(["DataFim"]);
+    }
+
     [Fact] // RN-15: inicio = fim e valido
     public void Validate_InicioIgualAoFim_NaoTemErros()
     {

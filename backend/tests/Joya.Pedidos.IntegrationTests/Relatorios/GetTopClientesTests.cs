@@ -205,6 +205,7 @@ public sealed class GetTopClientesTests(SqlServerFixture banco) : IAsyncLifetime
     [InlineData("?dataInicio=01/01/2026&dataFim=2026-12-31")]
     [InlineData("?dataInicio=2026-01-01&dataFim=2026-02-30")]
     [InlineData("?dataInicio=2026-04-01&dataFim=2026-03-31")]
+    [InlineData("?dataInicio=0001-01-01&dataFim=9999-12-31")]
     public async Task GetTopClientes_SemPeriodo_Retorna400(string consulta)
     {
         var (status, corpo) = await ObterAsync($"/relatorios/top-clientes{consulta}");

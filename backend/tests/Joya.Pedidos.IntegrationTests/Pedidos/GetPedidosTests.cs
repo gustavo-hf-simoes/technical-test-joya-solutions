@@ -189,6 +189,7 @@ public sealed class GetPedidosTests(SqlServerFixture banco) : IAsyncLifetime
     [InlineData("dataInicio=11/13/2026")]
     [InlineData("dataFim=ontem")]
     [InlineData("dataInicio=2026-04-01&dataFim=2026-03-31")]
+    [InlineData("dataFim=9999-12-31")]
     public async Task GetPedidos_ParametrosInvalidos_Retorna400(string consulta)
     {
         var (status, corpo) = await ObterAsync($"/pedidos?{consulta}");
