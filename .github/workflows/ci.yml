@@ -8,6 +8,7 @@
 #   backend     — build, formatação e testes unitários.
 #   integracao  — testes de integração contra SQL Server real (Testcontainers; Docker do runner).
 #                 A medição da Parte 4 (Categoria=Medicao) fica de fora (HL-27).
+#   frontend    — lint, testes (ChromeHeadless) e build do Angular.
 #
 # Segurança (skill gha-security-review): permissões mínimas, actions fixadas por SHA,
 # sem `pull_request_target` e sem interpolar dados do evento em `run:`.
@@ -90,4 +91,34 @@ jobs:
         run: >-
           dotnet test backend/tests/Joya.Pedidos.IntegrationTests
           --configuration Release --filter "Categoria!=Medicao"
+
+  frontend:
+    name: Frontend (lint, testes, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes unitários (ChromeHeadless)
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Build de produção
+        run: npm run build
 
