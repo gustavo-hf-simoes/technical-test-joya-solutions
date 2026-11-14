@@ -10,6 +10,8 @@
 #   api      ASP.NET Core sem root (backend/Dockerfile). Conecta como joya_app (nunca sa),
 #            só depois do db-init concluir. Swagger só no loopback (127.0.0.1:8080).
 #   frontend Nginx sem root (frontend/Dockerfile): SPA em http://localhost:4200 e proxy /api -> api.
+#            Publicado só no loopback (127.0.0.1:4200): a API não tem autenticação e o proxy
+#            repassa /api inteiro (inclusive o Swagger), então não vai para a rede local.
 #
 # Senhas: valores padrão de DESENVOLVIMENTO, sobrescrevíveis por variável de
 # ambiente ou por um .env local (modelo em .env.example). Em produção, nunca
@@ -85,7 +87,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "4200:8080"
+      - "127.0.0.1:4200:8080"
 
 volumes:
   sqlserver-data:
