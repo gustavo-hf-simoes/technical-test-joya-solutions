@@ -783,3 +783,40 @@ Desvios da spec: nenhum, sem PROP.
 ### Resposta a achados (US-08, rodada 2)
 
 - Gate: `default!` em `PedidoConsultaServiceTests.cs:53` (regra de ouro 1). Corrigido trocando por `Arg.Any<Periodo>()`; busca de silenciamento vazia, build 0 aviso, 101 unitários e `dotnet format` verdes (integração não rodada, a pedido).
+
+## T-09.2 — `GET /relatorios/top-clientes`
+
+| Tarefa | Commit previsto | Arquivos (em `backend/`) |
+|---|---|---|
+| T-09.2 | `feat(api): expõe GET /relatorios/top-clientes` | `src/Joya.Pedidos.Core/Relatorios/{TopClienteResponse,IRelatorioConsultas,RelatorioErrors,RelatorioService}.cs`, `src/Joya.Pedidos.Infrastructure/Relatorios/RelatorioConsultas.cs`, `src/Joya.Pedidos.Api/Controllers/RelatoriosController.cs`, `Infrastructure/DependencyInjection.cs` e `Api/Program.cs` (linhas `// T-09.2`, inclusive o `IValidator<TopClientesQuery>` pendente da T-09.1); testes `UnitTests/Relatorios/RelatorioServiceTests.cs`, `IntegrationTests/Relatorios/{GetTopClientesTests,RelatorioConsultasTests}.cs` |
+
+Decisões:
+- A porta recebe `DateTime inicio, DateTime fimExclusivo` não nulos: o ranking nunca roda sem limite de período. O serviço reaproveita `Periodo.Criar` e, se faltar uma ponta (o validator já barra antes), devolve `RelatorioErrors.PeriodoObrigatorio` (`400 VALIDACAO`).
+- Consulta única, no banco: filtro semiaberto sobre `DataPedido`, `GROUP BY ClienteId`, `ORDER BY SUM DESC, ClienteId`, `TOP(5)` dentro da subconsulta e só depois o join com `Clientes` (5 seeks em `PK_Clientes`). Soma `Pedidos.ValorTotal`, sem tocar `ItensPedido`, então não há multiplicação de linhas. `posicao` é o índice das até 5 linhas já ordenadas.
+- Defeitos da Parte 4 ausentes por construção, e provados por teste: agrupar por nome, `YEAR()` sobre a coluna, `LEFT JOIN` anulado pelo `WHERE`, `ORDER BY` crescente e sem `TOP`.
+- Índices: o `IX_Pedidos_DataPedido (DataPedido DESC, Id DESC) INCLUDE (ClienteId, ValorTotal)` de `database/02-indices.sql` cobre a consulta (Q5). `database/` não foi alterado.
+
+SQL gerado pelo EF, capturado no teste `TopClientesAsync_SqlGerado_UmComandoAgrupadoPorClienteSemFuncaoSobreData`. Ele exige um único comando e confere a forma da instrução:
+
+```sql
+SELECT [t].[ClienteId], [c].[Nome], [t].[ValorTotal], [t].[QuantidadePedidos]
+FROM (
+    SELECT TOP(@__p_2) [p].[ClienteId], COALESCE(SUM([p].[ValorTotal]), 0.0) AS [ValorTotal], COUNT(*) AS [QuantidadePedidos]
+    FROM [dbo].[Pedidos] AS [p]
+    WHERE [p].[DataPedido] >= @__inicio_0 AND [p].[DataPedido] < @__fimExclusivo_1
+    GROUP BY [p].[ClienteId]
+    ORDER BY COALESCE(SUM([p].[ValorTotal]), 0.0) DESC, [p].[ClienteId]
+) AS [t]
+INNER JOIN [dbo].[Clientes] AS [c] ON [t].[ClienteId] = [c].[Id]
+ORDER BY [t].[ValorTotal] DESC, [t].[ClienteId]
+```
+
+Testes, com o critério de cada um:
+- Integração: `GetTopClientes_OitoClientes_RetornaCincoEmOrdemDecrescente` (CA-21), `GetTopClientes_PedidosForaDoPeriodo_NaoContam` (CA-22; as duas pontas ao milissegundo), `GetTopClientes_Homonimos_NaoSomaNomesIguais` (CA-23), `GetTopClientes_Empate_OrdenaPorMenorClienteId` (CA-24; seis empatados, o sexto fica fora do TOP), `GetTopClientes_MenosDeCinco_RetornaSoQuemComprou` (CA-25, mais período vazio → `[]`), `GetTopClientes_SemPeriodo_Retorna400` (CA-26, 7 casos), `GetTopClientes_ValorTotal_IgualSomaDosItens` (CA-27; pedidos criados pelo `POST /pedidos`), `GetTopClientes_ClienteInativo_ApareceNoRanking` (RN-17) e `TopClientesAsync_SqlGerado_UmComandoAgrupadoPorClienteSemFuncaoSobreData` (RN-15/RN-17, forma do SQL).
+- Unitários: `RelatorioServiceTests`, com 8 casos (fim exclusivo e tamanho 5, lista vazia, período incompleto, início maior que fim, repasse do `CancellationToken`).
+
+Verificação: `dotnet build` com 0 aviso e 0 erro. 109 unitários aprovados. Integração: suíte completa com 118 aprovados (103 anteriores + 15 novos). `dotnet format --verify-no-changes` sem pendência. A busca por silenciamento voltou vazia.
+
+Evidência MCP: não coletada, por causa do CG-05 (AUTH_FAILED). No lugar dela vale o SQL acima, capturado do log do EF contra o SQL Server real. O plano (*Index Seek* em `IX_Pedidos_DataPedido` → agregação → *Top N Sort* → seek em `PK_Clientes`) fica para conferir pelo `explain_sql` quando o MCP voltar.
+
+Desvios da spec: nenhum, sem PROP.

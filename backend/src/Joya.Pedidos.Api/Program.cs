@@ -6,6 +6,7 @@ using Joya.Pedidos.Api.Saude;
 using Joya.Pedidos.Core.Clientes;
 using Joya.Pedidos.Core.Pedidos;
 using Joya.Pedidos.Core.Produtos;
+using Joya.Pedidos.Core.Relatorios; // T-09.2
 using Joya.Pedidos.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -25,10 +26,12 @@ builder.Services.AddControllers(mvc => mvc.Filters.Add<ValidationFilter>()) // T
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<IPedidoConsultaService, PedidoConsultaService>(); // T-08.2
+builder.Services.AddScoped<IRelatorioService, RelatorioService>(); // T-09.2
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddSingleton<IValidator<CriarPedidoRequest>, CriarPedidoValidator>();
 builder.Services.AddSingleton<IValidator<ListarPedidosQuery>, ListarPedidosQueryValidator>(); // T-08.2
+builder.Services.AddSingleton<IValidator<TopClientesQuery>, TopClientesQueryValidator>(); // T-09.2
 builder.Services.AddProblemDetails(opcoes => opcoes.CustomizeProblemDetails = contexto =>
     contexto.ProblemDetails.Extensions.TryAdd(
         "traceId",
