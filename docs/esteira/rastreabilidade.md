@@ -21,13 +21,13 @@
 | ENU | Classe | Requisito | US | Tarefas | Testes | Commits |
 |---|---|---|---|---|---|---|
 | ENU-L001–L005 | Contexto | — | — | — | — | — |
-| ENU-L007 | Obrigatório | ENT-23 | US-01, US-18 | T-01.1, T-18.3 | Manual: diário em docs/ia e seção Como usei o Claude no README mostram o uso do Claude Code em cada etapa | — |
+| ENU-L007 | Obrigatório | ENT-23 | US-01, US-18 | T-01.1, T-18.3 | Manual: diário em docs/ia e seção Como usei o Claude no README mostram o uso do Claude Code em cada etapa | 501ae41 |
 | ENU-L009 | Contexto | — | — | — | — | — |
-| ENU-L011 | Obrigatório | ENT-01, ENT-02 | US-01 | T-01.1, T-01.2 | Manual: git log mostra spec e plano antes do primeiro commit de código | — |
-| ENU-L013 | Obrigatório | ENT-01 | US-01 | T-01.2 | Manual: docs/spec.md tem objetivo, regras de negócio, endpoints, modelo de dados e critérios de aceite | — |
-| ENU-L014 | Obrigatório | ENT-02 | US-01 | T-01.3 | Manual: docs/plan.md tem a proposta do plan mode e a seção Human-in-the-Loop preenchida | — |
+| ENU-L011 | Obrigatório | ENT-01, ENT-02 | US-01 | T-01.1, T-01.2 | Manual: git log mostra spec e plano antes do primeiro commit de código | 501ae41, 125952a |
+| ENU-L013 | Obrigatório | ENT-01 | US-01 | T-01.2 | Manual: docs/spec.md tem objetivo, regras de negócio, endpoints, modelo de dados e critérios de aceite | 125952a |
+| ENU-L014 | Obrigatório | ENT-02 | US-01 | T-01.3 | Manual: docs/plan.md tem a proposta do plan mode e a seção Human-in-the-Loop preenchida | abf8b91 |
 | ENU-L015 | Contexto | — | — | — | — | — |
-| ENU-L017 | Obrigatório | ENT-07 | US-01, US-18 | T-01.1, T-18.2 | Manual: git ls-files .claude CLAUDE.md lista agentes, hooks e skills versionados | — |
+| ENU-L017 | Obrigatório | ENT-07 | US-01, US-18 | T-01.1, T-18.2 | Manual: git ls-files .claude CLAUDE.md lista agentes, hooks e skills versionados | 501ae41 |
 | ENU-L019 | Obrigatório | ENT-03, RNF-03 | US-02, US-03, US-18 | T-02.1, T-03.2, T-18.2 | `Core_Dependencias_NaoReferenciaEfAspNetNemSqlClient`, `Dtos_Declaracao_SaoSealedRecord`, `Controllers_Dependencias_NaoAcessamDbContext` | — |
 | ENU-L020 | Obrigatório | ENT-04 | US-18 | T-18.2 | Manual: editar um arquivo do backend dispara post-edit.sh, que roda build e testes unitários | — |
 | ENU-L021 | Obrigatório | ENT-05 | US-06, US-18 | T-06.6, T-18.2 | Manual: T-06.6 e T-07.1 feitas com a skill new-endpoint, registradas no diário | — |
@@ -67,7 +67,7 @@
 | ENU-L078 | Obrigatório | ENT-14 | US-10, US-18 | T-10.3, T-18.4 | Manual: seção Parte 4 traz os defeitos, os planos antes e depois e os índices | — |
 | ENU-L079 | Obrigatório | ENT-15, RNF-04 | US-13 | T-13.2 | Manual: mesma verificação da Parte 6 em clone limpo | — |
 | ENU-L080 | Obrigatório | ENT-16, RNF-07 | US-06, US-03 | T-06.3, T-06.6, T-03.3 | `CriarAsync_ClienteInexistente_RetornaClienteNaoEncontrado`, `PostPedidos_PedidoValido_Retorna201ComLocationEDebitaEstoque` | — |
-| ENU-L081 | Obrigatório | ENT-17 | US-01, US-18 | T-01.1, T-18.3 | Manual: git log da main mostra um merge por história, um commit por tarefa e nenhum squash ou force-push | — |
+| ENU-L081 | Obrigatório | ENT-17 | US-01, US-18 | T-01.1, T-18.3 | Manual: git log da main mostra um merge por história, um commit por tarefa e nenhum squash ou force-push | 501ae41 |
 | ENU-L082 | Obrigatório | ENT-18 | US-18 | T-18.6, T-18.7 | Manual: vídeo de até 10 minutos com o fluxo no Claude Code, com link no README | — |
 | ENU-L083 | Contexto | — | — | — | — | — |
 | ENU-L085 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
