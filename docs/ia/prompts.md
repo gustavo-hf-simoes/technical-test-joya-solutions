@@ -174,3 +174,47 @@
 - PROP-13, `Idempotency-Key` na tela → **Sim, a tela envia (Recomendado)**
 - ADR-0004, sem *retry* automático → **Aceitar o ADR-0004 (Recomendado)**
 - Ajustes do backlog → **Delegar ao PO agora (Recomendado)**
+
+## Prompt 15
+<a id="prompt-15"></a>
+
+**2026-11-13, depois das 22:12**. Resposta, por botão, à pergunta sobre integrar o PR da etapa 2 e seguir para a etapa 3.
+
+> Sim, merge e etapa 3
+
+## Prompt 16
+<a id="prompt-16"></a>
+
+**2026-11-13**. Resposta, por botão, à falha da T-02.1 por modelo inexistente (`model_not_found`).
+
+> Subir o gateway
+
+## Prompt 17
+<a id="prompt-17"></a>
+
+**2026-11-13**
+
+> Verifique se esse processo não é overengineering ou overthinking e veja uma alternativa para a resolução.
+
+## Prompt 18
+<a id="prompt-18"></a>
+
+**2026-11-13**. Origem da `HL-24`.
+
+> Entendi, nesse caso, pode realizar a alteração, você possui o meu aval, vamos tratar como uma exceção, estou ciente dos riscos, mas eu gostei da abordagem e da resolução proposta. Prossiga.
+
+## Prompt 19
+<a id="prompt-19"></a>
+
+**2026-11-13**. Respostas, por botão, aos pedidos de reinício do app.
+
+> Reiniciei, prossiga
+
+> Fechei e reabri
+
+## Prompt 20
+<a id="prompt-20"></a>
+
+**2026-11-13**. Resposta, por botão, à pergunta "Posso fazer os 4 commits da US-02 e abrir o PR?".
+
+> Sim, commits e PR

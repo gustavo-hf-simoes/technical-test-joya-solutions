@@ -213,7 +213,27 @@
   - numa segunda passada, as marcas de PROP já decididas viraram referências às `HL`.
 - **Modelo:** orquestrador no Opus 5.5; `arquiteto` no Opus `high`; `product-owner` no Opus `medium`. Tokens em [status.md](../esteira/status.md).
 
-<!-- Próximas entradas: E08 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E08 — Ambiente de modelos e etapa 3: US-02, esqueleto (`backend`) · 2026-11-13 22:12 → 22:40
+
+- **Pedido** ([prompts 15 a 19](prompts.md#prompt-15)): integrar a etapa 2 e seguir para a etapa 3. Depois da falha dos subagentes, o desenvolvedor pediu para verificar se o processo era *overengineering* e aprovou a alternativa como exceção (`HL-24`).
+- **Falha de ambiente:**
+  - a T-02.1 falhou duas vezes com `model_not_found`;
+  - o `~/.claude/settings.json` global levava `haiku`/`sonnet`/`opus` a um *gateway* local (`localhost:20128`) fora do ar. Com ele no ar, C2 e C3 cairiam no mesmo modelo, e o ADR-0001 viraria só rótulo;
+  - autocrítica: o orquestrador gastou tempo procurando o programa do *gateway* quando `curl → 000` já bastava para decidir.
+- **Correção (`HL-24`):** com aval explícito, o orquestrador removeu as substituições da configuração global (com cópia de segurança). Mais duas lições:
+  - reiniciar só a sessão não bastou, porque o app desktop guarda o `env` lido quando abre. Foi preciso sair do app pela bandeja;
+  - um teste de 11 mil tokens com o `verificador` confirmou o conserto antes da tarefa real.
+- **Esteira mais leve (`HL-24`):** a T-02.1 e a T-02.2 foram numa delegação só, com um registro por história e um commit por tarefa.
+- **Delegação ao `backend`** (Sonnet `medium`, 4 min): solução com 5 projetos, `Directory.Build.props` (`TreatWarningsAsErrors`, `AnalysisLevel=latest`), `.editorconfig`, `global.json`, `Result<T>`, `Error`/`TipoErro` e `PaginaResponse<T>`, com 10 testes. O próprio teste apanhou um bug: `Value` não lançava na falha.
+- **Gate (rodado pelo orquestrador):**
+  - rodada 1: tudo verde, mas a busca por `!` achou um `default!` no teste (`CG-03`). O caso voltou ao dono e foi corrigido em 40 s;
+  - rodada 2: aprovada.
+- **Decisões a conferir pelo desenvolvedor:**
+  - `AnalysisLevel=latest`, e não `latest-recommended`, porque o modo recomendado barra os nomes `Error` e `Result<T>.Failure`, fixados pela spec;
+  - CA1707 desligado só em `tests/**`, pela convenção `Metodo_Cenario_Resultado`.
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium`; `verificador` no Haiku (teste de ambiente).
+
+<!-- Próximas entradas: E09 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -221,9 +241,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 23 |
-| Erros da IA detectados e corrigidos (`CG`) | 2, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
+| Decisões humanas registradas (`HL`) | 24 |
+| Erros da IA detectados e corrigidos (`CG`) | 3, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
 | Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
-| Compactações de contexto da sessão | 4 |
+| Compactações de contexto da sessão | 5 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 4 delegações. O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 6 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
