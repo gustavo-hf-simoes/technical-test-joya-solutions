@@ -142,3 +142,35 @@
 - PROP-04, acessibilidade e `pt-BR` → **RNF-08 na spec (Recomendado)**
 - PROP-06, comando do Docker → **up sem flags (Recomendado)**
 - PROP-07, duas tabelas de rastreabilidade → **§9 resumo + matriz oficial (Recomendado)**
+
+## Prompt 12
+<a id="prompt-12"></a>
+
+**2026-11-13 21:36**. Resposta, por botão, à pergunta "Posso fazer os 5 commits e abrir o PR para a main?".
+
+> Sim, commits e PR
+
+## Prompt 13
+<a id="prompt-13"></a>
+
+**2026-11-13 21:38**
+
+> Pode prosseguir com o merge e a etapa 2.
+
+## Prompt 14
+<a id="prompt-14"></a>
+
+**2026-11-13 22:12**. Resposta, por botão, à pergunta "Posso fazer os 4 commits e abrir o PR da etapa 2?".
+
+> Sim, commits e PR
+
+**Respostas às perguntas da IA sobre a etapa 2 (2026-11-13, por volta de 22:05):**
+
+- PROP-08, RNF-02 e listagem sem filtro → **Ajustar a RNF-02 (Recomendado)**
+- PROP-09, `ativo` em `/clientes` e `/produtos` → **Opcional, traz todos (Recomendado)**
+- PROP-10, limite de taxa e CA-10 → **Limite elevado nos testes (Recomendado)**
+- PROP-11, precisão de `DataPedido` → **Truncar em ms (Recomendado)**
+- PROP-12, Swagger em `Testing` e contrato versionado → **Liberar e versionar (Recomendado)**
+- PROP-13, `Idempotency-Key` na tela → **Sim, a tela envia (Recomendado)**
+- ADR-0004, sem *retry* automático → **Aceitar o ADR-0004 (Recomendado)**
+- Ajustes do backlog → **Delegar ao PO agora (Recomendado)**
