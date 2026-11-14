@@ -1,8 +1,8 @@
 # Análise estática de segurança com CodeQL (HL-08).
 #
-# Linguagens analisadas hoje: os workflows do GitHub Actions e os scripts Python do CI.
-# `csharp` e `javascript-typescript` entram na matriz junto com o esqueleto do backend
-# e do frontend. Sem código-fonte, o CodeQL falha com "no code found".
+# Linguagens: os workflows do GitHub Actions, os scripts Python do CI, o backend C# e o
+# frontend/E2E em TypeScript (SEC-06). Todas com `build-mode: none`: o CodeQL extrai o C#
+# sem compilar, o que evita depender do SDK no job e mantém o tempo dentro do timeout.
 #
 # Segurança (skill gha-security-review): permissões mínimas por job, actions fixadas por SHA,
 # sem `pull_request_target`.
@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        linguagem: [actions, python]
+        linguagem: [actions, python, csharp, javascript-typescript]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

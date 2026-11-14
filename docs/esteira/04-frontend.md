@@ -115,3 +115,29 @@ PROP-xx: nenhuma. Bloqueios: nenhum.
 **Verificação:** com `docker compose up -d` saudável, `npm --prefix e2e test` passou 3 vezes seguidas (após a correção da corrida); `tsc --noEmit` do e2e limpo. `docker compose down` sem `-v` ao final.
 
 **Limitação:** assume que a listagem ordena do mais recente ao mais antigo (a primeira linha é o pedido novo); o teste confere cliente e valor, não o id da linha. PROP-xx: nenhuma. Bloqueios: nenhum.
+
+---
+
+## Correção, rodada 1 (HL-29): ARQ-03, ARQ-04, SEC-02, SEC-07
+
+### Resposta a achados
+
+| Achado | Rodada | O que foi feito | Onde | Teste que prova | Status declarado |
+|---|---|---|---|---|---|
+| ARQ-04 | 1 | `gerarUuid()` usa `crypto.randomUUID` se existir; senão monta UUID v4 com `getRandomValues` | `frontend/src/app/core/uuid.ts`, `pedidos/pedido-form.component.ts:94` | `core/uuid.spec.ts` (caminho sem `randomUUID`, versão/variante) | Corrigido |
+| ARQ-03 | 1 | `ItemPedidoResponse` -> `PedidoItemResponse`; `ItemPedidoRequest` -> `CriarPedidoItemRequest` | `core/api/pedidos.models.ts` (nenhum outro uso) | build + `contrato.spec.ts` | Corrigido |
+| SEC-02 | 1 | Cabeçalhos em `seguranca.inc`, incluído em todas as `location`; CSP `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri/form-action 'self'; frame-ancestors 'none'`; Nginx 1.28-alpine; `inlineCritical:false` no build de produção | `frontend/nginx.conf`, `frontend/seguranca.inc`, `frontend/Dockerfile`, `frontend/angular.json` | Não verificável sem Docker: o orquestrador valida com `curl -D -` em `/`, `/pedidos` e um `.js` | Corrigido, a validar no gate |
+| SEC-07 | 1 | `@playwright/test` 1.49.1 -> 1.65.1 (exata), lock atualizado; `channel: 'chrome'` mantido | `e2e/package.json`, `e2e/package-lock.json` | `npm audit`: 0 vulnerabilidades; `tsc --noEmit` limpo | Corrigido |
+
+Justificativas de SEC-02: o `index.html` do Angular trazia CSS crítico inline com `onload="this.media='all'"`, que `script-src 'self'` bloquearia (CSS ficaria `media=print`). Desliguei `inlineCritical` (o build não tem mais `onload`). `style-src 'unsafe-inline'` permanece porque o Angular injeta `<style>` em tempo de execução; sem `unsafe-eval`. `Cache-Control` segue nas `location` de ativo e SPA. Não incluí o teste automatizado de cabeçalhos sugerido pelo achado.
+
+Verificação: lint limpo; build ok; testes 27/27 (ChromeHeadless); `tsc --noEmit` do e2e limpo. Docker e E2E não rodados (instrução).
+
+### Correção, rodada 2: SEC-02 (teste de regressão) e SEC-08
+
+| Achado | Rodada | O que foi feito | Onde | Teste que prova | Status declarado |
+|---|---|---|---|---|---|
+| SEC-02 | 2 | Teste de regressão dos cabeçalhos (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, CSP) em `/`, `/pedidos`, um `.js` e `/api/clientes` | `e2e/cabecalhos-seguranca.spec.ts` | `CabecalhosSeguranca_RotasDaSpaEAtivos_TrazemCspEDemais` (usa `request`, sem navegador); `tsc --noEmit` limpo; execução fica com o orquestrador | Corrigido, a validar no gate |
+| SEC-08 | 1 | Imagem `nginxinc/nginx-unprivileged:1.30-alpine`; `nginx.conf` e `seguranca.inc` usam só `include`, `add_header`, `proxy_pass`, `try_files`, `expires` (diretivas estáveis), sem mudança | `frontend/Dockerfile:10` | `nginx -t` e E2E a cargo do orquestrador (Docker proibido) | Corrigido, a validar no gate |
+
+Complemento da SEC-08 (HL-30): `frontend/Dockerfile` remove o `curl` da base com `USER root` + `RUN apk del --no-cache curl` + `USER 101` (uid original da imagem). O `HEALTHCHECK` segue usando `wget` (busybox, não afetado). Build, scan e E2E a cargo do orquestrador.

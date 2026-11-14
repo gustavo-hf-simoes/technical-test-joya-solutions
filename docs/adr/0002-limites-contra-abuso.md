@@ -22,7 +22,7 @@ A API não tem autenticação (`HL-03`) e fica pública no deploy (ENU-L087). Os
   2. se o `TestServer` também não expuser essa *feature*, um filtro de recurso de ~10 linhas no `POST` que rejeita `Content-Length > CorpoMaximoBytes` com `413` antes da leitura. O limite do Kestrel continua como a proteção real contra *chunked*.
 
   O caminho escolhido fica registrado no relatório da etapa 3.
-- **Nginx.** `client_max_body_size 64k` no `web`. É uma barreira externa mais larga que a da API, para que quem decida o `413`, e o devolva em Problem Details, seja a API. O padrão do Nginx (1 MB) também funcionaria, mas o valor explícito documenta a intenção.
+- **Nginx.** `client_max_body_size 64k` no `frontend`. É uma barreira externa mais larga que a da API, para que quem decida o `413`, e o devolva em Problem Details, seja a API. O padrão do Nginx (1 MB) também funcionaria, mas o valor explícito documenta a intenção.
 
 ### 2. Limite de taxa: janela fixa por IP, **10 requisições a cada 10 s**
 

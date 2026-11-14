@@ -24,7 +24,7 @@ Só entram aqui restrições **técnicas** do enunciado, ou seja, as que limitam
 | R-10 | Query da Parte 4 corrigida e otimizada, investigada com **plano de execução** | ENU-L040 a L048 | Nenhum índice novo é necessário: os índices da spec §6.3 já atendem a query corrigida (§6). Os planos são capturados pelo MCP | CA-33; `database/parte4/investigacao.md` |
 | R-11 | Testes unitários no backend, cobrindo regras e validações do pedido | ENU-L054 | Regras no `Core`, sem I/O, testadas com portas substituídas (NSubstitute, `D11`) | `dotnet test backend/tests/Joya.Pedidos.UnitTests` |
 | R-12 | Testes de integração contra **SQL Server real** | ENU-L055 | Testcontainers + `WebApplicationFactory` + Respawn (`D10`), aplicando os **mesmos** scripts com o **mesmo** executor, e a API conectada como `joya_app` ([ADR-0003](../adr/0003-banco-real-nos-testes-de-integracao.md)) | `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` |
-| R-13 | Tudo no Docker, com `docker-compose.yml` **na raiz** | ENU-L061 | Serviços `db`, `db-init`, `api` e `web` num único arquivo na raiz | `docker compose config` |
+| R-13 | Tudo no Docker, com `docker-compose.yml` **na raiz** | ENU-L061 | Serviços `db`, `db-init`, `api` e `frontend` num único arquivo na raiz | `docker compose config` |
 | R-14 | Scripts de criação e carga executados **automaticamente** | ENU-L063 | `db-init` efêmero (`D15`), encadeado por `depends_on` com condição | `docker compose ps -a` mostra `db-init` com `Exited (0)` |
 | R-15 | **Um único comando** (`docker compose up`) | ENU-L066, L068 | Todos os serviços com `build:` e imagem; nenhuma variável sem valor padrão; nenhum `.env` obrigatório (`HL-15`) | Checklist `DK-01` a `DK-03` |
 | R-16 | Playwright (diferencial) | ENU-L058, L085 | `e2e/` contra o compose em execução | `npm --prefix e2e test` |
@@ -47,7 +47,7 @@ flowchart LR
     dev(["Desenvolvedor<br/>Claude Code"])
 
     subgraph compose["docker compose (rede interna)"]
-        web["<b>web</b><br/>Nginx sem root :8080<br/>SPA Angular 19 + proxy /api"]
+        frontend["<b>frontend</b><br/>Nginx sem root :8080<br/>SPA Angular 19 + proxy /api"]
         api["<b>api</b><br/>ASP.NET Core 8 sem root :8080<br/>Controllers · Core · EF Core 8"]
         db[("<b>db</b><br/>SQL Server 2022 :1433<br/>banco JoyaPedidos")]
         dbinit["<b>db-init</b> (efêmero)<br/>sqlcmd -I -b<br/>database/init.sh"]
@@ -56,9 +56,9 @@ flowchart LR
     mcp["<b>MCP mssql</b><br/>DBHub (stdio)"]
     caddy["Caddy :443<br/>(só no deploy, HL-04)"]
 
-    usuario -- "HTTP :4200<br/>(HTTPS no deploy)" --> web
-    caddy -. "deploy" .-> web
-    web -- "/api/* → /*<br/>X-Forwarded-For" --> api
+    usuario -- "HTTP :4200<br/>(HTTPS no deploy)" --> frontend
+    caddy -. "deploy" .-> frontend
+    frontend -- "/api/* → /*<br/>X-Forwarded-For" --> api
     api -- "TDS · login joya_app<br/>SELECT/INSERT/UPDATE" --> db
     dbinit -- "TDS · login sa<br/>schema, índices, logins, carga" --> db
     dev --> mcp
@@ -70,17 +70,17 @@ flowchart LR
 | `db` | `mssql/server:2022-latest` | `127.0.0.1:1433` (só *loopback*: MCP e `dotnet run`) | — | Dados. `healthcheck` com `sqlcmd ... -Q "SELECT 1"` |
 | `db-init` | mesma imagem do `db` (já traz `sqlcmd` em `/opt/mssql-tools18`) | nenhuma | `db: service_healthy` | Roda `database/init.sh`: scripts em ordem, `-I -b -C`, senhas por `-v`. Sai com 0 |
 | `api` | `backend/Dockerfile` (`sdk:8.0` → `aspnet:8.0`, usuário `app`) | `127.0.0.1:8080` (Swagger) | `db-init: service_completed_successfully` | HTTP, regras, persistência. `healthcheck` em `/health/ready` |
-| `web` | `frontend/Dockerfile` (Node → `nginx-unprivileged`) | `4200 → 8080` | `api: service_healthy` | SPA com *fallback* para `index.html`; `location /api/ { proxy_pass http://api:8080/; }` |
+| `frontend` | `frontend/Dockerfile` (Node → `nginx-unprivileged`) | `127.0.0.1:4200 → 8080` (só *loopback*, `SEC-04`) | `api: service_healthy` | SPA com *fallback* para `index.html`; `location /api/ { proxy_pass http://api:8080/; }` |
 | MCP `mssql` | fora do compose (processo local do Claude Code) | — | `db` e `db-init` | Inspeção de schema, dados e planos (`D16`) |
 
 Pontos de desenho que valem para todas as histórias:
 
-1. **Mesma origem.** O navegador só fala com o `web`. O Nginx tira o prefixo `/api` (barra final no `proxy_pass`), e a API não precisa de CORS (`D14`). No desenvolvimento, o `proxy.conf.json` do Angular faz o mesmo para `localhost:8080`.
+1. **Mesma origem.** O navegador só fala com o `frontend`. O Nginx tira o prefixo `/api` (barra final no `proxy_pass`), e a API não precisa de CORS (`D14`). No desenvolvimento, o `proxy.conf.json` do Angular faz o mesmo para `localhost:8080`.
 2. **`Location` relativo.** O `201` devolve `Location: /pedidos/{id}`, como na spec §5.2. O controller usa `Created($"/pedidos/{id}", corpo)`, e **não** `CreatedAtAction`: este gera URL absoluta com o host interno (`http://api:8080/...`) quando a API está atrás do proxy.
-3. **Ordem de subida sem `sleep`.** `db` saudável → `db-init` concluído → `api` saudável → `web`. A imagem `aspnet:8.0` não traz `curl`. O `healthcheck` da API usa uma ferramenta que já está na imagem ou um binário mínimo instalado no estágio final; a escolha é do `backend` (T-13.1), e o requisito é: só fica saudável quando `/health/ready` devolve `200`.
+3. **Ordem de subida sem `sleep`.** `db` saudável → `db-init` concluído → `api` saudável → `frontend`. A imagem `aspnet:8.0` não traz `curl`. O `healthcheck` da API usa uma ferramenta que já está na imagem ou um binário mínimo instalado no estágio final; a escolha é do `backend` (T-13.1), e o requisito é: só fica saudável quando `/health/ready` devolve `200`.
 4. **`/health/ready` sem pacote novo.** Um `IHealthCheck` próprio chama `DbContext.Database.CanConnectAsync(ct)`. O pacote `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore` **não** é adicionado (regra de ouro 12).
 5. **IP real do cliente.** O *rate limiter* particiona por IP, então a API precisa do IP de quem chamou, e não do IP do Nginx. A API usa `UseForwardedHeaders` com `ForwardedLimit` configurável: `1` no compose local e `2` no deploy, onde o Caddy fica na frente do Nginx. Detalhes e riscos estão no [ADR-0002](../adr/0002-limites-contra-abuso.md).
-6. **Portas no *loopback*.** `1433` e `8080` são publicadas só em `127.0.0.1`. O MCP e o Swagger funcionam, e o banco não fica exposto na rede local. No deploy, só o Caddy publica porta.
+6. **Portas no *loopback*.** `1433`, `8080` e `4200` são publicadas só em `127.0.0.1`. O MCP, o Swagger e a SPA funcionam pela própria máquina, e nem o banco nem a API sem autenticação ficam expostos na rede local: o Nginx repassa `/api` inteiro, inclusive o Swagger, então publicar o `4200` em todas as interfaces exporia a API (`SEC-04`, ajuste da revisão de arquitetura, rodada 3). No deploy, só o Caddy publica porta.
 7. **Segredos.** As senhas do compose usam `${VAR:-valor-de-dev}`. O compose sobe sem `.env` (`HL-15`), e o `.env.example` documenta como sobrescrever. O valor padrão vale só para desenvolvimento, e o README avisa isso.
 
 ## 3. Camadas e regra de dependência
@@ -142,7 +142,7 @@ As três primeiras linhas e a de controllers são as do backlog (T-03.2). As dem
 sequenceDiagram
     autonumber
     actor U as Navegador
-    participant W as Nginx (web)
+    participant W as Nginx (frontend)
     participant P as Pipeline da API
     participant C as PedidosController
     participant S as PedidoService (Core)
@@ -255,7 +255,7 @@ flowchart LR
 
 | Etapa | Quem | Como |
 |---|---|---|
-| **Fonte** | `backend` | Os `Request`/`Query`/`Response` do `Core`, com `[ProducesResponseType]` nos controllers (`D8`). Os nomes de schema são os nomes das classes: `CriarPedidoRequest`, `PedidoResponse`, `ItemPedidoResponse`, `PedidoResumoResponse`, `TopClienteResponse`, `ClienteResponse`, `ProdutoResponse`. O genérico vira `PaginaResponseDePedidoResumoResponse` por `CustomSchemaIds` |
+| **Fonte** | `backend` | Os `Request`/`Query`/`Response` do `Core`, com `[ProducesResponseType]` nos controllers (`D8`). Os nomes de schema são os nomes das classes: `CriarPedidoRequest`, `PedidoResponse`, `PedidoItemResponse`, `PedidoResumoResponse`, `TopClienteResponse`, `ClienteResponse`, `ProdutoResponse`. O genérico vira `PaginaResponseDePedidoResumoResponse` por `CustomSchemaIds` |
 | **Publicação** | `backend` | `GET /swagger/v1/swagger.json` (Swashbuckle, que já vem no modelo `webapi` do .NET 8). Duas configurações sem pacote novo: um `ISchemaFilter` de ~20 linhas que marca como `required` toda propriedade não anulável (`NullabilityInfoContext`), e `MapType<decimal>` com `format: decimal` em vez do `double` padrão |
 | **Arquivo versionado** | `backend` | `docs/contratos/openapi.json`, gerado pelo próprio teste com `ATUALIZAR_CONTRATO=1` e revisado no `git diff` de cada PR que muda contrato |
 | **Verificação no backend** | `backend` | `Contrato_OpenApiPublicado_IgualAoVersionado` (integração): lê o JSON publicado, compara com o arquivo por `JsonNode.DeepEquals` e, se divergir, falha com a instrução para regerar e revisar o diff |
@@ -362,9 +362,9 @@ Como aplicar:
 - **BE-08** · Relógio só pelo `TimeProvider` (regra de ouro 8) · `backend` · Alta
   `git grep --untracked -nE "DateTime(Offset)?\.(Now|UtcNow|Today)" -- backend/src` → vazio; `git grep --untracked -n "TimeProvider.System" -- backend/src/Joya.Pedidos.Api` → 1 registro
 - **BE-09** · Dinheiro em `decimal` (regra de ouro 7, RN-11) · `backend` · Alta
-  `git grep --untracked -nwE "double|float|Double|Single" -- "backend/src/*.cs"` → vazio; `git grep --untracked -niwE "float|real|money" -- database` → vazio
+  `git grep --untracked -nwE "double|float|Double|Single" -- "backend/src/*.cs"` → vazio; `git grep --untracked -niwE "float|real|money" -- "database/*.sql" | grep -vE ":[0-9]+:\s*--"` → vazio (ignora linhas de comentário SQL; ajuste da revisão 1)
 - **BE-10** · Sem bloqueio síncrono (regra de ouro 3) · `backend` · Alta
-  `git grep --untracked -nE "\.Result\b|\.Wait\(|async void|GetAwaiter\(\)\.GetResult" -- "backend/*.cs"` → vazio, salvo `Result` qualificado por *namespace*, que é falso positivo
+  `git grep --untracked -nE "\.Result\b|\.Wait\(|async void|GetAwaiter\(\)\.GetResult" -- "backend/*.cs" | grep -vE "context\.Result\b"` → vazio (`context.Result` dos filtros MVC é propriedade, não bloqueio; ajuste da revisão 1)
 - **BE-11** · `CancellationToken` de ponta a ponta (regra de ouro 3) · `backend` · Média
   Teste `MetodosAsync_Assinatura_RecebemCancellationTokenPorUltimo` verde; `git grep --untracked -nE "CancellationToken\.None|default\(CancellationToken\)|CancellationToken ct = default" -- backend/src` → vazio
 - **BE-12** · Leitura com `AsNoTracking` (regra de ouro 10) · `backend` · Média
@@ -374,7 +374,10 @@ Como aplicar:
 - **BE-14** · SQL à mão só na baixa (`D7`) e sempre parametrizado (RNF-06) · `backend` · Alta
   `git grep --untracked -lE "SqlQuery|FromSql|ExecuteSql" -- backend/src` → só `Infrastructure/Estoque/EstoqueRepository.cs`; `git grep --untracked -nE "(SqlQuery|FromSql|ExecuteSql)Raw" -- backend` → vazio
 - **BE-15** · Sem *check-then-act* no estoque (regra de ouro 4, spec §4.3) · `backend` · Alta
-  `git grep --untracked -nE "Estoque\s*(>=|<=|>|<|-=|-)" -- "backend/src/*.cs"` → vazio (o C# nunca compara nem subtrai estoque)
+  Três buscas (comando completado na revisão 1; o anterior acusava o próprio SQL da baixa e comentários XML):
+  1. `git grep --untracked -nE "\bEstoque\s*(>=|<=|>|<|-=|-[^>])" -- "backend/src/*.cs" ':!backend/src/Joya.Pedidos.Infrastructure/Estoque/EstoqueRepository.cs' | grep -vE ":[0-9]+:\s*//"` → vazio (o C# nunca compara nem subtrai estoque);
+  2. `git grep --untracked -n "AND  Estoque >= {quantidade}" -- backend/src/Joya.Pedidos.Infrastructure/Estoque/EstoqueRepository.cs` → 1 linha (a condição está no `UPDATE ... OUTPUT`);
+  3. `git grep --untracked -nE "ObterEstoquesAsync|TentarBaixarAsync" -- backend/src/Joya.Pedidos.Core` → revisar: `ObterEstoquesAsync` só depois do *rollback*, para compor a mensagem do `409`, nunca para decidir a baixa
 - **BE-16** · Preço nunca vem da requisição (regra de ouro 5, RN-09) · `backend` · Alta
   `git grep --untracked -niE "preco" -- backend/src/Joya.Pedidos.Core/Pedidos/CriarPedidoRequest.cs` → vazio
 - **BE-17** · Só dependências aprovadas (regra de ouro 12, `D3`, `D11`, `HL-08`) · `backend` · Alta
@@ -390,7 +393,12 @@ Como aplicar:
 - **BE-22** · Sem *retry* automático (ADR-0004) · `backend` · Alta
   `git grep --untracked -nE "EnableRetryOnFailure|CreateExecutionStrategy" -- backend` → vazio; `git grep --untracked -n "catch (DbUpdateException" -- backend/src` → só `PedidoRepository.cs`
 - **BE-23** · Limites contra abuso (ADR-0002, `HL-12`) · `backend` · Alta
-  `git grep --untracked -nE "MaxRequestBodySize|RequestSizeLimit|AddRateLimiter|UseForwardedHeaders|ForwardedLimit" -- backend/src/Joya.Pedidos.Api` → presentes; `git grep --untracked -n "EnableRateLimiting(\"criar-pedido\")" -- backend/src/Joya.Pedidos.Api/Controllers` → 1 linha; no `Program.cs`, `UseForwardedHeaders` vem antes de `UseRateLimiter` → revisar
+  Comandos completados na revisão 1 (o código usa a constante `LimitesHttp.PoliticaCriarPedido`, não o literal):
+  1. `git grep --untracked -nE "PoliticaCriarPedido = \"criar-pedido\"|CorpoMaximoBytes = 32 \* 1024|MaxRequestBodySize = LimitesHttp\.CorpoMaximoBytes|AddRateLimiter|ForwardLimit = " -- backend/src/Joya.Pedidos.Api` → 5 linhas;
+  2. `git grep --untracked -nE "EnableRateLimiting\((LimitesHttp\.PoliticaCriarPedido|\"criar-pedido\")\)" -- backend/src/Joya.Pedidos.Api/Controllers` → 1 linha;
+  3. `git grep --untracked -hoE "app\.Use(ForwardedHeaders|RateLimiter)\(" -- backend/src/Joya.Pedidos.Api/Program.cs | tr '\n' ' '` → `app.UseForwardedHeaders( app.UseRateLimiter(` nesta ordem;
+  4. `git grep --untracked -nE "\"(Permissoes|JanelaSegundos|ForwardedLimit)\": " -- backend/src/Joya.Pedidos.Api/appsettings.json` → 3 linhas;
+  5. `git grep --untracked -nE "PostPedidos_(CorpoAcimaDoLimite_Retorna413|RajadaAcimaDoLimite_Retorna429)" -- backend/tests` → 2 testes, verdes no gate de integração
 - **BE-24** · Contrato verificado (ADR-0005) · `backend` · Média
   `git ls-files --others --cached docs/contratos/openapi.json` → 1 arquivo; `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "FullyQualifiedName~Contrato"` → verde
 - **BE-25** · A aplicação não usa `sa` (RNF-06, spec §6.5) · `backend` · Alta
@@ -453,15 +461,15 @@ Como aplicar:
 ### Docker
 
 - **DK-01** · Um comando num clone limpo, sem `.env` (`HL-15`, RNF-04) · `backend` e `frontend` · Alta
-  Num clone limpo: `docker compose config --quiet` sem aviso de variável indefinida; `docker compose up -d` e depois `docker compose ps -a` → `db` saudável, `db-init` `Exited (0)`, `api` saudável e `web` no ar
+  Num clone limpo: `docker compose config --quiet` sem aviso de variável indefinida; `docker compose up -d` e depois `docker compose ps -a` → `db` saudável, `db-init` `Exited (0)`, `api` saudável e `frontend` saudável (nome do serviço corrigido na revisão 1, ver `ARQ-01`)
 - **DK-02** · Contêineres sem root (RNF-06) · `backend` e `frontend` · Alta
-  `docker compose exec api id -u` e `docker compose exec web id -u` → diferentes de `0`
+  `docker compose exec api id -u` e `docker compose exec frontend id -u` → diferentes de `0`
 - **DK-03** · Toda variável com valor padrão (`HL-15`) · `backend` · Alta
   `git grep --untracked -nE "\\$\{[A-Za-z_]+\}" -- docker-compose.yml` → vazio (toda variável no formato `${VAR:-padrão}`)
 - **DK-04** · Portas só no *loopback* (§2) · `backend` · Média
-  `git grep --untracked -nE "\"?(1433|8080):" -- docker-compose.yml` → toda ocorrência precedida de `127.0.0.1:`
+  `git grep --untracked -nE "\"?(1433|4200|8080):" -- docker-compose.yml` → toda ocorrência precedida de `127.0.0.1:` (o `4200` entrou com o `SEC-04`; ajuste da revisão de arquitetura, rodada 3)
 - **DK-05** · Ordem de subida sem `sleep` (`D15`) · `backend` · Média
-  `git grep --untracked -n "sleep" -- docker-compose.yml database/init.sh` → vazio; `git grep --untracked -nE "service_(healthy|completed_successfully)" -- docker-compose.yml` → presentes
+  `git grep --untracked -n "sleep" -- docker-compose.yml` → vazio; `git grep --untracked -n "sleep" -- database/init.sh` → revisar: só dentro de laço de espera **limitado** por condição verificável (passo 1b, erro 904), nunca como espera fixa de ordem de subida (ajuste da revisão 1); `git grep --untracked -nE "service_(healthy|completed_successfully)" -- docker-compose.yml` → presentes
 - **DK-06** · Proxy e limite no Nginx (`D14`, ADR-0002) · `frontend` · Média
   `git grep --untracked -nE "proxy_pass http://api:8080/;|client_max_body_size|X-Forwarded-For" -- frontend/nginx.conf` → as três presentes
 
@@ -521,4 +529,4 @@ Nenhum bloqueio para o gate. Perguntas e sugestões para o orquestrador:
 
 | Achado | Rodada | O que foi feito | Onde (arquivo:linha) | Teste que prova | Status declarado |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| ARQ-01 | 1 | Corpo do desenho alinhado ao código: serviço `web` → `frontend` (§1 R-13, §2 diagrama, tabela e itens 1 e 3, §4 participante) e schema `ItemPedidoResponse` → `PedidoItemResponse` (§5). Decisão do arquiteto (pendência a): fica `frontend` | `02-arquitetura.md:27,50,59-61,73,78,80,145,258` | `git grep -nw web -- docs/esteira/02-arquitetura.md` vazio | Resolvido (aguarda re-revisão) |

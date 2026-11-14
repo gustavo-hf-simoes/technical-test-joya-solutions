@@ -10,7 +10,7 @@ export interface PedidoResumoResponse {
   quantidadeItens: number;
 }
 
-export interface ItemPedidoResponse {
+export interface PedidoItemResponse {
   produtoId: number;
   produtoNome: string;
   quantidade: number;
@@ -24,7 +24,7 @@ export interface PedidoResponse {
   clienteNome: string;
   dataPedido: string;
   valorTotal: number;
-  itens: ItemPedidoResponse[];
+  itens: PedidoItemResponse[];
 }
 
 /** Envelope de paginação (spec §5.3): `PaginaResponse<PedidoResumoResponse>`. */
@@ -46,12 +46,12 @@ export interface FiltroPedidos {
 }
 
 /** Item do corpo de `POST /pedidos` (spec §5.2). O corpo não aceita preço (RN-09). */
-export interface ItemPedidoRequest {
+export interface CriarPedidoItemRequest {
   produtoId: number;
   quantidade: number;
 }
 
 export interface CriarPedidoRequest {
   clienteId: number;
-  itens: ItemPedidoRequest[];
+  itens: CriarPedidoItemRequest[];
 }

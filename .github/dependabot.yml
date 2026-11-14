@@ -1,7 +1,8 @@
 # Atualização de dependências (HL-08). Cada PR do Dependabot passa pelo mesmo CI e pela proteção da main.
 #
-# Hoje só existem actions. `nuget` (backend/) e `npm` (frontend/, e2e/) entram aqui junto com o esqueleto,
-# para não gerar erro de "manifesto não encontrado". `docker` entra com os Dockerfiles.
+# Ecossistemas: actions, NuGet (backend/), npm (frontend/, e2e/) e as imagens base dos dois Dockerfiles (SEC-06).
+# Atualizações minor e patch vêm agrupadas num PR por ecossistema; as major vêm em PRs separados, porque
+# pedem decisão (ex.: Angular 19 → 22, aceito como risco na HL-29/SEC-01).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -16,3 +17,42 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      nuget-menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directories: [/frontend, /e2e]
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories: [/backend, /frontend]
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope

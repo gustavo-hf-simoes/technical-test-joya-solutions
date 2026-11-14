@@ -27,6 +27,11 @@ public sealed record Periodo(DateTime? Inicio, DateTime? FimExclusivo)
             return Error.Validation(CodigoInvalido, "A data inicial não pode ser maior que a data final.");
         }
 
+        if (dataFim == DateOnly.MaxValue)
+        {
+            return Error.Validation(CodigoInvalido, "A data final não tem dia seguinte representável.");
+        }
+
         return new Periodo(
             dataInicio?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
             dataFim?.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));

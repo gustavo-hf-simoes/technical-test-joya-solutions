@@ -351,6 +351,7 @@
 **2026-11-14**. Depois de o gate do E2E da US-16 passar.
 
 > Sim, commit
+
 ## Prompt 40
 <a id="prompt-40"></a>
 
@@ -378,3 +379,52 @@
 **2026-11-14**. Depois de o CI do PR #17 passar, com a aplicação aberta no navegador.
 
 > Sim, merge
+
+## Prompt 44
+<a id="prompt-44"></a>
+
+**2026-11-14**. Depois do gate da T-11.1 (backend e docs), com o PR #17 integrado.
+
+> Sim, commits
+
+## Prompt 45
+<a id="prompt-45"></a>
+
+**2026-11-14**. Depois dos commits da T-11.1, com os jobs de CI e as revisões rodando.
+
+> Sim, push e PR
+
+## Prompt 46
+<a id="prompt-46"></a>
+
+**2026-11-14**. Depois do gate dos jobs de CI de integração, frontend e E2E (T-03.3 a T-03.5).
+
+> Sim, commits
+
+## Prompt 47
+<a id="prompt-47"></a>
+
+**2026-11-14**. Com o CI do PR #19 verde e os commits de CI prontos: merge do PR #19 e push e PR da `us-03-ci`.
+
+> Sim, os dois
+
+## Prompt 48
+<a id="prompt-48"></a>
+
+**2026-11-14**. Resposta ao `AskUserQuestion` sobre os achados das revisões 4b e 5 (corrigir 9 e aceitar SEC-01, SEC-05 e os riscos de contexto, HL-29).
+
+> Aplicar a proposta (Recommended)
+
+## Prompt 49
+<a id="prompt-49"></a>
+
+**2026-11-14**. Resposta ao `AskUserQuestion` sobre o resíduo da base Alpine na imagem do frontend depois da SEC-08 (HL-30).
+
+> Remover curl e aceitar o resto (Recommended)
+
+## Prompt 50
+<a id="prompt-50"></a>
+
+**2026-11-14**. Com as revisões 4b e 5 fechadas e os gates verdes: autorização dos commits por achado na `chore/achados-revisao-1` e do merge do PR #20.
+
+> Sim, os dois

@@ -24,7 +24,12 @@ public static class PeriodoRegras
             var inicio = Ler(dataInicio(consulta), obrigatorio, "DataInicio", "inicial", contexto);
             var fim = Ler(dataFim(consulta), obrigatorio, "DataFim", "final", contexto);
 
-            if (inicio is { } i && fim is { } f && i > f)
+            if (fim == DateOnly.MaxValue)
+            {
+                // O fim exclusivo é o dia seguinte: 9999-12-31 não tem dia seguinte representável.
+                contexto.AddFailure("DataFim", $"A data final deve ser anterior a {DateOnly.MaxValue.ToString(Periodo.FormatoData, System.Globalization.CultureInfo.InvariantCulture)}.");
+            }
+            else if (inicio is { } i && fim is { } f && i > f)
             {
                 contexto.AddFailure("DataFim", "A data final não pode ser anterior à data inicial.");
             }

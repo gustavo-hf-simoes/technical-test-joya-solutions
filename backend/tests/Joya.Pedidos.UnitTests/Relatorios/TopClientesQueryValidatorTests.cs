@@ -42,6 +42,12 @@ public sealed class TopClientesQueryValidatorTests
         Campos(_validator.Validate(new TopClientesQuery("01/01/2026", "2026-12-31"))).ShouldBe(["DataInicio"]);
     }
 
+    [Fact] // SEC-03, RN-15
+    public void Validate_DataFimNoMaximoDoCalendario_RetornaErroNoCampoDataFim()
+    {
+        Campos(_validator.Validate(new TopClientesQuery("0001-01-01", "9999-12-31"))).ShouldBe(["DataFim"]);
+    }
+
     [Fact] // RN-15
     public void Validate_InicioMaiorQueFim_RetornaErroNoCampoDataFim()
     {
