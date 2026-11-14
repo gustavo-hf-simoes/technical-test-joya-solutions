@@ -1,0 +1,44 @@
+    should satisfy the condition
+((s == 201) || (s == 409))
+    but
+[HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError]
+    do not
+  Rastreamento de pilha:
+     at Joya.Pedidos.IntegrationTests.Pedidos.ConcorrenciaTests.PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(Int32 estoqueInicial, Int32 quantidade, Int32 aceitosEsperados, Int32 estoqueFinalEsperado) in C:\Users\gusta\AppData\Local\Temp\qa-mut\backend\tests\Joya.Pedidos.IntegrationTests\Pedidos\ConcorrenciaTests.cs:line 68
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[xUnit.net 00:02:02.29]     Joya.Pedidos.IntegrationTests.Pedidos.ConcorrenciaTests.PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(estoqueInicial: 5, quantidade: 1, aceitosEsperados: 5, estoqueFinalEsperado: 0) [FAIL]
+  Com falha Joya.Pedidos.IntegrationTests.Pedidos.ConcorrenciaTests.PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(estoqueInicial: 5, quantidade: 1, aceitosEsperados: 5, estoqueFinalEsperado: 0) [1 s]
+  Mensagem de erro:
+   Shouldly.ShouldAssertException : respostas.Select(r => r.Status)
+    should satisfy the condition
+((s == 201) || (s == 409))
+    but
+[HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError, HttpStatusCode.InternalServerError]
+    do not
+  Rastreamento de pilha:
+     at Joya.Pedidos.IntegrationTests.Pedidos.ConcorrenciaTests.PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo(Int32 estoqueInicial, Int32 quantidade, Int32 aceitosEsperados, Int32 estoqueFinalEsperado) in C:\Users\gusta\AppData\Local\Temp\qa-mut\backend\tests\Joya.Pedidos.IntegrationTests\Pedidos\ConcorrenciaTests.cs:line 68
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+
+Com falha! – Com falha:     3, Aprovado:     0, Ignorado:     0, Total:     3, Duração: 3 s - Joya.Pedidos.IntegrationTests.dll (net8.0)
+
+real	2m18.359s
+user	0m0.125s
+sys	0m0.171s

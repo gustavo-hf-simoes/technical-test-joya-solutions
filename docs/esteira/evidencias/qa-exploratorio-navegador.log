@@ -1,0 +1,37 @@
+LISTAGEM linhas (incl. cabecalho): 21
+PRIMEIRA LINHA: 14/11/2026 Ana Pereira 1 R$ 2,40
+HEADERS: Data | Cliente | Itens | Valor total | Ana Pereira | Maria Silva | Maria Silva | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Beatriz Rocha | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Ana Pereira | Carlos Lima | Maria Silva | Fernanda Costa | João Souza
+TEXTO PAGINACAO: ["Data\tCliente\tItens\tValor total","Anterior","Página 1 de 3 (49 pedidos)","Próxima"]
+URL APOS PROXIMA: http://localhost:4200/pedidos?page=2
+OPCOES CLIENTE: ["Todos os clientes","Ana Pereira","Beatriz Rocha","Carlos Lima","Fernanda Costa","João Souza","João Souza","Luciana Barros","Marcos Teixeira","Maria Silva","Maria Silva","Paulo Almeida","Rafael Mendes"]
+URL FILTRADA: http://localhost:4200/pedidos?clienteId=5&dataInicio=2026-01-01&dataFim=2026-12-31
+APOS RELOAD cliente: 5 inicio: 2026-01-01 fim: 2026-12-31
+VAZIO msg visivel: true
+CARREGANDO visivel: true
+ERRO alerta: Não foi possível carregar os pedidos. Tentar novamente
+APOS TENTAR NOVAMENTE tabela visivel: true
+PRODUTOS: ["Selecione um produto"," Agenda 2026 — R$ 39,90 (estoque 0) "," Borracha branca — R$ 1,20 (estoque 282) "," Caderno universitário — R$ 24,90 (estoque 120) "," Calculadora científica — R$ 89,00 (estoque 25) "," Caneta esferográfica azul — R$ 2,50 (estoque 498) "," Estojo duplo — R$ 27,50 (estoque 60) "," Lápis preto HB — R$ 1,80 (estoque 800) "," Marcador de texto amarelo — R$ 5,90 (estoque 250) "," Mochila escolar — R$ 149,90 (estoque 40) "," Papel sulfite A4 (500 fls) — R$ 32,00 (estoque 200) "," Pasta com elástico — R$ 12,30 (estoque 0) "," Régua de 30 cm — R$ 4,75 (estoque 0) "]
+INDICE produto estoque 0: 1
+BOTAO confirmar habilitado (estoque 0, qtd 1): true
+409 TELA: Novo pedido Estoque insuficiente. Ajuste as quantidades dos itens destacados. A lista de produtos foi atualizada. Cliente Selecione um cliente Ana Pereira Beatriz Rocha Carlos Lima Fernanda Costa João Souza João Souza Maria Silva Maria Silva Paulo Almeida Rafael Mendes Itens do pedido Produto (item 1) Selecione um produto Agenda 2026 — R$ 39,90 (estoque 0) Borracha branca — R$ 1,20 (estoque 282) Caderno universitário — R$ 24,90 (estoque 120) Calculadora científica — R$ 89,00 (estoque 25) Caneta esferográfica azul — R$ 2,50 (estoque 498) Estojo duplo — R$ 27,50 (estoque 60) Lápis preto HB — R$ 
+URL pos-409: http://localhost:4200/pedidos/novo
+qtd preservada: 1
+422 TELA: Novo pedido O pedido não pôde ser aceito. O cliente 11 esta inativo. Cliente Selecione um cliente Ana Pereira Beatriz Rocha Carlos Lima Fernanda Costa João Souza João Souza Maria Silva Maria Silva Paulo Almeida Rafael Mendes O cliente 11 esta inativo. Itens do pedido Produto (item 1) Selecione um produto Agenda 2026 — R$ 39,90 (estoque 0) Borracha branca — R$ 1,20 (estoque 282) Caderno universitário — R$ 24,90 (estoque 120) Calculadora científica — R$ 89,00 (estoque 25) Caneta esferográfica azul
+CA-31 botao desabilitado sem cliente/itens: true
+CA-31 qtd 0 botao desabilitado: true
+TAB LISTAGEM:
+  A# "Gestão de Pedidos" outline=auto/1px boxShadow=none
+  A# "Novo pedido" outline=solid/2px boxShadow=none
+  SELECT#filtro-cliente "Todos os clientes Ana Per" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-inicio "" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-inicio "" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-inicio "" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-inicio "" outline=none/3px boxShadow=none
+  INPUT#filtro-data-fim "" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-fim "" outline=auto/1px boxShadow=none
+  INPUT#filtro-data-fim "" outline=auto/1px boxShadow=none
+FOCO apos Tab do select cliente: BUTTON Adicionar item
+FOCO apos Enter em Adicionar item: BUTTON 
+FORMATO pt-BR 1a linha: 14/11/2026 Ana Pereira 1 R$ 2,40
+html lang: pt-BR
+CONSOLE erros/avisos: ["error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)","error: Failed to load resource: the server responded with a status of 409 (Conflict)","error: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"]
