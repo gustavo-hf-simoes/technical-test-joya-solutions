@@ -9,7 +9,7 @@ RUN dotnet restore src/Joya.Pedidos.Api/Joya.Pedidos.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/Joya.Pedidos.Api/Joya.Pedidos.Api.csproj -c Release --no-restore -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
