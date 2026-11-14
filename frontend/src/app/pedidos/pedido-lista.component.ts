@@ -2,7 +2,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
 
 import { ClientesApi } from '../core/api/clientes-api';
@@ -18,7 +18,7 @@ type EstadoLista =
 
 @Component({
   selector: 'app-pedido-lista',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pedido-lista.component.html',
 })
@@ -43,8 +43,13 @@ export class PedidoListaComponent {
 
   readonly estado = signal<EstadoLista>({ tipo: 'carregando' });
   readonly periodoInvalido = signal(false);
+  /** Id do pedido recém-criado, vindo do estado de navegação do formulário (CA-30). */
+  readonly pedidoCriadoId = signal<number | null>(null);
 
   constructor() {
+    const criado: unknown = this.router.getCurrentNavigation()?.extras.state?.['pedidoCriadoId'];
+    if (typeof criado === 'number') this.pedidoCriadoId.set(criado);
+
     const filtroDaUrl$ = this.route.queryParamMap.pipe(map((q): FiltroPedidos => this.lerFiltro(q)));
 
     filtroDaUrl$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((filtro) => {

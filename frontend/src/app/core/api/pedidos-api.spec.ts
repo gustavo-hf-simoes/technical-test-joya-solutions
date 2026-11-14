@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { ClientesApi } from './clientes-api';
 import { PedidosApi } from './pedidos-api';
+import { ProdutosApi } from './produtos-api';
 
 describe('PedidosApi e ClientesApi', () => {
   let http: HttpTestingController;
@@ -43,6 +44,36 @@ describe('PedidosApi e ClientesApi', () => {
 
     const req = http.expectOne('/api/clientes');
     expect(req.request.params.keys()).toEqual([]);
+    req.flush([]);
+  });
+});
+
+describe('PedidosApi.criar e ProdutosApi', () => {
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('PedidosApi_Criar_EnviaCorpoSemPrecoEIdempotencyKey', () => {
+    TestBed.inject(PedidosApi)
+      .criar({ clienteId: 7, itens: [{ produtoId: 12, quantidade: 2 }] }, 'chave-1')
+      .subscribe();
+
+    const req = http.expectOne('/api/pedidos');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Idempotency-Key')).toBe('chave-1');
+    expect(req.request.body).toEqual({ clienteId: 7, itens: [{ produtoId: 12, quantidade: 2 }] });
+    req.flush({});
+  });
+
+  it('ProdutosApi_Listar_FiltraPorAtivo', () => {
+    TestBed.inject(ProdutosApi).listar(true).subscribe();
+    const req = http.expectOne((r) => r.url === '/api/produtos');
+    expect(req.request.params.get('ativo')).toBe('true');
     req.flush([]);
   });
 });

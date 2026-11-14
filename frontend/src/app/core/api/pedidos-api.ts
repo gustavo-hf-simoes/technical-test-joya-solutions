@@ -1,8 +1,14 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { FiltroPedidos, PaginaResponse, PedidoResumoResponse } from './pedidos.models';
+import {
+  CriarPedidoRequest,
+  FiltroPedidos,
+  PaginaResponse,
+  PedidoResponse,
+  PedidoResumoResponse,
+} from './pedidos.models';
 
 @Injectable({ providedIn: 'root' })
 export class PedidosApi {
@@ -17,5 +23,11 @@ export class PedidosApi {
     if (filtro.pageSize !== undefined) params = params.set('pageSize', filtro.pageSize);
 
     return this.http.get<PaginaResponse<PedidoResumoResponse>>('/api/pedidos', { params });
+  }
+
+  /** `POST /pedidos` (RN-14): a mesma `Idempotency-Key` deve ser reenviada em toda nova tentativa. */
+  criar(pedido: CriarPedidoRequest, idempotencyKey: string): Observable<PedidoResponse> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<PedidoResponse>('/api/pedidos', pedido, { headers });
   }
 }

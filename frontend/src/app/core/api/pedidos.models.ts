@@ -44,3 +44,14 @@ export interface FiltroPedidos {
   page?: number;
   pageSize?: number;
 }
+
+/** Item do corpo de `POST /pedidos` (spec §5.2). O corpo não aceita preço (RN-09). */
+export interface ItemPedidoRequest {
+  produtoId: number;
+  quantidade: number;
+}
+
+export interface CriarPedidoRequest {
+  clienteId: number;
+  itens: ItemPedidoRequest[];
+}

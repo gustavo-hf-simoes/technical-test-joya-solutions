@@ -65,6 +65,37 @@ Pendência de contrato (não é divergência da spec): `docs/contratos/openapi.j
 
 Verificado nesta rodada: `<label for>` em cada campo; `<th scope="col">` e `<th scope="row">`; `<caption class="sr-only">`; `role="status"` e `aria-live="polite"` para carregamento e resultado; `role="alert"` para erro e período inválido; `aria-invalid`/`aria-describedby` nas datas; `<nav aria-label="Paginação">`; `lang="pt-BR"`; foco visível nos botões; controles nativos (teclado completo); botões Anterior/Próxima com `disabled`; contraste: texto slate-900/700 sobre branco, botões azul 700 e vermelho 700 com texto branco (acima de 4,5:1 pelas tabelas do Tailwind, não medido com ferramenta). Não verificado ainda: foco no primeiro erro (vale para o formulário de pedido, US-13) e auditoria automática (axe) no E2E (US-16).
 
+## US-15 — Tela de criação de pedido
+
+Rota `/pedidos/novo` (D13), link "Novo pedido" na listagem.
+
+**Mapa arquivo → tarefa** (o componente é compartilhado pelas três tarefas, então os 3 commits tocam `pedido-form.component.*`; se for preciso separar, use `git add -p`):
+
+| Tarefa | Arquivos |
+|---|---|
+| T-15.1 | `core/api/produtos-api.ts`, `core/api/produtos.models.ts`, `pedidos/pedido-form.component.{ts,html,spec.ts}` (formulário, validação, total estimado, rota) |
+| T-15.2 | `core/api/pedidos-api.ts` (`criar` + `Idempotency-Key`), `core/api/pedidos.models.ts` (`CriarPedidoRequest`), `core/api/pedidos-api.spec.ts`, `app.routes.ts`, `pedidos/pedido-lista.component.{ts,html}` (banner de sucesso e link), partes de envio no componente do formulário |
+| T-15.3 | partes de tratamento de 409/422/400 no componente do formulário |
+
+**Testes** (`pedido-form.component.spec.ts`, `pedidos-api.spec.ts`; 24 de 24 verdes): `SemItens_DesabilitaConfirmar`, `SemCliente_MostraMotivo`, `QuantidadeInvalida_MostraMotivo`, `ProdutoRepetido_MostraMotivo` (CA-31, RN-01 a RN-03); `TotalEstimado_SomaPrecoVezesQuantidade`; `Confirmar_RedirecionaParaListagemComSucesso` (CA-30); `Reenvio_ReutilizaIdempotencyKey` (CA-30, RN-14, HL-22); `Resposta409_DestacaItensEPreservaDados` (CA-32); `Resposta422Cliente_MostraNoCampoCliente`; `ErroAoCarregarApoio_PermiteTentarNovamente`; `PedidosApi_Criar_EnviaCorpoSemPrecoEIdempotencyKey`; `ProdutosApi_Listar_FiltraPorAtivo`.
+
+**Verificações:** `lint` verde; `build` verde; `test` 24 SUCCESS (ChromeHeadless).
+
+**Decisões de UX**
+- Formulário começa sem itens; "Adicionar item" até 50 (RN-01). `FormArray<FormGroup>` tipado; produto repetido (RN-03) e quantidade fora de 1..10000 ou não inteira (RN-02) ficam inválidos no cliente.
+- Confirmar desabilitado se inválido ou enviando; o motivo aparece em texto ligado por `aria-describedby`, para o bloqueio não ser silencioso. Erros por campo só depois de tocar/editar.
+- Total estimado por `computed` (preço do `GET /produtos` x quantidade), com aviso de que o preço final é do servidor (RN-09).
+- `Idempotency-Key` (`crypto.randomUUID()`) gerada uma vez por instância do formulário e reenviada em todo reenvio. Ela é mantida também depois de 409/422 (o brief pede uma por formulário); como o backend só grava a chave em pedido criado, não deveria haver efeito. Se o backend (US-12) preferir chave nova após erro de negócio, é mudança de uma linha.
+- 409: itens destacados com "pedido N, disponível M", dados preservados, produtos recarregados em silêncio; 422: mensagem no campo cliente (`CLIENTE_*`) ou nos itens (`produtoIds`); 400/rede: mensagem geral. O resumo de erro é `role="alert"` e recebe o foco.
+- Sucesso: navega para `/pedidos` com `state.pedidoCriadoId`, e a listagem mostra "Pedido #id criado com sucesso" (`role="status"`). O estado não sobrevive a recarregar a página.
+- Seletores usam `GET /clientes?ativo=true` e `GET /produtos?ativo=true`, com estados carregando/erro (nova tentativa).
+
+**A conferir com `openapi.json` (T-11.2):** `ProdutoResponse` (`id, sku, nome, preco, estoque`), `CriarPedidoRequest`/`ItemPedidoRequest`, status de sucesso do `POST` (tratado igual para 200/201), o header `Idempotency-Key`, e que `produtoIds`/`itens` do 409/422 batem com o `ProblemaApi`.
+
+**Acessibilidade:** `<label for>` em todos os campos (com "item N" no rótulo); `aria-invalid`/`aria-describedby` nos campos com erro; `fieldset`/`legend` nos itens; botão Remover com texto para leitor de tela; foco no resumo de erro do servidor. Não verificado: auditoria automática (axe) e contraste medido. Limitação: com o botão desabilitado não há "foco no primeiro erro" de validação local, mitigado pelo texto do motivo.
+
+PROP-xx: nenhuma. Bloqueios: nenhum.
+
 ## Resposta a achados
 
 | Achado | Rodada | O que foi feito | Onde (arquivo:linha) | Teste que prova | Status declarado |
