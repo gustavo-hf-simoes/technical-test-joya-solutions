@@ -156,7 +156,41 @@
 - **Consequência para o processo.** Com a `main` protegida, a partir daqui **toda** mudança entra por PR, inclusive esta. O primeiro PR do repositório é o desta entrada.
 - **Modelo:** Opus 5.5.
 
-<!-- Próximas entradas: E05 — Etapa 1 (product-owner), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E06 — Etapa 1: requisitos e backlog (`product-owner`) · 2026-11-13 20:53 → 21:35
+
+- **Pedido** ([prompts 6 a 8](prompts.md#prompt-6)): com o Docker instalado, iniciar a etapa 1 da esteira.
+- **Episódio da sessão anterior.** A sessão que recebeu os prompts 6 a 8 não conseguiu rodar a etapa, por dois motivos:
+  - a skill falhou com `Unknown skill: esteira` (20:53), e os agentes de `.claude/agents/` também não apareciam como tipos de agente. Eles tinham sido criados durante a própria sessão e só são carregados quando a sessão começa;
+  - o PATH da sessão era anterior à instalação do Docker, e `docker` respondeu `docker: command not found` (20:59). O daemon também ainda não estava no ar.
+
+  Ela registrou o próximo passo em `status.md` e a etapa foi para uma sessão nova. Esta sessão conferiu os três pontos antes de delegar (`CG-02`): `docker info` com `Server Version: 29.9.3`, os agentes do projeto disponíveis e a skill `/esteira` carregada.
+- **Tentativa 1 parada pelo desenvolvedor, e o porquê** ([prompts 9 a 11](prompts.md#prompt-9)). O `product-owner` (Opus, esforço `high`) rodou 13 min sem gravar nada. A IA mediu a transcrição:
+  - leu 25 arquivos em 70 s, inclusive agentes de outros papéis, a skill `/new-endpoint` e `.git/logs/HEAD`;
+  - raciocinou 3,5 min, com 23.018 tokens de saída, e só depois fez dois `Grep`;
+  - entrou numa segunda geração de cerca de 8 min, perdida na parada.
+
+  A causa foi raciocínio demais, e não a leitura. Parte da culpa foi da delegação, que não limitou as entradas nem a ordem de escrita. **`HL-09`:** o esforço do PO caiu para `medium`, o modelo continua Opus, e a delegação passou a ter lista fechada de entradas e escrita incremental.
+- **Tentativa 2:** 9,6 min, três artefatos gravados:
+  - [01-requisitos.md](../esteira/01-requisitos.md): 11 RF, 9 RNF, 23 ENT e 7 PROPs;
+  - [backlog.md](../esteira/backlog.md): 1 épico, 18 histórias e 56 tarefas (7 C1, 34 C2, 15 C3);
+  - [rastreabilidade.md](../esteira/rastreabilidade.md): as 75 linhas do enunciado classificadas, com 46 obrigatórias, todas com tarefa.
+- **Gate (rodado pelo orquestrador):**
+  - `validar_rastreabilidade.py` deu 0 erro;
+  - `validar_config.py` reprovou duas vezes por um link quebrado no texto da PROP-07. Na primeira correção, o PO pôs o link entre crases, mas a regex do validador não ignora crases. Na segunda, tirou a sintaxe de link;
+  - na terceira rodada, os dois validadores passaram.
+- **Decisões humanas:** as 7 PROPs foram aceitas com a opção recomendada, em 2 rodadas de `AskUserQuestion`, e viraram as `HL-10` a `HL-16`. O orquestrador aplicou o texto na [spec](../spec.md):
+  - CA-33 a CA-38;
+  - RNF-08;
+  - RN-14 com a corrida na idempotência;
+  - RNF-04 e RNF-06;
+  - `413` e `429` no catálogo de erros;
+  - premissa P7;
+  - a §9 apontando a matriz oficial.
+
+  O `CLAUDE.md` passou a usar `docker compose up` sem flags (`HL-15`). O código `LIMITE_DE_TAXA` do `429` foi nomeado pelo orquestrador ao aplicar a PROP-03, e isso está registrado na `HL-12`.
+- **Modelo:** orquestrador no Opus 5.5 (esforço high); `product-owner` no Opus, `high` na tentativa 1 e `medium` na tentativa 2. Tokens em [status.md](../esteira/status.md), *Execuções de agentes*.
+
+<!-- Próximas entradas: E07 — Etapa 2 (arquiteto), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -164,9 +198,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 8 |
+| Decisões humanas registradas (`HL`) | 16 |
 | Erros da IA detectados e corrigidos (`CG`) | 2, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
-| Perguntas estruturadas da IA ao desenvolvedor | 10, em 4 rodadas |
-| Compactações de contexto da sessão | 3 |
-| Tarefas por nível (`C1`/`C2`/`C3`) | — (backlog ainda não gerado) |
-| Taxa de escalonamento de modelo | — |
+| Perguntas estruturadas da IA ao desenvolvedor | 17, em 6 rodadas |
+| Compactações de contexto da sessão | 4 |
+| Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 34 / 15 (56 tarefas em 18 histórias) |
+| Taxa de escalonamento de modelo | 0 de 2 delegações. O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

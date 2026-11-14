@@ -90,3 +90,55 @@
 **2026-11-13 20:29**. Resposta, por botão, à pergunta "Quais diferenciais eu registro como HL-08 antes da etapa 1?". A IA tinha proposto 4 diferenciais recomendados e 4 opcionais.
 
 > Os 4 recomendados
+
+## Prompt 6
+<a id="prompt-6"></a>
+
+**2026-11-13 20:53**
+
+> Fiz a instalação do docker na máquina, podemos iniciar a etapa 1.
+
+## Prompt 7
+<a id="prompt-7"></a>
+
+**2026-11-13 20:54**
+
+> Reinicio a sessão
+
+## Prompt 8
+<a id="prompt-8"></a>
+
+**2026-11-13 20:59**
+
+> /esteira etapa 1
+
+## Prompt 9
+<a id="prompt-9"></a>
+
+**2026-11-13 21:13**, depois de parar o `product-owner`.
+
+> Qual o motivo do travamento no agente?
+
+## Prompt 10
+<a id="prompt-10"></a>
+
+**2026-11-13 21:15**
+
+> Ficou 13 minutos rodando, é tempo suficiente para leitura, verifique se o uso do modelo opus não está exagerando como overthinking para a tarefa executada.
+
+## Prompt 11
+<a id="prompt-11"></a>
+
+**2026-11-13 21:16**. Resposta, por botão, à pergunta "Como redelego a etapa 1?".
+
+> Opus medium + incremental
+
+**Respostas às perguntas da IA sobre as PROPs da etapa 1 (2026-11-13, por volta de 21:30):**
+
+- PROP-01, critério da query da Parte 4 → **Ranking completo (Recomendado)**
+- PROP-02, critérios das rotas derivadas → **Criar os CAs (Recomendado)**
+- PROP-03, limites contra abuso → **Corpo 413 + taxa 429 (Recomendado)**
+- PROP-05, corrida na idempotência → **Desfazer e devolver 200 (Recomendado)**
+- PROP-04, acessibilidade e `pt-BR` → **RNF-08 na spec (Recomendado)**
+- PROP-06, comando do Docker → **up sem flags (Recomendado)**
+- PROP-07, duas tabelas de rastreabilidade → **§9 resumo + matriz oficial (Recomendado)**
