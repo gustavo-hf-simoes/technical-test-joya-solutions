@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using Joya.Pedidos.Api.Erros;
+using Joya.Pedidos.Api.Saude;
+using Joya.Pedidos.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,11 @@ builder.Services.AddExceptionHandler<ErroInternoExceptionHandler>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --- T-05.2: health checks (live sem verificações; ready consulta o SQL Server) ---
+builder.Services.AddInfrastructure();
+builder.Services.AddHealthChecks()
+    .AddCheck<BancoDeDadosHealthCheck>("sqlserver", tags: [BancoDeDadosHealthCheck.Tag]);
+
 var app = builder.Build();
 
 // --- T-05.1 ---
@@ -30,6 +38,13 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker") |
 }
 
 app.MapControllers();
+
+// --- T-05.2 ---
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registro => registro.Tags.Contains(BancoDeDadosHealthCheck.Tag),
+});
 
 app.Run();
 
