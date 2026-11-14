@@ -330,3 +330,31 @@
 **2026-11-14**. Depois de o CI do PR #15 passar, com o README escrito e sem commit.
 
 > Sim, merge
+
+## Prompt 40
+<a id="prompt-40"></a>
+
+**2026-11-14**. Depois dos commits da US-16.
+
+> Sim, commit, push e PR
+
+## Prompt 41
+<a id="prompt-41"></a>
+
+**2026-11-14**. Com o PR #17 aberto, antes da US-11.
+
+> Sim, e além de prosseguir com a US, me dê um panorama do projeto geral, já atende aos requisitos oficiais da vaga?
+
+## Prompt 42
+<a id="prompt-42"></a>
+
+**2026-11-14**. Depois do panorama, com a T-11.1 delegada.
+
+> Sim, adiante e mostre o front-end rodando com o banco e o back, preciso ver o resultado.
+
+## Prompt 43
+<a id="prompt-43"></a>
+
+**2026-11-14**. Depois de o CI do PR #17 passar, com a aplicação aberta no navegador.
+
+> Sim, merge
