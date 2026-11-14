@@ -17,6 +17,13 @@ public sealed class Pedido
         ValorTotal = valorTotal;
     }
 
+    // T-06.4: construtor de materialização do EF Core, que não liga parâmetro de construtor a navegação.
+    // Os itens chegam pelo campo _itens (PropertyAccessMode.Field). Não protege invariantes: só lê o que o banco já tem.
+    private Pedido(int clienteId, DateTime dataPedido, Guid? chaveIdempotencia, decimal valorTotal)
+        : this(clienteId, dataPedido, chaveIdempotencia, [], valorTotal)
+    {
+    }
+
     /// <summary>Atribuído pelo banco ao gravar (IDENTITY).</summary>
     public int Id { get; private set; }
 
