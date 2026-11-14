@@ -1,32 +1,30 @@
 using Joya.Pedidos.Core.Common;
-using Microsoft.Data.SqlClient;
+using Joya.Pedidos.Infrastructure.Persistencia;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Joya.Pedidos.Infrastructure.Saude;
 
-/// <summary>Abre uma conexão e executa <c>SELECT 1</c>. Qualquer falha de conexão significa "indisponível".</summary>
-public sealed class VerificadorDeBanco(string? connectionString, ILogger<VerificadorDeBanco> logger) : IVerificadorDeBanco
+/// <summary>
+/// Readiness pelo mesmo <see cref="PedidosDbContext"/> da aplicação (mesma connection string e login). O
+/// <c>CanConnectAsync</c> abre a conexão e devolve <c>false</c> em falha de banco; cancelamento continua subindo.
+/// </summary>
+public sealed class VerificadorDeBanco(PedidosDbContext contexto, ILogger<VerificadorDeBanco> logger) : IVerificadorDeBanco
 {
     public async Task<bool> EstaDisponivelAsync(CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(connectionString))
+        if (string.IsNullOrWhiteSpace(contexto.Database.GetConnectionString()))
         {
             logger.LogWarning("A connection string ConnectionStrings:Default não está configurada.");
             return false;
         }
 
-        try
+        var disponivel = await contexto.Database.CanConnectAsync(ct);
+        if (!disponivel)
         {
-            await using var conexao = new SqlConnection(connectionString);
-            await conexao.OpenAsync(ct);
-            await using var comando = new SqlCommand("SELECT 1", conexao);
-            await comando.ExecuteScalarAsync(ct);
-            return true;
+            logger.LogWarning("O banco de dados não respondeu à verificação de readiness.");
         }
-        catch (SqlException excecao)
-        {
-            logger.LogWarning(excecao, "O banco de dados não respondeu à verificação de readiness.");
-            return false;
-        }
+
+        return disponivel;
     }
 }

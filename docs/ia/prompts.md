@@ -253,3 +253,17 @@
 **2026-11-13**. Depois de aberto o PR #6, com o CI ainda rodando.
 
 > Siga a sequência da esteira, qual é o problema atual? é só aguardar o CI? se for o caso acompanhe e prossiga.
+
+## Prompt 26
+<a id="prompt-26"></a>
+
+**2026-11-13**. Depois do gate da US-05, com os commits e o PR propostos.
+
+> Sim, commits e PR
+
+## Prompt 27
+<a id="prompt-27"></a>
+
+**2026-11-13**. Depois de o CI do PR #7 passar.
+
+> Sim, merge e US-06
