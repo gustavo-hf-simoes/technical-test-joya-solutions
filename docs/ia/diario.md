@@ -274,7 +274,17 @@
 - **Gate (rodado pelo orquestrador):** aprovado. 0 aviso, 64/64 unitários e 77/77 de integração. MCP `mssql` não verificado (`CG-05`, falta reiniciar).
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (C2) e no Opus `high` (C3).
 
-<!-- Próximas entradas: E13 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E13 — Etapas 3 e 4 em paralelo: US-07, US-08, US-09, US-14 e US-15 · 2026-11-14
+
+- **Pedido** ([prompt 28](prompts.md#prompt-28), [prompt 29](prompts.md#prompt-29) e [prompt 30](prompts.md#prompt-30)): commits e PR da US-06; depois, integrar o PR #8 e acelerar, com prazo em 2026-11-15 12h25, menos créditos e menos disco no C:.
+- **Decisões humanas:** `HL-25` (uma delegação por história ou par de histórias pequenas, Opus só nas tarefas C3 críticas, backend e frontend em paralelo em pastas disjuntas, integração uma vez por história, um PR por rodada) e `HL-26` (obrigatório primeiro; extras depois, na ordem US-16, US-11, US-17, US-12). O desenvolvedor autorizou os commits por tarefa da rodada inteira de uma vez.
+- **Cinco delegações:** US-07 (Sonnet), US-14 (Sonnet, em paralelo), US-08 com T-09.1 (Sonnet), T-09.2 (Opus `high`) e US-15 (Sonnet, em paralelo com a T-09.2). Cache do npm e testes do Angular no Chrome já instalado, sem baixar nada no C:.
+- **Correção do orquestrador:** a busca por silenciamento do gate pegou um `default!` num teste unitário da T-08.2 (regra de ouro 1). Devolvido em CORRECAO e resolvido em uma rodada. Também corrigi na rastreabilidade o nome de um teste que não existia (`GetProdutos_AtivoInvalido_Retorna400` → `GetCatalogo_AtivoInvalido_Retorna400`).
+- **Desvio de processo:** T-14.3 com T-14.4, e T-15.1 com T-15.3, saíram em um commit cada, porque dividem o mesmo componente; separar trechos de template à mão custaria tempo sem ganho (`HL-25`).
+- **Gate (rodado pelo orquestrador):** aprovado. Backend: 0 aviso, 109/109 unitários e 118/118 de integração. Frontend: lint limpo, build sem aviso, 24/24. MCP `mssql` não verificado (`CG-05`); a T-09.2 trouxe o SQL gerado pelo EF como evidência.
+- **Modelo:** orquestrador no Opus 5.5; `backend` e `frontend` no Sonnet `medium` (C2) e `backend` no Opus `high` (T-09.2).
+
+<!-- Próximas entradas: E14 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -282,9 +292,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 24 |
+| Decisões humanas registradas (`HL`) | 26 |
 | Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
-| Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
-| Compactações de contexto da sessão | 7 |
+| Perguntas estruturadas da IA ao desenvolvedor | 27, em 9 rodadas |
+| Compactações de contexto da sessão | 8 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 16 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 21 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
