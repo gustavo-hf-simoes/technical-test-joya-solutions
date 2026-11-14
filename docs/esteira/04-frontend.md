@@ -101,3 +101,17 @@ PROP-xx: nenhuma. Bloqueios: nenhum.
 | Achado | Rodada | O que foi feito | Onde (arquivo:linha) | Teste que prova | Status declarado |
 |---|---|---|---|---|---|
 | — | — | Sem achados nesta rodada | — | — | — |
+
+---
+
+## US-16 — Teste E2E com Playwright (T-16.1)
+
+**Arquivos:** `e2e/package.json` (+ lock), `e2e/playwright.config.ts`, `e2e/tsconfig.json`, `e2e/criar-pedido.spec.ts`. O `.gitignore` da raiz já cobria `node_modules/`, `e2e/test-results/` e `e2e/playwright-report/`.
+
+**Teste:** `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` (CA-30). Abre `/pedidos/novo`, escolhe o primeiro cliente e, na tela, o primeiro produto com estoque >= 2 (lê o preço do texto da opção), quantidade 2, confere o total estimado (2 x preço), confirma. Espera a rota `/pedidos`, o aviso "Pedido #N criado com sucesso" e, na primeira linha da tabela, o cliente escolhido e o valor total = 2 x preço em BRL (formato pt-BR via `Intl`). Seletores só por papel e rótulo.
+
+**Decisões:** `channel: 'chrome'` (nenhum navegador do Playwright baixado); `baseURL` por `E2E_BASE_URL` (padrão `http://localhost:4200`); 1 worker; quantidade 2 (CA-30 integral); consome 2 unidades por execução, então a repetição depende do estoque da carga. Corrida inicial corrigida: o teste aguarda as opções carregarem (`nth(1)` anexada) antes de ler os textos.
+
+**Verificação:** com `docker compose up -d` saudável, `npm --prefix e2e test` passou 3 vezes seguidas (após a correção da corrida); `tsc --noEmit` do e2e limpo. `docker compose down` sem `-v` ao final.
+
+**Limitação:** assume que a listagem ordena do mais recente ao mais antigo (a primeira linha é o pedido novo); o teste confere cliente e valor, não o id da linha. PROP-xx: nenhuma. Bloqueios: nenhum.
