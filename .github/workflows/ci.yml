@@ -5,8 +5,9 @@
 #             links do Markdown, os hooks de limite (guard-paths / guard-bash) e a matriz
 #             de rastreabilidade (HL-08).
 #   CodeQL fica em codeql.yml.
-#   backend, frontend e e2e entram com o esqueleto da solução (backlog, épico de fundação),
-#   pelos agentes `backend` e `frontend`.
+#   backend     — build, formatação e testes unitários.
+#   integracao  — testes de integração contra SQL Server real (Testcontainers; Docker do runner).
+#                 A medição da Parte 4 (Categoria=Medicao) fica de fora (HL-27).
 #
 # Segurança (skill gha-security-review): permissões mínimas, actions fixadas por SHA,
 # sem `pull_request_target` e sem interpolar dados do evento em `run:`.
@@ -71,3 +72,22 @@ jobs:
 
       - name: Testes unitários
         run: dotnet test backend/tests/Joya.Pedidos.UnitTests --configuration Release --no-build
+
+  integracao:
+    name: Integração (SQL Server real)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: backend/global.json
+
+      - name: Testes de integração (sem a medição da Parte 4)
+        run: >-
+          dotnet test backend/tests/Joya.Pedidos.IntegrationTests
+          --configuration Release --filter "Categoria!=Medicao"
+
