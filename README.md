@@ -4,6 +4,20 @@
 
 Cadastro e consulta de pedidos de clientes: .NET 8, Angular 19 e SQL Server 2022, tudo em Docker. O projeto foi construído com o **Claude Code** numa esteira *Spec-Driven Development* com agentes por papel.
 
+## Sumário
+
+1. [Como rodar com Docker](#como-rodar-com-docker)
+2. [Como rodar os testes](#como-rodar-os-testes)
+3. [Principais decisões técnicas](#principais-decisões-técnicas)
+4. [Como usei o Claude](#como-usei-o-claude)
+5. [Configuração AI-first](#configuração-ai-first-claude-e-claudemd)
+6. [Parte 4: debug da query](#parte-4-debug-da-query)
+7. [Limitações](#limitações)
+8. [Custo medido da esteira](#custo-medido-da-esteira)
+9. [Links de entrega](#links-de-entrega)
+10. [Onde está cada coisa](#onde-está-cada-coisa)
+11. [Histórico de commits](#histórico-de-commits)
+
 ## Como rodar com Docker
 
 Pré-requisito: Docker com Compose v2. Nada mais: não é preciso .NET, Node nem `.env`.
@@ -172,6 +186,30 @@ Os planos e as leituras foram colhidos com o login de leitura `claude_mcp`. Os t
 O problema nunca foi a falta de índice, e sim a função sobre a coluna, que impedia o uso dele.
 
 **Por que a entrega é a `02`, e não a `03`.** A `03` é cerca de 4 vezes mais rápida e é a mesma forma que a API usa no top-clientes. Mas a query do enunciado soma os itens, e a `02` mantém essa semântica. A `03` só é equivalente porque `ValorTotal` é gravado na mesma transação que os itens, e isso é uma regra da aplicação, não do banco. A comparação está na seção 8 da investigação.
+
+## Limitações
+
+- **Sem autenticação nem autorização**, por decisão de escopo (spec 2.2). Em produção, a API ficaria atrás de um gateway com OIDC.
+- **Sem CRUD de clientes e produtos, e sem edição ou cancelamento de pedido** (spec 2.2). Os cadastros vêm da carga inicial.
+- **MCP `mssql`:** a conexão falhou com `AUTH_FAILED` na sessão da Parte 4 (`CG-05`). As evidências foram colhidas com o mesmo login, por teste.
+- **Medição da Parte 4 fora do gate** (`HL-27`). Ela leva de 2 a 3 minutos e roda sob demanda. Uma regressão de desempenho na query só aparece se alguém rodá-la.
+- **Corpo *chunked* acima do limite:** o 413 foi testado com `Content-Length`, mas não com corpo *chunked* contra o Kestrel real.
+- **Senhas padrão do compose** são de desenvolvimento. Em produção, viriam de um cofre de segredos.
+- **Histórias opcionais** (E2E com Playwright, contrato OpenAPI conferido no CI, deploy e idempotência) entram na ordem da `HL-26`, conforme o prazo. O estado de cada uma está em [status.md](docs/esteira/status.md).
+
+## Custo medido da esteira
+
+Tokens por delegação a agente, lidos do resultado de cada chamada e registrados na tabela *Execuções de agentes* de [status.md](docs/esteira/status.md):
+
+| Modelo | Delegações | Tokens | Onde |
+|---|---|---|---|
+| Opus | 11 | 1.156.396 | Requisitos, arquitetura e as tarefas `C3`: baixa atômica, relatório, Parte 4 |
+| Sonnet | 12 | 978.121 | As tarefas `C2` do backend e todo o frontend |
+| **Total** | **23** | **2.134.517** | |
+
+- **Escalonamento de modelo:** nenhum. Nenhuma tarefa precisou subir de modelo depois de falhar no gate (0 de 23); as falhas foram corrigidas no mesmo nível.
+- **Fora da conta:** a sessão do orquestrador, que é a conversa principal, e as delegações perdidas por erro de ambiente (`HL-24`).
+- **Lição de custo** (`HL-27`): a US-10 levou 41 min, e 21,5 deles foram teste esperando a carga de 800 mil linhas. Daí a medição sair do gate e os agentes rodarem só os próprios testes.
 
 ## Links de entrega
 
