@@ -131,6 +131,48 @@ Também aceitei, como exceção registrada (`HL-24`), remover o *gateway* local 
 
 **Sobre o MCP.** O login `claude_mcp` não consegue escrever, e isso é provado por teste (`LoginMcp_TentaEscrever_PermissaoNegada`). Na Parte 4, a conexão do MCP falhou com `AUTH_FAILED` (`CG-05`). Então os planos foram colhidos **com o mesmo login e os mesmos comandos** (`SHOWPLAN_XML`, `STATISTICS XML`, `STATISTICS IO`) dentro de um teste de integração. O resultado é reproduzível por qualquer pessoa com Docker, e não depende da sessão do Claude. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/parte4/investigacao.md).
 
+## Parte 4: debug da query
+
+A query do enunciado deveria trazer o ranking dos clientes que mais compraram em 2026, mas estava lenta e errada. A investigação completa, com os planos antes e depois, está em [database/parte4/investigacao.md](database/parte4/investigacao.md).
+
+| Arquivo | Papel |
+|---|---|
+| [01-query-original.sql](database/parte4/01-query-original.sql) | A query do enunciado, sem alteração |
+| [02-query-corrigida.sql](database/parte4/02-query-corrigida.sql) | **A correção entregue** |
+| [03-variante-valor-total.sql](database/parte4/03-variante-valor-total.sql) | Variante para comparação: soma o `ValorTotal` do pedido |
+| [00-carga-volume.sql](database/parte4/00-carga-volume.sql) | Carga determinística para medir: 5 mil clientes, 200 mil pedidos, 600 mil itens |
+
+### Os quatro defeitos
+
+| # | Defeito | Efeito | Correção | Teste que prova |
+|---|---|---|---|---|
+| 1 | `GROUP BY c.Nome` | Clientes homônimos viram uma linha só, com os totais somados | `GROUP BY c.Id, c.Nome`, com o `ClienteId` na saída | `QueryOriginal_ClientesHomonimos_SomaIndevidamente`, `QueryCorrigida_ClientesHomonimos_UmaLinhaPorCliente` |
+| 2 | `ORDER BY Total` | Ordem crescente: o "ranking" começa por quem **menos** comprou, e não há desempate | `ORDER BY Total DESC, c.Id` | `QueryOriginal_Ordenacao_RetornaMenorTotalPrimeiro`, `QueryCorrigida_Empate_OrdenaPorMenorClienteId` |
+| 3 | `YEAR(p.DataPedido) = 2026` | Função sobre a coluna: o índice por data não é usado e todos os pedidos são lidos | Intervalo semiaberto: `>= '2026-01-01' AND < '2027-01-01'` | `QueryOriginal_Plano_LeTodosOsPedidosComFuncaoSobreDataPedido`, `QueryCorrigida_FronteirasDoAno_ContaSoPedidosDe2026` |
+| 4 | `LEFT JOIN` com filtro no `WHERE` sobre a tabela da direita | É um `INNER JOIN` disfarçado. No plano medido, o otimizador manteve a junção externa e juntou os 200 mil pedidos antes de filtrar o ano | `INNER JOIN`, começando por `Pedidos`, o lado filtrado | Plano na seção 4 da investigação |
+
+A correção também é provada contra a API: os 5 primeiros da query corrigida coincidem com `GET /relatorios/top-clientes` de 2026 (`QueryCorrigida_Ranking2026_CoincideComTopClientes`, CA-33).
+
+### Como investiguei e o que medi
+
+Os planos e as leituras foram colhidos com o login de leitura `claude_mcp`. Os tempos vêm de `sys.dm_exec_query_stats`, em médias de 10 execuções com cache quente, sobre 200 mil pedidos.
+
+| Consulta | Leituras lógicas | CPU (ms) | Tempo (ms) | Paralelismo | Acesso a `Pedidos` |
+|---|---|---|---|---|---|
+| Original | 4 779 | 1 229 | 715 | 3 | Scan dos 200 mil pedidos |
+| **Corrigida (`02`)** | **3 589** | **351** | **352** | 1 | Seek em `IX_Pedidos_DataPedido` (−78 % de leituras em `Pedidos`) |
+| Variante `ValorTotal` (`03`) | 311 | 85 | 85 | 1 | O mesmo seek, sem ler `ItensPedido` |
+
+### Índices
+
+**Nenhum índice novo foi necessário.** Dois índices existentes cobrem a consulta:
+- `IX_Pedidos_DataPedido (DataPedido DESC, Id DESC) INCLUDE (ClienteId, ValorTotal)` cobre `Pedidos`;
+- a chave clusterizada de `ItensPedido` (`PedidoId, ProdutoId`) cobre os itens.
+
+O problema nunca foi a falta de índice, e sim a função sobre a coluna, que impedia o uso dele.
+
+**Por que a entrega é a `02`, e não a `03`.** A `03` é cerca de 4 vezes mais rápida e é a mesma forma que a API usa no top-clientes. Mas a query do enunciado soma os itens, e a `02` mantém essa semântica. A `03` só é equivalente porque `ValorTotal` é gravado na mesma transação que os itens, e isso é uma regra da aplicação, não do banco. A comparação está na seção 8 da investigação.
+
 ## Links de entrega
 
 | O quê | Link |
