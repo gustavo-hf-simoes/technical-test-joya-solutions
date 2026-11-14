@@ -243,3 +243,143 @@ O banco ficou de pé: `docker compose ps` mostra `db` healthy e `db-init` `Exite
 ### Resposta a achados (delegação 2)
 
 Nenhum achado recebido.
+
+## Rodada 1 — 2026-11-13 — US-05, delegação 1 (T-05.1 e T-05.2)
+
+### Tarefas
+
+| Tarefa | Status | Mensagem de commit prevista | Arquivos principais |
+|---|---|---|---|
+| T-05.1 | Pronta | `feat(api): padroniza erros em Problem Details com code e traceId` | `backend/src/Joya.Pedidos.Api/Erros/ErroInternoExceptionHandler.cs`, trechos `T-05.1` do `Program.cs`, `Joya.Pedidos.Api.csproj` (Swashbuckle), `backend/tests/Joya.Pedidos.IntegrationTests/Api/{ApiFactory,RotasDeTesteController,PipelineDeErrosTests}.cs`, `IntegrationTests.csproj` (Mvc.Testing) |
+| T-05.2 | Pronta | `feat(api): adiciona health checks de liveness e readiness` | `backend/src/Joya.Pedidos.Api/Saude/BancoDeDadosHealthCheck.cs`, trechos `T-05.2` do `Program.cs`, `Core/Common/IVerificadorDeBanco.cs`, `Infrastructure/{DependencyInjection,Saude/VerificadorDeBanco}.cs`, `Infrastructure.csproj`, `IntegrationTests/Api/HealthTests.cs` |
+
+Separação no `Program.cs` (marcada por comentários `// --- T-05.1 ---` e `// --- T-05.2 ---`):
+- T-05.1: `ClearProviders`/`AddJsonConsole`, `AddProblemDetails` (acrescenta `traceId`), `AddExceptionHandler`, `AddSwaggerGen`, `UseExceptionHandler`, `UseStatusCodePages` e o bloco do Swagger (Development, Docker, Testing).
+- T-05.2: `AddInfrastructure()`, `AddHealthChecks` e os dois `MapHealthChecks`.
+- Os `using` e o `Program.cs` compartilhado: para separar os commits, o `git add -p` resolve; os dois blocos não se entrelaçam. Os `.csproj` também dividem: Swashbuckle e Mvc.Testing são da T-05.1; `Microsoft.EntityFrameworkCore.SqlServer` na Infrastructure é da T-05.2.
+
+Decisões de design:
+- `/health/ready` usa uma porta `IVerificadorDeBanco` (Core) implementada na Infrastructure com `SqlConnection` + `SELECT 1`, e o `IHealthCheck` na Api só a chama. A arquitetura (§2 item 4) fala em `DbContext.Database.CanConnectAsync`, mas o `DbContext` só nasce na T-06.4. Quando ele existir, basta trocar o corpo do `VerificadorDeBanco`; o contrato HTTP não muda. Não é divergência da spec (§5.x só exige "verifica conexão com o SQL Server"), por isso sem PROP.
+- Connection string só por configuração (`ConnectionStrings:Default`, variável `ConnectionStrings__Default`), lida na hora do uso. Sem valor, `ready` devolve 503 e `live` continua 200.
+- `Microsoft.EntityFrameworkCore.SqlServer 8.0.34` na Infrastructure (já aprovado, BE-17) para trazer o SqlClient. Pacotes adicionados dentro da lista BE-17: `Swashbuckle.AspNetCore 6.9.0` (Api) e `Microsoft.AspNetCore.Mvc.Testing 8.0.11` (testes). Nenhum pacote novo fora da lista, nenhum pacote de health check.
+- O 500 é escrito via `IProblemDetailsService`, sem passar a exceção ao contexto: o corpo nunca leva mensagem nem stack trace, em qualquer ambiente. A exceção vai para o log JSON. O `UseExceptionHandler()` vale também em Development (sem *developer exception page*).
+- 415: vem do próprio MVC (`[ApiController]` com `[FromBody]`), em `application/problem+json` com `traceId`. `UseStatusCodePages` converte também 404/405 sem corpo.
+- Rotas só de teste (`/_teste/excecao`, `/_teste/eco`) ficam num controller do projeto de testes, adicionado por `AddApplicationPart` na `ApiFactory`; nada disso existe no assembly da API.
+- O Swagger sobe em Development, `Docker` e `Testing` (PROP-12). O nome `Docker` para o ambiente fica a confirmar na T-13.1/T-15.2 (compose).
+
+### Testes criados
+
+| Teste | Tipo | Cobre |
+|---|---|---|
+| `Excecao_NaoTratada_Retorna500ProblemDetailsSemStackTrace` | integração | CA-38, spec 5.1 (500) |
+| `Post_ContentTypeTexto_Retorna415` | integração | spec 5.1 (415) |
+| `Post_ContentTypeJson_Retorna200` | integração | controle do teste do 415 |
+| `Swagger_AmbienteDeTeste_PublicaODocumento` | integração | spec 5.1 / PROP-12 |
+| `HealthLive_ProcessoNoAr_Retorna200` | integração | CA-36 (com banco inalcançável: liveness independe dele) |
+| `HealthReady_BancoDisponivel_Retorna200` | integração | CA-36 (SQL Server real, login `joya_app`) |
+| `HealthReady_BancoIndisponivel_Retorna503` | integração | CA-36 (`127.0.0.1:1`, recusa imediata; não derruba o contêiner) |
+
+### Verificações executadas
+
+| Comando | Resultado | Resumo da saída |
+|---|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | Passou | `0 Aviso(s) 0 Erro(s)` |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | Passou | `Aprovado: 19` (inclui as regras de arquitetura) |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` | Passou | `Aprovado: 28` (21 anteriores + 7 novos) |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | Passou | código 0 |
+
+### Evidência no banco (MCP `mssql`)
+
+Não se aplica: as tarefas não gravam nem consultam dados. A readiness foi provada contra o SQL Server do Testcontainers (200) e contra um endereço recusado (503).
+
+### Desvios em relação à spec
+
+Nenhum. PROP: nenhuma.
+
+### Bloqueios e perguntas
+
+- Nenhum. Para o compose (T-13.1/T-15.2): a API precisa de `ConnectionStrings__Default` (login `joya_app`) e `ASPNETCORE_ENVIRONMENT=Docker` para expor o Swagger.
+
+### Resposta a achados (US-05, delegação 1)
+
+Nenhum achado recebido.
+
+## Rodada 1 — 2026-11-13 — US-05, delegação 2 (T-05.3)
+
+### Tarefas
+
+| Tarefa | Status | Mensagem de commit prevista | Arquivos principais |
+|---|---|---|---|
+| T-05.3 | Pronta | `feat(api): limita tamanho do corpo e taxa de criação de pedidos` | `backend/src/Joya.Pedidos.Api/Limites/{LimitesHttp,LimiteDeTaxaOptions,LimiteCriarPedidoPolicy,LimiteDeCorpoFilter}.cs`, `backend/src/Joya.Pedidos.Api/Erros/RequisicaoHttpInvalidaExceptionHandler.cs`, `backend/src/Joya.Pedidos.Api/appsettings.json` (novo), trechos `T-05.3` do `Program.cs`, `backend/tests/Joya.Pedidos.IntegrationTests/Api/{LimitesHttpTests,ApiFactory,RotasDeTesteController}.cs` |
+
+Separação no `Program.cs` para o commit por tarefa (`HL-24`):
+- o bloco `// --- T-05.3: limites contra abuso ---`, antes do `Build()`;
+- o bloco `// --- T-05.3 ---` (`UseForwardedHeaders` e `UseRateLimiter`), antes do `MapControllers`;
+- a linha `AddExceptionHandler<RequisicaoHttpInvalidaExceptionHandler>()`, marcada `// T-05.3`, dentro do bloco da T-05.1 (precisa vir antes do handler do 500);
+- os `using` de `Joya.Pedidos.Api.Limites`, `Microsoft.AspNetCore.HttpOverrides` e `Microsoft.AspNetCore.Mvc`.
+
+Na `ApiFactory`, são da T-05.3 a constante `PermissoesNoAmbienteDeTeste`, a chave `LimiteDeTaxa:CriarPedido:Permissoes` e os `using` `System.Globalization` e `Joya.Pedidos.Api.Limites`. No `RotasDeTesteController`, são da T-05.3 a action `CriarPedido` (`POST /_teste/pedidos`) e os `using` de `Limites` e `RateLimiting`.
+
+Decisões de design:
+- **413, caminho escolhido (ADR-0002, item 1).** O teste `PostPedidos_CorpoAcimaDoLimite_Retorna413` foi escrito primeiro e ficou vermelho (200) só com `KestrelServerOptions.Limits.MaxRequestBodySize`. A opção 1 (`[RequestSizeLimit]` na action) **também** ficou vermelha: o `TestServer` do .NET 8 não expõe `IHttpMaxRequestBodySizeFeature`, e o filtro do MVC só registra no log que não aplicou o limite. Segui a **opção 2**: `LimiteDeCorpoFilter`, filtro de recurso que rejeita `Content-Length > LimitesHttp.CorpoMaximoBytes` antes do *model binding*. Ele lança a mesma `BadHttpRequestException(413)` que o Kestrel lança. O novo `RequisicaoHttpInvalidaExceptionHandler`, registrado antes do `ErroInternoExceptionHandler`, converte as duas origens no mesmo Problem Details: `status 413`, `traceId` e nenhum `code`, como no catálogo da spec 5.1. Um `400` de corpo malformado no nível HTTP sai com `code = VALIDACAO`. A mensagem da exceção só vai para o log.
+- **Filtro global, e não só na action.** O filtro está em `MvcOptions.Filters` (global), espelhando o limite global do Kestrel. Hoje só o `POST /pedidos` recebe corpo, e assim a T-06.4 não precisa lembrar de mais um atributo. O ADR fala em filtro "no POST"; o global cobre o POST e não muda o contrato, por isso sem PROP. O `[RequestSizeLimit]` foi retirado: seria redundante com o Kestrel (mesmo valor) e inerte no `TestServer`.
+- **Corpo *chunked*.** Sem `Content-Length`, quem barra é o Kestrel (`MaxRequestBodySize = 32 768`), como previsto no ADR. O `TestServer` não aplica esse limite, então o teste `Kestrel_LimiteDoCorpo_IgualAoCorpoMaximo` prova a configuração lendo `IOptions<KestrelServerOptions>` do host. A prova ponta a ponta com o Kestrel real fica para o E2E ou o compose (sugestão ao `qa`: `POST` *chunked* de 33 KiB → `413`).
+- **429.** `AddRateLimiter` com a política nomeada `LimitesHttp.PoliticaCriarPedido` (`"criar-pedido"`), implementada em `LimiteCriarPedidoPolicy : IRateLimiterPolicy<string>`:
+  - `FixedWindowRateLimiter` por `RemoteIpAddress`; sem IP, a partição é `"desconhecido"`;
+  - `QueueLimit = 0`;
+  - valores de `LimiteDeTaxa:CriarPedido:{Permissoes,JanelaSegundos}`, com padrão 10 a cada 10 s no código e no `appsettings.json`, validados no *start*;
+  - o `OnRejected` da política escreve Problem Details `429` com `code = LIMITE_DE_TAXA`, `traceId` e `Retry-After` (lido de `MetadataName.RetryAfter` do *lease*, com a janela como reserva).
+- **IP atrás de proxy (ADR-0002, item 3).** `ForwardedHeadersOptions` com `XForwardedFor`, `ForwardLimit` vindo de `Proxy:ForwardedLimit` (padrão 1, validado ≥ 1) e `KnownNetworks`/`KnownProxies` vazios. `UseForwardedHeaders` vem antes de `UseRateLimiter`. O teste `PostPedidos_IpsDistintos_TemCotasSeparadas` prova a partição por IP via `X-Forwarded-For`. O override `Proxy__ForwardedLimit=2` do deploy fica para a T-17.x (compose de produção).
+- **HL-19.** A `ApiFactory` sobe `Permissoes` para `100 000` em todos os testes. O teste do 429 usa `WithWebHostBuilder` com `Permissoes = 2` e janela de 60 s, para que a cota não renove no meio do teste. O teste `PostPedidos_AmbienteDeTesteComRajadaParalela_NaoRetorna429` dispara 20 `POST`s simultâneos, como o CA-10, e confere que nenhum recebe 429.
+
+**Como a T-06.4 liga a política no `POST /pedidos`:**
+1. Na action `PedidosController.CriarAsync`, acrescentar `[EnableRateLimiting(LimitesHttp.PoliticaCriarPedido)]` (`using Microsoft.AspNetCore.RateLimiting;` e `using Joya.Pedidos.Api.Limites;`). O limite de corpo já vale, porque o filtro é global. Recomendado: `[ProducesResponseType<ProblemDetails>(413)]` e `(429)`, para o Swagger documentar os dois status.
+2. Em `LimitesHttpTests`, trocar a constante `_rotaCriarPedido` de `"/_teste/pedidos"` para `"/pedidos"` e o corpo de teste para um `CriarPedidoRequest`. O 413 continua decidido antes do *model binding*. No 429, as duas primeiras respostas deixam de ser `200`: ou o teste semeia cliente e produto, ou confere `!= 429` nelas.
+3. Remover a action `CriarPedido` do `RotasDeTesteController`.
+
+Nenhum nome de teste muda; a spec e o backlog continuam valendo.
+
+### Testes criados ou alterados
+
+| Teste | Tipo | Cobre |
+|---|---|---|
+| `PostPedidos_CorpoAcimaDoLimite_Retorna413` | integração | RNF-06, ADR-0002 item 1 (`413` em Problem Details com `traceId`, sem detalhe de exceção) |
+| `PostPedidos_CorpoNoLimite_Retorna200` | integração | controle do 413: exatamente 32 768 bytes passam |
+| `Kestrel_LimiteDoCorpo_IgualAoCorpoMaximo` | integração | ADR-0002 item 1: proteção contra corpo *chunked* configurada no Kestrel |
+| `PostPedidos_RajadaAcimaDoLimite_Retorna429` | integração | RNF-06, HL-19, ADR-0002 item 2 (`429`, `code = LIMITE_DE_TAXA`, `traceId`, `Retry-After` entre 1 e 60 s) |
+| `PostPedidos_IpsDistintos_TemCotasSeparadas` | integração | ADR-0002 itens 2 e 3 (partição por IP via `X-Forwarded-For`) |
+| `Post_RotaSemPolitica_NaoSofreLimiteDeTaxa` | integração | ADR-0002 item 2 (a política só vale onde é aplicada) |
+| `PostPedidos_AmbienteDeTesteComRajadaParalela_NaoRetorna429` | integração | HL-19 (20 `POST`s paralelos, como o CA-10, sem 429) |
+| `ApiFactory` (alterado) | infraestrutura de teste | HL-19: `LimiteDeTaxa:CriarPedido:Permissoes = 100000` |
+
+### Verificações executadas
+
+| Comando | Resultado | Resumo da saída |
+|---|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | Passou | `0 Aviso(s) 0 Erro(s)` |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | Passou | `Aprovado: 19` |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "FullyQualifiedName~Limite"` | Passou | `Aprovado: 7`. Antes da correção, o 413 ficou vermelho com o limite do Kestrel e com `[RequestSizeLimit]` |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` | Passou | `Aprovado: 35` (28 anteriores + 7 novos) |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | Passou | código 0 |
+| Grep do BE-23 em `backend/src/Joya.Pedidos.Api` | Parcial, como esperado | `MaxRequestBodySize`, `AddRateLimiter`, `UseForwardedHeaders` e `ForwardedLimit` presentes; `UseForwardedHeaders` vem antes de `UseRateLimiter`. O grep de `EnableRateLimiting` em `Controllers/` só fecha na T-06.4 |
+
+### Evidência no banco (MCP `mssql`)
+
+Não se aplica: a tarefa não grava nem consulta dados.
+
+### Desvios em relação à spec
+
+Nenhum. PROP: nenhuma.
+
+Observação para o revisor de arquitetura: o checklist BE-23 procura o literal `EnableRateLimiting("criar-pedido")`. A T-06.4 usará `EnableRateLimiting(LimitesHttp.PoliticaCriarPedido)`, cujo valor é `"criar-pedido"`. Se o grep literal for obrigatório, basta ajustar o comando do checklist (arquivo do `arquiteto`).
+
+### Bloqueios e perguntas
+
+- Nenhum bloqueio. Pendências registradas para outras tarefas:
+  - a T-06.4 liga a política (roteiro acima);
+  - a T-17.x define `Proxy__ForwardedLimit=2` no compose de produção;
+  - a prova do 413 *chunked* com o Kestrel real cabe ao E2E ou ao compose.
+
+### Resposta a achados (US-05, delegação 2)
+
+Nenhum achado recebido.

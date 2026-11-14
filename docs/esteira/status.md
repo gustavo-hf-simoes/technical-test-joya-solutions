@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**Commits e PR da US-04** (`us-04-banco` → `main`; T-04.1 a T-04.5), depois de autorizados. O CI ainda não roda os testes de integração (T-03.3). Para o MCP `mssql` funcionar, reinicie o Claude Code com o banco de pé (`docker compose up -d db db-init`): o padrão da senha mudou (`CG-05`). Em seguida, **US-05** (base HTTP da API). As T-03.3 a T-03.5 voltam depois das US-04, US-14 e US-16.
+**Commits e PR da US-05** (`us-05-base-http` → `main`; T-05.1 a T-05.3), depois de autorizados. Em seguida, **US-06** (criar pedido com baixa atômica). A T-06.4 liga a política `criar-pedido` ao `POST /pedidos` pelo roteiro de [03-backend.md](03-backend.md), e o comando do item BE-23 do checklist precisa aceitar a constante `LimitesHttp.PoliticaCriarPedido` (dono: `arquiteto`). O deploy (T-17.x) precisa de `Proxy__ForwardedLimit=2`. Para o MCP `mssql`, reinicie o Claude Code com o banco de pé (`CG-05`).
 
 ## Etapas
 
@@ -13,7 +13,7 @@
 | 0 | Configuração AI-first (spec, plano, CLAUDE.md, hooks, skills, MCP, agentes) | orquestrador | Concluída | 2 | Configuração validada no CI (`config`). Build e testes .NET ainda sem código; Docker ausente na máquina (ver diário E04) | 2026-11-13 |
 | 1 | Requisitos e backlog | product-owner | Concluída | 1 (tentativa 2) | Aprovado: matriz com 0 erro, configuração válida, 7 PROPs decididas (`HL-10` a `HL-16`) | 2026-11-13 |
 | 2 | Arquitetura | arquiteto | Concluída | 1 | Aprovado: checklist com 55 itens verificáveis, 4 ADRs (0002 a 0005), matriz com 0 erro, configuração válida, 6 PROPs e o ADR-0004 decididos (`HL-17` a `HL-23`) | 2026-11-13 |
-| 3 | Backend, por história | backend | Em andamento (US-02 e US-03 parte 1 integradas, US-04 pronta) | 2 (US-04) | US-04 aprovada na rodada 2: 0 aviso, 19/19 unitários, 21/21 de integração contra SQL Server 2022 real, compose com `db` saudável e `db-init` com saída 0. Rodada 1 reprovada por collation (`CG-04`). US-02 aprovada na rodada 2: build com 0 aviso, 10/10 testes unitários, `dotnet format` sem mudanças, matriz com 0 erro, configuração válida. Rodada 1 reprovada por `default!` (BE-07, `CG-03`). Integração: não há testes ainda | 2026-11-13 |
+| 3 | Backend, por história | backend | Em andamento (US-02, US-03 parte 1 e US-04 integradas; US-05 pronta) | 1 (US-05) | US-05 aprovada na rodada 1: 0 aviso, 19/19 unitários, 35/35 de integração. US-04 aprovada na rodada 2: 0 aviso, 19/19 unitários, 21/21 de integração contra SQL Server 2022 real, compose com `db` saudável e `db-init` com saída 0. Rodada 1 reprovada por collation (`CG-04`). US-02 aprovada na rodada 2: build com 0 aviso, 10/10 testes unitários, `dotnet format` sem mudanças, matriz com 0 erro, configuração válida. Rodada 1 reprovada por `default!` (BE-07, `CG-03`). Integração: não há testes ainda | 2026-11-13 |
 | 4 | Frontend, por história | frontend | Pendente | — | — | — |
 | 4b | Revisão de arquitetura | arquiteto | Pendente | — | — | — |
 | 5 | Segurança | ciberseguranca | Pendente | — | — | — |
@@ -26,8 +26,8 @@
 | US-01 Fundação SDD e rastreabilidade | orquestrador | Concluída (PR #2) | 3 / 3 | 501ae41, 125952a, abf8b91 |
 | US-02 Esqueleto da solução .NET | backend | Concluída (PR #4) | 2 / 2 | 088ea5b, 3d2ebe9 |
 | US-03 Qualidade automatizada: CI e testes de arquitetura | backend | Em andamento: T-03.1 e T-03.2 integradas (PR #5); T-03.3 a T-03.5 dependem das US-04, US-14 e US-16 | 2 / 5 | 8b0384e, 86f7b47 |
-| US-04 Banco de dados com schema, índices, logins e carga | backend | Pronta, sem commit | 5 / 5 | — |
-| US-05 Base HTTP da API | backend | Pendente | 0 / 3 | — |
+| US-04 Banco de dados com schema, índices, logins e carga | backend | Concluída (PR #6) | 5 / 5 | 027a0ff, 75b834d, 97a88c1, d2c6c85, 994e5c0 |
+| US-05 Base HTTP da API | backend | Pronta, sem commit | 3 / 3 | — |
 | US-06 Criar pedido com baixa atômica de estoque | backend | Pendente | 0 / 7 | — |
 | US-07 Catálogo de clientes e produtos para as telas | backend | Pendente | 0 / 1 | — |
 | US-08 Listar pedidos com filtros e paginação | backend | Pendente | 0 / 2 | — |
@@ -72,6 +72,8 @@
 | 2026-11-13 | Etapa 3, US-04, T-04.1 a T-04.3 (delegação 1 de 2, por nível) | C3 | backend | opus | high | 1 | Reprovado: 2 de 17 testes de integração com erro de collation (`CG-04`). O Docker caiu antes por disco C: cheio; o gate só rodou depois de liberado | Não | 149.220 |
 | 2026-11-13 | Etapa 3, US-04, CORRECAO de `CG-04` (T-04.1 e T-04.2) | C3 | backend | opus | high | 2 | Aprovado: 17/17 | Não | 49.914 |
 | 2026-11-13 | Etapa 3, US-04, T-04.4 (C1) e T-04.5 (C2) (delegação 2 de 2) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1; PROP-04-01 era configuração, resolvida pelo orquestrador (`CG-05`) | Não | 91.113 |
+| 2026-11-13 | Etapa 3, US-05, T-05.1 e T-05.2 (delegação 1 de 2) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 84.048 |
+| 2026-11-13 | Etapa 3, US-05, T-05.3 (delegação 2 de 2) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 113.288 |
 
 ## Log de gates
 
@@ -92,3 +94,6 @@
 | 2026-11-13 | 3, US-04 (rodada 1) | `dotnet test` de integração (Testcontainers, `mssql/server:2022-latest`) | Reprovado: 15/17; erro 468 de collation nas consultas de catálogo de `SchemaTests` e `IndicesTests` (`CG-04`) |
 | 2026-11-13 | 3, US-04 (rodada 2, T-04.1 a T-04.3) | `dotnet build`, `dotnet test` (unit e integração), `dotnet format --verify-no-changes`, os 2 validadores, busca por silenciamento | Aprovado: 0 aviso; 19/19 e 17/17; formato sem mudanças; matriz com 0 erro; configuração válida; nenhum silenciamento |
 | 2026-11-13 | 3, US-04 (T-04.4 e T-04.5) | Os mesmos, mais `docker compose ps -a` e `validar_config.py` depois de ajustar o `.mcp.json` | Aprovado: 0 aviso; 19/19 e 21/21; `db` healthy, `db-init` com saída 0. Evidência no banco colhida pelo agente com `sqlcmd` (12 clientes, 15 produtos, 34 pedidos, 68 itens; `DELETE` negado aos dois logins); MCP não verificado nesta sessão (a senha nova só vale depois de reiniciar) |
+| 2026-11-13 | 3, US-04 (PR #6) | `gh pr checks 6`: backend, CodeQL (actions, python) e configuração | Aprovado; integrado com merge commit `4162800` |
+| 2026-11-13 | 3, US-05 (T-05.1 e T-05.2) | `dotnet build`, `dotnet test` (unit e integração), `dotnet format --verify-no-changes`, os 2 validadores, busca por silenciamento, pacotes contra a lista do BE-17 | Aprovado: 0 aviso; 19/19 e 28/28; pacotes novos (Swashbuckle, Mvc.Testing, EF SqlServer) todos na lista |
+| 2026-11-13 | 3, US-05 (T-05.3) | Os mesmos | Aprovado: 0 aviso; 19/19 e 35/35; nenhum pacote novo. O 413 de corpo *chunked* contra o Kestrel real fica para o QA |
