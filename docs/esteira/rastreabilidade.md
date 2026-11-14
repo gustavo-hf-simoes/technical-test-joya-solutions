@@ -28,7 +28,7 @@
 | ENU-L014 | Obrigatório | ENT-02 | US-01 | T-01.3 | Manual: docs/plan.md tem a proposta do plan mode e a seção Human-in-the-Loop preenchida | abf8b91 |
 | ENU-L015 | Contexto | — | — | — | — | — |
 | ENU-L017 | Obrigatório | ENT-07 | US-01, US-18 | T-01.1, T-18.2 | Manual: git ls-files .claude CLAUDE.md lista agentes, hooks e skills versionados | 501ae41 |
-| ENU-L019 | Obrigatório | ENT-03, RNF-03 | US-02, US-03, US-18 | T-02.1, T-03.2, T-18.2 | `Core_Dependencias_NaoReferenciaEfAspNetNemSqlClient`, `Core_Dependencias_NaoReferenciaInfrastructureNemApi`, `Infrastructure_Dependencias_NaoReferenciaApi`, `Controllers_Dependencias_NaoAcessamDbContext`, `Dtos_Declaracao_SaoSealedRecord`, `Entidades_Propriedades_NaoTemSetterPublico`, `MetodosAsync_Assinatura_RecebemCancellationTokenPorUltimo`, `Classes_Declaracao_SaoSealed`, `TestesDeRegra_Dependencias_NaoUsamInfrastructureNemApi` | — |
+| ENU-L019 | Obrigatório | ENT-03, RNF-03 | US-02, US-03, US-18 | T-02.1, T-03.2, T-18.2 | `Core_Dependencias_NaoReferenciaEfAspNetNemSqlClient`, `Core_Dependencias_NaoReferenciaInfrastructureNemApi`, `Infrastructure_Dependencias_NaoReferenciaApi`, `Controllers_Dependencias_NaoAcessamDbContext`, `Dtos_Declaracao_SaoSealedRecord`, `Entidades_Propriedades_NaoTemSetterPublico`, `MetodosAsync_Assinatura_RecebemCancellationTokenPorUltimo`, `Classes_Declaracao_SaoSealed`, `TestesDeRegra_Dependencias_NaoUsamInfrastructureNemApi` | 088ea5b, 86f7b47 |
 | ENU-L020 | Obrigatório | ENT-04 | US-18 | T-18.2 | Manual: editar um arquivo do backend dispara post-edit.sh, que roda build e testes unitários | — |
 | ENU-L021 | Obrigatório | ENT-05 | US-06, US-18 | T-06.6, T-18.2 | Manual: T-06.6 e T-07.1 feitas com a skill new-endpoint, registradas no diário | — |
 | ENU-L022 | Obrigatório | ENT-06 | US-04, US-10, US-18 | T-04.3, T-10.3, T-18.2 | `LoginMcp_TentaEscrever_PermissaoNegada` | — |
@@ -71,6 +71,6 @@
 | ENU-L082 | Obrigatório | ENT-18 | US-18 | T-18.6, T-18.7 | Manual: vídeo de até 10 minutos com o fluxo no Claude Code, com link no README | — |
 | ENU-L083 | Contexto | — | — | — | — | — |
 | ENU-L085 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
-| ENU-L086 | Diferencial | ENT-20 | US-03 | T-03.1, T-03.3, T-03.4, T-03.5 | Manual: workflow do GitHub Actions verde em push e em pull request | — |
+| ENU-L086 | Diferencial | ENT-20 | US-03 | T-03.1, T-03.3, T-03.4, T-03.5 | Manual: workflow do GitHub Actions verde em push e em pull request | 8b0384e |
 | ENU-L087 | Diferencial | ENT-21 | US-17, US-18 | T-17.1, T-17.2, T-18.6 | Manual: a URL do README abre a aplicação via HTTPS | — |
 | ENU-L088–L100 | Contexto | — | — | — | — | — |
