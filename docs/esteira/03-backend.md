@@ -820,3 +820,78 @@ Verificação: `dotnet build` com 0 aviso e 0 erro. 109 unitários aprovados. In
 Evidência MCP: não coletada, por causa do CG-05 (AUTH_FAILED). No lugar dela vale o SQL acima, capturado do log do EF contra o SQL Server real. O plano (*Index Seek* em `IX_Pedidos_DataPedido` → agregação → *Top N Sort* → seek em `PK_Clientes`) fica para conferir pelo `explain_sql` quando o MCP voltar.
 
 Desvios da spec: nenhum, sem PROP.
+
+---
+
+## US-13 — Aplicação completa com um comando (T-13.1, T-13.2)
+
+Arquivos: `backend/Dockerfile` e `backend/.dockerignore` (T-13.1); `docker-compose.yml` com os serviços `api` (T-13.1) e `frontend` (T-13.2).
+
+- **API:** multi-stage `sdk:8.0` → `aspnet:8.0`, `USER app` (uid 1654), restore em camada própria. O `HEALTHCHECK` usa `bash` (`/dev/tcp`) e `grep` porque a imagem aspnet não traz curl nem wget; consulta `/health/ready`.
+- **Compose:** `api` depende de `db` saudável e `db-init` concluído; conecta como `joya_app` (`ConnectionStrings__Default`, senha `${APP_SQL_PASSWORD:-...}`, `TrustServerCertificate=True` por causa do certificado autoassinado do contêiner). `ASPNETCORE_ENVIRONMENT=Docker` (o `Program.cs` já liga o Swagger nesse nome; nenhum código mudou). Porta `127.0.0.1:8080`. `frontend` depende de `api` saudável e publica `4200:8080`.
+- **Nome do serviço:** `frontend`, como pediu a delegação; a arquitetura (§ serviços) o chama de `web`. Só nomenclatura, sem efeito no proxy (o Nginx só conhece o host `api`). Sugiro alinhar o texto da arquitetura.
+- **Verificação** (`docker compose up --build -d`): `db` healthy, `db-init` Exited (0), `api` healthy, `frontend` healthy. `GET :4200/` 200; `GET :4200/api/health/live` 200 e `/api/health/ready` 200 (proxy real do Nginx até a API); `GET :4200/api/clientes` 200; `GET :8080/swagger/index.html` 200. `id -u`: api 1654, frontend 101. `dotnet build backend/Joya.Pedidos.sln`: 0 aviso, 0 erro. `docker compose down` (sem `-v`) ao final.
+- **Não verificado:** clone limpo com `down -v` (o volume do `db` já existia; foi preservado por restrição de disco/tempo). O ciclo "subir de novo sem duplicar carga" já é coberto pelo `db-init` idempotente da US-04.
+- Desvios da spec: nenhum, sem PROP.
+
+### Resposta a achados (US-13, rodada 2)
+
+- Gate: `db-init` saía 1 com Msg 904 num segundo `up` (JoyaPedidos ainda em recuperação). Feito: o healthcheck do `db` agora exige todos os bancos ONLINE (`docker-compose.yml`) e o `database/init.sh` espera o JoyaPedidos abrir, com retentativa limitada de 60 x 3 s, sem espera fixa e sem esperar nada no clone limpo (`DB_ID` nulo). O healthcheck sozinho não bastou, porque `sys.databases` já marca ONLINE antes do autostart; a espera no init.sh fecha a lacuna. Prova: `down` + `up -d` com volume existente subiu com db-init Exited (0), api e frontend saudáveis e `:4200/api/health/ready` 200, com 16 mensagens "aguardando" no log do db-init antes de passar. Um `up` anterior deu exit 137 (db-init Dead, contêiner morto pelo Docker sob carga) e passou ao repetir.
+
+## US-10 — Parte 4: debug e otimização da query (T-10.1, T-10.2, T-10.3)
+
+O detalhe está em `database/parte4/investigacao.md`: defeitos, hipóteses H1 a H6, planos antes e depois e medições.
+
+| Tarefa | Arquivos | Commit previsto |
+|---|---|---|
+| T-10.1 | `database/parte4/01-query-original.sql`, `Parte4/QueryRankingTests.cs` (testes `QueryOriginal_*`), `Parte4/ScriptsParte4.cs`, `Parte4/PlanoDeExecucao.cs` | `test(db): reproduz os defeitos da query de ranking da Parte 4` |
+| T-10.2 | `database/parte4/02-query-corrigida.sql`, `Parte4/QueryRankingTests.cs` (testes `QueryCorrigida_*`) | `perf(db): corrige e otimiza a query de ranking de 2026 (Parte 4)` |
+| T-10.3 | `database/parte4/00-carga-volume.sql`, `03-variante-valor-total.sql`, `investigacao.md`, `Parte4/InvestigacaoTests.cs`, esta seção | `docs(db): documenta a investigação da query com plano de execução` |
+
+Os caminhos `Parte4/` ficam em `backend/tests/Joya.Pedidos.IntegrationTests/`. `QueryRankingTests.cs` serve a T-10.1 e a T-10.2. No commit da T-10.1, ele entra só com os testes `QueryOriginal_*` e os auxiliares, ou inteiro na T-10.2, a critério do orquestrador.
+
+**Testes de integração** (todos contra SQL Server real):
+
+| Teste | Critério |
+|---|---|
+| `QueryOriginal_ClientesHomonimos_SomaIndevidamente` | RN-17 (defeito) |
+| `QueryOriginal_Ordenacao_RetornaMenorTotalPrimeiro` | defeito de ordenação |
+| `QueryOriginal_Plano_LeTodosOsPedidosComFuncaoSobreDataPedido` | RN-15 (defeito) |
+| `QueryCorrigida_Ranking2026_CoincideComTopClientes` | CA-33 |
+| `QueryCorrigida_ClientesHomonimos_UmaLinhaPorCliente` | CA-23 |
+| `QueryCorrigida_FronteirasDoAno_ContaSoPedidosDe2026` | CA-22 |
+| `QueryCorrigida_Empate_OrdenaPorMenorClienteId` | CA-24 |
+| `Investigacao_CargaDeVolume_MedePlanosELeituras` | CA-33 com volume; trait `Categoria=Medicao`, cerca de 2 min |
+
+**Verificações** (2026-11-14):
+
+- `dotnet build`: 0 avisos, 0 erros.
+- Testes unitários: 109/109.
+- Testes de integração, suíte inteira: 126/126 em 2 min 38 s.
+- `dotnet format --verify-no-changes`: exit 0.
+- Grep de silenciamento: vazio.
+- Grep DB-03 (`git grep --untracked`): vazio.
+
+**Evidência.** O MCP `mssql` estava fora do ar (`AUTH_FAILED`, CG-05). O substituto autorizado foram as medições no SQL Server 2022 do Testcontainers:
+
+- Login `claude_mcp`: `SHOWPLAN_XML`, `STATISTICS XML` e `STATISTICS IO`.
+- Login `sa`: `sys.dm_exec_query_stats`.
+- Volume: 5 000 clientes, 200 000 pedidos, 600 000 itens.
+- Médias de 10 execuções com cache quente:
+
+| Consulta | Leituras lógicas | CPU (ms) | Decorrido (ms) | DOP | Plano em `Pedidos` |
+|---|---|---|---|---|---|
+| Original | 4 779 | 1 229,0 | 714,6 | 3 | *Index Scan*, 200 000 linhas, 1 151 leituras |
+| Corrigida (`02`) | 3 589 | 351,4 | 352,4 | 1 | *Index Seek* `IX_Pedidos_DataPedido`, 44 867 linhas, 248 leituras |
+| Variante `ValorTotal` (`03`) | 311 | 84,5 | 84,6 | 1 | *Index Seek*, 248 leituras; não lê `ItensPedido` |
+
+Nenhum índice novo, de acordo com a arquitetura Q12.
+
+**Achados durante a rodada:**
+
+- Com estatísticas herdadas de testes anteriores (Respawn), o CA-33 sobre a carga de exemplo mostrava *scan*. O teste agora atualiza as estatísticas depois da carga; detalhes na seção 9 de `investigacao.md`.
+- A limpeza das 800 mil linhas de volume estoura o timeout de 30 s do Respawn. O `InvestigacaoTests` apaga antes, com timeout longo (`ScriptsParte4.RemoverDadosAsync`).
+
+**Desvios da spec:** nenhum, sem PROP.
+
+**Para o desenvolvedor:** a `03` é 4× mais rápida que a `02` e pede 5 MB de memória contra 81 MB. A `02` segue o backlog e o enunciado, porque soma os itens. A escolha para o README está na seção 8 de `investigacao.md`.
