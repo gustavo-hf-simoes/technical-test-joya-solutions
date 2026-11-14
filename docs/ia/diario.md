@@ -245,7 +245,18 @@
 - **Gate (rodado pelo orquestrador):** aprovado na rodada 1. O orquestrador conferiu o SHA do `setup-dotnet` contra a tag e leu os testes para descartar asserção vazia.
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium`.
 
-<!-- Próximas entradas: E10 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E10 — Etapa 3: US-04, banco de dados (`backend`) · 2026-11-13
+
+- **Pedido** ([prompt 23](prompts.md#prompt-23) e [prompt 24](prompts.md#prompt-24)): integrar o PR #5 e seguir para a US-04; depois, continuar quando o disco C: foi liberado.
+- **Duas delegações por nível** (`HL-24`): T-04.1 a T-04.3 (C3) no Opus `high`; T-04.4 (C1) e T-04.5 (C2) no Sonnet `medium`.
+- **Ambiente:** o *pull* da imagem do SQL Server encheu o disco C: e derrubou o Docker. O orquestrador não registrou o gate até rodar os testes de verdade.
+- **`CG-04`:** os testes de catálogo compilavam e passavam no format, mas falharam contra o servidor real (erro 468 de collation). Voltaram ao `backend` no mesmo nível e passaram sem mudar nenhuma asserção. Os textos esperados do catálogo bateram sem ajuste.
+- **`CG-05`:** a senha padrão do MCP, escrita na fase de configuração, continha o nome do login, e o SQL Server a recusa (erro 33064). O `backend` achou ao subir o compose. O orquestrador corrigiu o `.mcp.json`, que é configuração e não spec.
+- **Entregas:** schema com `READ_COMMITTED_SNAPSHOT`, índices da spec, logins de menor privilégio (`DENY DELETE`), carga idempotente com homônimos e pedidos de 2025 e 2026, e compose com `db` e `db-init`. 21 testes de integração.
+- **Gate (rodado pelo orquestrador):** reprovado na rodada 1 e aprovado na rodada 2.
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Opus `high` (C3) e no Sonnet `medium` (C1/C2).
+
+<!-- Próximas entradas: E11 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -254,8 +265,8 @@ Atualize a cada etapa.
 | Métrica | Valor |
 |---|---|
 | Decisões humanas registradas (`HL`) | 24 |
-| Erros da IA detectados e corrigidos (`CG`) | 3, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
+| Erros da IA detectados e corrigidos (`CG`) | 5, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
 | Perguntas estruturadas da IA ao desenvolvedor | 25, em 8 rodadas |
-| Compactações de contexto da sessão | 5 |
+| Compactações de contexto da sessão | 6 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 7 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 10 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

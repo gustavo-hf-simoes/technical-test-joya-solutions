@@ -232,3 +232,17 @@
 **2026-11-13**. Resposta, por botão, à pergunta "Posso fazer os commits da US-03 e abrir o PR?".
 
 > Sim, commits e PR
+
+## Prompt 23
+<a id="prompt-23"></a>
+
+**2026-11-13**. Resposta, por botão, à pergunta "Integro o PR #5 quando o CI ficar verde e sigo para a US-04?".
+
+> Sim, merge e US-04
+
+## Prompt 24
+<a id="prompt-24"></a>
+
+**2026-11-13**. Depois de o disco C: encher durante o *pull* da imagem do SQL Server e o Docker parar.
+
+> Liberei espaço no disco C, pode prosseguir

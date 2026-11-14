@@ -8,7 +8,7 @@
         "MSSQL_HOST": "${MSSQL_HOST:-localhost}",
         "MSSQL_DATABASE": "${MSSQL_DATABASE:-JoyaPedidos}",
         "MCP_SQL_USER": "${MCP_SQL_USER:-claude_mcp}",
-        "MCP_SQL_PASSWORD": "${MCP_SQL_PASSWORD:-Claude_Mcp_2026}"
+        "MCP_SQL_PASSWORD": "${MCP_SQL_PASSWORD:-Mcp_Leitura_2026}"
       }
     }
   }
