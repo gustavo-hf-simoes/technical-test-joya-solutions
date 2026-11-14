@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<IProdutoRepository, ProdutoRepository>();
         services.AddScoped<IPedidoRepository, PedidoRepository>();
+        services.AddScoped<IPedidoConsultas, PedidoConsultas>(); // T-08.2
         services.AddScoped<IVerificadorDeBanco, VerificadorDeBanco>();
 
         // --- T-06.5: baixa atômica de estoque (spec 4.3), no mesmo DbContext e na mesma transação do IUnitOfWork ---

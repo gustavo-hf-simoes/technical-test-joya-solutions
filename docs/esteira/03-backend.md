@@ -745,3 +745,41 @@ Nenhum achado recebido.
 - Evidência MCP: não coletada (CG-05, AUTH_FAILED). Sem índice novo: listagem de catálogo pequeno ordenada por `Nome`.
 - Bloqueio: `git checkout -b us-07-catalogo` foi barrado pelo `guard-bash.sh`; o trabalho está na branch corrente (main), sem commit.
 - Sem desvio da spec, sem PROP.
+
+## US-08 e T-09.1 — Listagem de pedidos e validador do ranking
+
+Um commit por tarefa; arquivos separáveis (paths em `backend/`).
+
+| Tarefa | Commit previsto | Arquivos |
+|---|---|---|
+| T-08.1 | `feat(core): valida período e paginação da listagem (RN-15, RN-16)` | `src/Joya.Pedidos.Core/Common/Periodo.cs`, `Common/PeriodoRegras.cs`, `Pedidos/ListarPedidosQuery.cs`, `Pedidos/ListarPedidosQueryValidator.cs`; testes `UnitTests/Common/PeriodoTests.cs`, `UnitTests/Pedidos/ListarPedidosQueryValidatorTests.cs` |
+| T-08.2 | `feat(api): expõe GET /pedidos com filtros e paginação` | `Core/Pedidos/{PedidoResumoResponse,IPedidoConsultas,PedidoConsultaService}.cs`, `Infrastructure/Pedidos/PedidoConsultas.cs`, `PedidosController.cs`, `Infrastructure/DependencyInjection.cs`, `Program.cs`; testes `UnitTests/Pedidos/PedidoConsultaServiceTests.cs`, `IntegrationTests/Pedidos/GetPedidosTests.cs`, `IntegrationTests/Persistencia/Arranjo.cs` (`InserirPedidoAsync`) |
+| T-09.1 | `feat(core): exige período no relatório de top clientes (RN-17)` | `Core/Relatorios/{TopClientesQuery,TopClientesQueryValidator}.cs`; teste `UnitTests/Relatorios/TopClientesQueryValidatorTests.cs` |
+
+Arquivo compartilhado: `Common/PeriodoRegras.cs` é da T-08.1 e a T-09.1 só o reutiliza (T-09.1 depende da T-08.1).
+
+Linhas de arquivos tocados por uma tarefa só (T-08.2):
+- `PedidosController.cs`: construtor ganha `IPedidoConsultaService consultas`, `using Joya.Pedidos.Core.Common`, a action `ListarAsync` (`[HttpGet]`) e o comentário do `Created` (agora cita T-11.1).
+- `Program.cs`: duas linhas marcadas `// T-08.2` (service e `IValidator<ListarPedidosQuery>`).
+- `Infrastructure/DependencyInjection.cs`: uma linha marcada `// T-08.2`.
+
+Decisões:
+- `Created("/pedidos/{id}")` mantido: o `GET /pedidos/{id}` é a T-11.1, não esta história. Trocar por `CreatedAtAction` fica para a T-11.1.
+- Datas como `string?` no `Query` (arquitetura, decisão 4): `yyyy-MM-dd` estrito. `page=abc` ou `clienteId=abc` caem no `InvalidModelStateResponseFactory` (400 `VALIDACAO`).
+- Serviço de leitura separado (`PedidoConsultaService`) para não mudar o construtor do `PedidoService`.
+- Consulta: `AsNoTracking`, filtro `>= Inicio AND < FimExclusivo` sobre `DataPedido`, `COUNT` + página com `OFFSET/FETCH`, join com `Clientes` e `p.Itens.Count()` como subconsulta (sem `Include`, sem N+1). Página além do fim (inclusive `page=int.MaxValue`, que estouraria o `Skip`) devolve `200` com `items: []` sem consultar a página.
+- Índices: os de `database/02-indices.sql` já cobrem; nenhuma alteração em `database/`.
+
+Testes (nome → CA): `Criar_DataFimInclusiva_GeraFimExclusivoNoDiaSeguinte` (CA-17); `Validate_ParametrosInvalidos_RetornaErroDeValidacao` (CA-19); `Validate_SemDataInicio_RetornaErroDeValidacao` (CA-26); `ListarAsync_*` do serviço (CA-15, 17, 19); integração `GetPedidos_SemFiltro_RetornaPrimeiraPaginaOrdenada` (CA-15, com empate de data), `..._FiltroCliente_...` (CA-16), `..._FiltroPeriodo_IncluiAsDuasPontas` (CA-17, 28/02 23:59:59.999 e 01/04 00:00 fora), `..._PercorreTodasAsPaginas_NaoRepeteNemOmite` (CA-18), `..._ParametrosInvalidos_Retorna400` (CA-19, 11 casos), `..._ClienteSemPedidos_Retorna200Vazio` (CA-20), mais página além do fim e `quantidadeItens`.
+
+Verificação: `dotnet build` 0 aviso, 0 erro; unitários 101 aprovados; integração 103 aprovados; `dotnet format --verify-no-changes` sem pendência.
+
+Evidência MCP: não coletada (CG-05, AUTH_FAILED). O plano de execução (seek em `IX_Pedidos_DataPedido` / `IX_Pedidos_ClienteId_DataPedido`) fica para conferir quando o MCP voltar.
+
+Pendência para a T-09.2: registrar `IValidator<TopClientesQuery>` no `Program.cs` (o validador existe, mas só passa a valer quando o endpoint existir).
+
+Desvios da spec: nenhum, sem PROP.
+
+### Resposta a achados (US-08, rodada 2)
+
+- Gate: `default!` em `PedidoConsultaServiceTests.cs:53` (regra de ouro 1). Corrigido trocando por `Arg.Any<Periodo>()`; busca de silenciamento vazia, build 0 aviso, 101 unitários e `dotnet format` verdes (integração não rodada, a pedido).

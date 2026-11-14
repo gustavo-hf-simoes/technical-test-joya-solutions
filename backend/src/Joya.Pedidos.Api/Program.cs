@@ -24,9 +24,11 @@ builder.Services.AddControllers(mvc => mvc.Filters.Add<ValidationFilter>()) // T
 // --- T-06.6: casos de uso, validators e relógio (UTC, RN-13) ---
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IPedidoConsultaService, PedidoConsultaService>(); // T-08.2
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddSingleton<IValidator<CriarPedidoRequest>, CriarPedidoValidator>();
+builder.Services.AddSingleton<IValidator<ListarPedidosQuery>, ListarPedidosQueryValidator>(); // T-08.2
 builder.Services.AddProblemDetails(opcoes => opcoes.CustomizeProblemDetails = contexto =>
     contexto.ProblemDetails.Extensions.TryAdd(
         "traceId",
