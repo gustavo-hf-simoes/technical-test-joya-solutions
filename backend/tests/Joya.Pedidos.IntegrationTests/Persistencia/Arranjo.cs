@@ -45,4 +45,38 @@ public static class Arranjo
 
     public static async Task<int> ContarItensAsync(string connectionString, CancellationToken ct) =>
         Convert.ToInt32(await Sql.EscalarAsync(connectionString, "SELECT COUNT(*) FROM dbo.ItensPedido;", ct), CultureInfo.InvariantCulture);
+
+    /// <summary>Grava um pedido com a data dada (UTC) e os itens informados; o total é a soma dos itens.</summary>
+    public static async Task<int> InserirPedidoAsync(
+        string connectionString,
+        int clienteId,
+        DateTime dataPedido,
+        IReadOnlyList<(int ProdutoId, int Quantidade, decimal Preco)> itens,
+        CancellationToken ct)
+    {
+        var total = itens.Sum(i => i.Quantidade * i.Preco);
+        var id = Convert.ToInt32(
+            await Sql.EscalarAsync(connectionString, """
+                INSERT INTO dbo.Pedidos (ClienteId, DataPedido, ValorTotal) OUTPUT INSERTED.Id
+                VALUES (@cliente, @data, @total);
+                """, ct,
+                new SqlParameter("@cliente", clienteId),
+                new SqlParameter("@data", System.Data.SqlDbType.DateTime2) { Scale = 3, Value = dataPedido },
+                new SqlParameter("@total", System.Data.SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = total }),
+            CultureInfo.InvariantCulture);
+
+        foreach (var item in itens)
+        {
+            await Sql.ExecutarAsync(connectionString, """
+                INSERT INTO dbo.ItensPedido (PedidoId, ProdutoId, Quantidade, PrecoUnitario)
+                VALUES (@pedido, @produto, @quantidade, @preco);
+                """, ct,
+                new SqlParameter("@pedido", id),
+                new SqlParameter("@produto", item.ProdutoId),
+                new SqlParameter("@quantidade", item.Quantidade),
+                new SqlParameter("@preco", System.Data.SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = item.Preco });
+        }
+
+        return id;
+    }
 }

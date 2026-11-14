@@ -3,11 +3,13 @@ using Joya.Pedidos.Core.Common;
 using Joya.Pedidos.Core.Estoque; // T-06.5
 using Joya.Pedidos.Core.Pedidos;
 using Joya.Pedidos.Core.Produtos;
+using Joya.Pedidos.Core.Relatorios; // T-09.2
 using Joya.Pedidos.Infrastructure.Clientes;
 using Joya.Pedidos.Infrastructure.Estoque; // T-06.5
 using Joya.Pedidos.Infrastructure.Pedidos;
 using Joya.Pedidos.Infrastructure.Persistencia;
 using Joya.Pedidos.Infrastructure.Produtos;
+using Joya.Pedidos.Infrastructure.Relatorios; // T-09.2
 using Joya.Pedidos.Infrastructure.Saude;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +35,8 @@ public static class DependencyInjection
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<IProdutoRepository, ProdutoRepository>();
         services.AddScoped<IPedidoRepository, PedidoRepository>();
+        services.AddScoped<IPedidoConsultas, PedidoConsultas>(); // T-08.2
+        services.AddScoped<IRelatorioConsultas, RelatorioConsultas>(); // T-09.2
         services.AddScoped<IVerificadorDeBanco, VerificadorDeBanco>();
 
         // --- T-06.5: baixa atômica de estoque (spec 4.3), no mesmo DbContext e na mesma transação do IUnitOfWork ---

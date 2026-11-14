@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**CI e merge do PR da US-06** (`us-06-criar-pedido` → `main`), o merge só com autorização. A ENU-L055 fica sem commit até existirem os testes `GetPedidos_*` e `GetTopClientes_*` (US-08 e US-09). Em seguida, **US-07** (catálogo de clientes e produtos). Pendências: o comando do item BE-23 do checklist precisa aceitar `LimitesHttp.PoliticaCriarPedido` e o do BE-15 tem falsos positivos (dono: `arquiteto`); o deploy (T-17.x) precisa de `Proxy__ForwardedLimit=2`; o `Location` do 201 passa a `CreatedAtAction` na T-08.2; para o MCP `mssql`, reinicie o Claude Code com o banco de pé (`CG-05`).
+**PR da rodada** (`us-07-catalogo` → `main`: US-07, US-08, US-09, US-14 e US-15), só com autorização. Depois, pela `HL-26`: US-10 (Parte 4, Opus) e US-13 (compose) em paralelo, US-18 (README); em seguida US-16, US-11, US-17 e US-12. A ENU-L036 fica sem commit até o teste de contrato contra o `openapi.json` (T-11.2) e a ENU-L065 até a T-13.2. Pendências: o comando do item BE-23 do checklist precisa aceitar `LimitesHttp.PoliticaCriarPedido` e o do BE-15 tem falsos positivos (dono: `arquiteto`); o deploy (T-17.x) precisa de `Proxy__ForwardedLimit=2`; o `Location` do 201 passa a `CreatedAtAction` na T-08.2; para o MCP `mssql`, reinicie o Claude Code com o banco de pé (`CG-05`).
 
 ## Etapas
 
@@ -28,16 +28,16 @@
 | US-03 Qualidade automatizada: CI e testes de arquitetura | backend | Em andamento: T-03.1 e T-03.2 integradas (PR #5); T-03.3 a T-03.5 dependem das US-04, US-14 e US-16 | 2 / 5 | 8b0384e, 86f7b47 |
 | US-04 Banco de dados com schema, índices, logins e carga | backend | Concluída (PR #6) | 5 / 5 | 027a0ff, 75b834d, 97a88c1, d2c6c85, 994e5c0 |
 | US-05 Base HTTP da API | backend | Concluída (PR #7) | 3 / 3 | 17b4a14, b786353, 09f0eb6 |
-| US-06 Criar pedido com baixa atômica de estoque | backend | Commitada, PR aberto | 7 / 7 | 10d064c, 4f33672, 1b6564d, dac6332, 0506fe7, 22132a4, f969a53 |
-| US-07 Catálogo de clientes e produtos para as telas | backend | Pendente | 0 / 1 | — |
-| US-08 Listar pedidos com filtros e paginação | backend | Pendente | 0 / 2 | — |
-| US-09 Relatório de top 5 clientes | backend | Pendente | 0 / 2 | — |
+| US-06 Criar pedido com baixa atômica de estoque | backend | Concluída (PR #8) | 7 / 7 | 10d064c, 4f33672, 1b6564d, dac6332, 0506fe7, 22132a4, f969a53 |
+| US-07 Catálogo de clientes e produtos para as telas | backend | Commitada, PR pendente | 1 / 1 | 61bb1c2 |
+| US-08 Listar pedidos com filtros e paginação | backend | Commitada, PR pendente | 2 / 2 | 8b98d09, 59eae2d |
+| US-09 Relatório de top 5 clientes | backend | Commitada, PR pendente | 2 / 2 | 15ae8c8, 9caca95 |
 | US-10 Parte 4: debug e otimização da query | backend | Pendente | 0 / 3 | — |
 | US-11 Consultar pedido por id | backend | Pendente | 0 / 2 | — |
 | US-12 Idempotência na criação | backend | Pendente | 0 / 2 | — |
 | US-13 Aplicação completa com um comando | backend | Pendente | 0 / 2 | — |
-| US-14 Tela de listagem de pedidos | frontend | Pendente | 0 / 5 | — |
-| US-15 Tela de criação de pedido | frontend | Pendente | 0 / 3 | — |
+| US-14 Tela de listagem de pedidos | frontend | Commitada, PR pendente (contrato da T-14.2 a conferir na T-11.2) | 5 / 5 | 1779aa4, 9c9d50c, d1318ef, fe9cb83 |
+| US-15 Tela de criação de pedido | frontend | Commitada, PR pendente | 3 / 3 | c757543, 32bc744 |
 | US-16 Teste end to end com Playwright | frontend | Pendente | 0 / 1 | — |
 | US-17 Deploy online | backend | Pendente | 0 / 2 | — |
 | US-18 README e entrega | orquestrador | Pendente | 0 / 7 | — |
@@ -78,6 +78,11 @@
 | 2026-11-14 | Etapa 3, US-06, T-06.4 e T-06.5 (delegação 2 de 4) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 123.092 |
 | 2026-11-14 | Etapa 3, US-06, T-06.6 (delegação 3 de 4, com 1 rodada de CORRECAO, `CG-06`) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 113.804 |
 | 2026-11-14 | Etapa 3, US-06, T-06.7 (delegação 4 de 4) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 99.429 |
+| 2026-11-14 | Etapa 3, US-07, T-07.1 (delegação única, `HL-25`) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 49.610 |
+| 2026-11-14 | Etapa 4, US-14, T-14.1 a T-14.5 (delegação única, `HL-25`) | C2 | frontend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 91.895 |
+| 2026-11-14 | Etapa 3, US-08 e T-09.1 (delegação única, com 1 rodada de CORRECAO: `default!` em teste) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 117.647 |
+| 2026-11-14 | Etapa 4, US-15, T-15.1 a T-15.3 (delegação única, `HL-25`) | C2 | frontend | sonnet | medium | 1 | Aprovado na rodada 1 | Não | 83.772 |
+| 2026-11-14 | Etapa 3, US-09, T-09.2 | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 121.362 |
 
 ## Log de gates
 
@@ -106,3 +111,8 @@
 | 2026-11-14 | 3, US-06 (T-06.4 e T-06.5) | Os mesmos, mais integração | Aprovado: 0 aviso; 64/64 e 59/59. MCP não verificado (`AUTH_FAILED`, `CG-05`) |
 | 2026-11-14 | 3, US-06 (T-06.6) | Os mesmos | Rodada 1: testes verdes (74/74), mas `title` fora da spec 5.2 (`CG-06`), devolvido. Rodada 2: aprovado, 0 aviso; 64/64 e 74/74 |
 | 2026-11-14 | 3, US-06 (T-06.7) | Os mesmos, integração 2 vezes, e `validar_config.py` | Aprovado: 0 aviso; 64/64 e 77/77 nas 2 execuções |
+| 2026-11-14 | 3, US-07 (T-07.1) | Build, unitários, integração, format, busca por silenciamento, rastreabilidade e `validar_config.py` | Aprovado: 0 aviso; 64/64 e 83/83. MCP não verificado (`CG-05`) |
+| 2026-11-14 | 4, US-14 (T-14.1 a T-14.5) | lint, build e testes (ChromeHeadless do Chrome 157 já instalado, cache npm no D:) | Aprovado: lint limpo, build sem aviso, 12/12 |
+| 2026-11-14 | 3, US-08 e T-09.1 | Os do backend | Rodada 1: 101/101 e 103/103, mas `default!` em `PedidoConsultaServiceTests.cs:53` (regra de ouro 1), devolvido. Rodada 2: aprovado, busca limpa, 0 aviso, 101/101 |
+| 2026-11-14 | 4, US-15 (T-15.1 a T-15.3) | lint, build e testes | Aprovado: lint limpo, build sem aviso, 24/24 |
+| 2026-11-14 | 3, US-09 (T-09.2) | Os do backend | Aprovado: 0 aviso, busca limpa; 109/109 e 118/118. MCP não verificado (`CG-05`); SQL gerado no relatório |

@@ -267,3 +267,24 @@
 **2026-11-13**. Depois de o CI do PR #7 passar.
 
 > Sim, merge e US-06
+
+## Prompt 28
+<a id="prompt-28"></a>
+
+**2026-11-14**. Depois do gate da US-06, com os commits e o PR propostos.
+
+> Sim, commits e PR
+
+## Prompt 29
+<a id="prompt-29"></a>
+
+**2026-11-14**. Depois de o CI do PR #8 passar, com o disco C: quase cheio.
+
+> Sim, estou trabalhando em paralelo na questão do espaço em disco, prossiga com o merge e com a us-07, mas preciso de mais performance, pois o prazo do projeto é dia 15/11/2026 às 12h25. Precisamos pensar numa estratégia para consumir menos créditos, otimizar a velocidade de desenvolvimento e espaço em disco. Como podemos adaptar essa demanda sem prejudicar a qualidade do projeto atual?
+
+## Prompt 30
+<a id="prompt-30"></a>
+
+**2026-11-14**. Depois do gate da US-07, com a pergunta se a autorização de commit vale para a rodada inteira.
+
+> Sim, esta rodada
