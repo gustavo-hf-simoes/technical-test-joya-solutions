@@ -38,17 +38,17 @@
 | ENU-L028 | Obrigatório | RF-08 | US-04 | T-04.1, T-04.4 | `Carga_AplicadaDuasVezes_NaoDuplicaLinhas` | 027a0ff, d2c6c85 |
 | ENU-L029 | Obrigatório | RNF-09, RNF-03 | US-02 | T-02.1 | Manual: dotnet build da solução net8.0 termina com 0 warnings | 088ea5b |
 | ENU-L031 | Obrigatório | RF-01, RNF-01 | US-06 | T-06.1, T-06.2, T-06.3, T-06.4, T-06.5, T-06.6, T-06.7 | `PostPedidos_PedidoValido_Retorna201ComLocationEDebitaEstoque`, `PostPedidos_ClienteInexistente_Retorna422`, `PostPedidos_EstoqueInsuficiente_Retorna409SemGravarNada`, `PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo` | 10d064c, 4f33672, 1b6564d, dac6332, 0506fe7, 22132a4, f969a53 |
-| ENU-L032 | Obrigatório | RF-02 | US-08 | T-08.1, T-08.2 | `GetPedidos_FiltroCliente_RetornaSoDoCliente`, `GetPedidos_FiltroPeriodo_IncluiAsDuasPontas`, `GetPedidos_PercorreTodasAsPaginas_NaoRepeteNemOmite` | — |
-| ENU-L033 | Obrigatório | RF-03 | US-09 | T-09.1, T-09.2 | `GetTopClientes_OitoClientes_RetornaCincoEmOrdemDecrescente`, `GetTopClientes_PedidosForaDoPeriodo_NaoContam`, `GetTopClientes_Homonimos_NaoSomaNomesIguais` | — |
-| ENU-L034 | Obrigatório | RNF-09 | US-14 | T-14.1 | `AppComponent_Inicializacao_UsaLocalePtBr` | — |
+| ENU-L032 | Obrigatório | RF-02 | US-08 | T-08.1, T-08.2 | `GetPedidos_FiltroCliente_RetornaSoDoCliente`, `GetPedidos_FiltroPeriodo_IncluiAsDuasPontas`, `GetPedidos_PercorreTodasAsPaginas_NaoRepeteNemOmite` | 8b98d09, 59eae2d |
+| ENU-L033 | Obrigatório | RF-03 | US-09 | T-09.1, T-09.2 | `GetTopClientes_OitoClientes_RetornaCincoEmOrdemDecrescente`, `GetTopClientes_PedidosForaDoPeriodo_NaoContam`, `GetTopClientes_Homonimos_NaoSomaNomesIguais` | 15ae8c8, 9caca95 |
+| ENU-L034 | Obrigatório | RNF-09 | US-14 | T-14.1 | `AppComponent_Inicializacao_UsaLocalePtBr` | 1779aa4 |
 | ENU-L036 | Obrigatório | RF-05, RNF-08 | US-14 | T-14.2, T-14.3, T-14.4 | `PedidoListaComponent_FiltrosAplicados_AtualizaQueryString`, `PedidoListaComponent_FalhaNaApi_MostraErroComTentarNovamente`, `Contrato_ModelosDoFrontend_IgualAoOpenApiVersionado` | — |
-| ENU-L037 | Obrigatório | RF-06, RF-10 | US-07, US-15 | T-07.1, T-15.1, T-15.2, T-15.3 | `PedidoFormComponent_Confirmar_RedirecionaParaListagemComSucesso`, `PedidoFormComponent_Resposta409_DestacaItensEPreservaDados`, `PedidoFormComponent_Reenvio_ReutilizaIdempotencyKey`, `GetProdutos_FiltroAtivo_RetornaSoAtivosOrdenadosPorNome`, `GetProdutos_AtivoInvalido_Retorna400` | — |
+| ENU-L037 | Obrigatório | RF-06, RF-10 | US-07, US-15 | T-07.1, T-15.1, T-15.2, T-15.3 | `PedidoFormComponent_Confirmar_RedirecionaParaListagemComSucesso`, `PedidoFormComponent_Resposta409_DestacaItensEPreservaDados`, `PedidoFormComponent_Reenvio_ReutilizaIdempotencyKey`, `GetProdutos_FiltroAtivo_RetornaSoAtivosOrdenadosPorNome`, `GetCatalogo_AtivoInvalido_Retorna400` | 61bb1c2, c757543, 32bc744 |
 | ENU-L038 | Contexto | — | — | — | — | — |
 | ENU-L040 | Obrigatório | RF-04, RNF-02, ENT-14 | US-10, US-18 | T-10.1, T-10.2, T-10.3, T-18.4 | `QueryCorrigida_Ranking2026_CoincideComTopClientes` | — |
 | ENU-L042–L048 | Obrigatório | RF-04 | US-10 | T-10.1, T-10.2 | `QueryOriginal_ClientesHomonimos_SomaIndevidamente`, `QueryOriginal_Ordenacao_RetornaMenorTotalPrimeiro`, `QueryCorrigida_Ranking2026_CoincideComTopClientes` | — |
 | ENU-L050–L052 | Contexto | — | — | — | — | — |
 | ENU-L054 | Obrigatório | RNF-07 | US-06 | T-06.2, T-06.3 | `CriarAsync_ClienteInexistente_RetornaClienteNaoEncontrado`, `CriarAsync_EstoqueInsuficiente_RetornaConflitoSemGravar`, `Validate_ItensVazios_RetornaErroNoCampoItens` | 4f33672, 1b6564d |
-| ENU-L055 | Obrigatório | RNF-07 | US-04, US-06, US-08, US-09 | T-04.1, T-06.6, T-08.2, T-09.2 | `PostPedidos_SemItens_Retorna400SemGravar`, `GetPedidos_SemFiltro_RetornaPrimeiraPaginaOrdenada`, `GetTopClientes_SemPeriodo_Retorna400` | — |
+| ENU-L055 | Obrigatório | RNF-07 | US-04, US-06, US-08, US-09 | T-04.1, T-06.6, T-08.2, T-09.2 | `PostPedidos_SemItens_Retorna400SemGravar`, `GetPedidos_SemFiltro_RetornaPrimeiraPaginaOrdenada`, `GetTopClientes_SemPeriodo_Retorna400` | 027a0ff, 22132a4, 59eae2d, 9caca95 |
 | ENU-L056 | Contexto | — | — | — | — | — |
 | ENU-L058 | Diferencial | ENT-19 | US-16, US-03 | T-16.1, T-03.5 | `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` | — |
 | ENU-L059 | Contexto | — | — | — | — | — |
