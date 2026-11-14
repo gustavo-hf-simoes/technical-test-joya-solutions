@@ -895,3 +895,19 @@ Nenhum índice novo, de acordo com a arquitetura Q12.
 **Desvios da spec:** nenhum, sem PROP.
 
 **Para o desenvolvedor:** a `03` é 4× mais rápida que a `02` e pede 5 MB de memória contra 81 MB. A `02` segue o backlog e o enunciado, porque soma os itens. A escolha para o README está na seção 8 de `investigacao.md`.
+
+## US-11 — Consultar pedido por id (T-11.1)
+
+**Tarefa pronta:** T-11.1. Commit previsto: `feat(api): expõe GET /pedidos/{id} com os itens`. A T-11.2 (contrato OpenAPI) fica para depois da US-12.
+
+**Arquivos:** `Core/Pedidos/IPedidoConsultas.cs` (porta `ObterPorIdAsync`), `PedidoConsultaService.cs`, `PedidoErrors.cs` (`NaoEncontrado`, 404), `Infrastructure/Pedidos/PedidoConsultas.cs` (projeção única com a coleção de itens aninhada, `AsNoTracking`, sem `Include`; itens por `ProdutoId`), `Api/Controllers/PedidosController.cs` (action `GET {id:int}`; comentário do `Created` atualizado, `Location` relativo mantido).
+
+**Testes:**
+- Unitários: `ObterPorIdAsync_Inexistente_RetornaPedidoNaoEncontrado` (CA-34), `ObterPorIdAsync_Existente_RetornaOPedidoComItens` (CA-34).
+- Integração (`GetPedidoPorIdTests`): `GetPedidoPorId_PrecoDeTabelaAlterado_MantemPrecoPraticado` (CA-11), `GetPedidoPorId_Inexistente_Retorna404` (CA-34, Problem Details com `code`), `GetPedidoPorId_AposCriacao_DataPedidoIgualAoRetornoDoPost` (RN-13, HL-20).
+
+**Verificações:** build 0 avisos e 0 erros; unitários 111 aprovados; integração `--filter GetPedidoPorId` 3 aprovados; `dotnet format --verify-no-changes` limpo; `git grep CreatedAtAction -- backend/src` vazio. Suíte de integração completa e categoria Medicao não rodadas (HL-27).
+
+**Evidência MCP:** não coletada nesta rodada (o banco de teste é efêmero, via Testcontainers). A consulta é por `PK_Pedidos` e `PK_ItensPedido` (spec 6.3). O plano de execução não foi medido.
+
+**Desvios da spec:** nenhum, sem PROP.
