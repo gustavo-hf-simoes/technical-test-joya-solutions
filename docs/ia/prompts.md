@@ -316,3 +316,17 @@
 **2026-11-14**. Depois do diagnóstico e das quatro otimizações propostas (`HL-27`).
 
 > Sim, aplique
+
+## Prompt 35
+<a id="prompt-35"></a>
+
+**2026-11-14**. Depois dos commits das US-10 e US-13.
+
+> Sim, push e PR
+
+## Prompt 36
+<a id="prompt-36"></a>
+
+**2026-11-14**. Depois de o CI do PR #15 passar, com o README escrito e sem commit.
+
+> Sim, merge

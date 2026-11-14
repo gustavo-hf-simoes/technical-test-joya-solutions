@@ -295,7 +295,15 @@
 - **Gate (rodado pelo orquestrador):** aprovado. 0 aviso, 109/109 unitários, 126/126 de integração, format sem mudanças, busca limpa, matriz com 0 erro. Compose: quatro serviços bem, 8/8 rotas com 200, contêineres sem root.
 - **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (US-13) e no Opus `high` (US-10).
 
-<!-- Próximas entradas: E15 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E15 — US-18: README (orquestrador) · 2026-11-14
+
+- **Pedido** ([prompt 35](prompts.md#prompt-35) e [prompt 36](prompts.md#prompt-36)): PR e merge das US-10 e US-13 (PR #15, merge commit `bf106c9`); em seguida, o README.
+- **Produzido pelo orquestrador, sem delegação** (a US-18 é dele): as seções exigidas pelo enunciado (Docker, testes, decisões técnicas, uso do Claude e Parte 4), mais a configuração AI-first, as limitações, o custo medido (23 delegações, 2.134.517 tokens) e os links. Cada fato foi conferido no repositório (versão do Node no `Dockerfile`, ArchUnitNET no `csproj`, `.env.example`, números do gate e da investigação).
+- **Desvio de processo:** um commit por tarefa, montado a partir do README final. O sumário só entrou no commit da T-18.5. A T-18.6 (links do vídeo e do deploy) e a T-18.7 (roteiro) ficam abertas.
+- **Gate:** `validar_config.py` (links) e `validar_rastreabilidade.py` verdes. Os comandos do README não foram reexecutados num clone limpo; são os mesmos dos gates desta rodada.
+- **Modelo:** orquestrador no Opus 5.5.
+
+<!-- Próximas entradas: E16 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 

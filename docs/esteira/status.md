@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**US-18 (README)**, com o orquestrador; depois o PR da rodada (`us-10-13-parte4-compose` → `main`: US-10 e US-13), só com autorização. Em seguida, pela `HL-26` e no Sonnet (`HL-27`): US-16, US-11, US-17 e US-12. Gates de integração com `--filter "Categoria!=Medicao"` (`HL-27`). A ENU-L036 fica sem commit até a T-11.2. Pendências: o nome do serviço do frontend (`web` na arquitetura e no DK-01, `frontend` no backlog e no compose; dono: `arquiteto`); os comandos dos itens BE-23 e BE-15 do checklist (`arquiteto`); `Proxy__ForwardedLimit=2` no deploy (T-17.x); `CreatedAtAction` na T-11.1; o MCP `mssql` com `AUTH_FAILED` (`CG-05`).
+**PR da US-18** (`us-18-readme` → `main`: README, T-18.1 a T-18.5), só com autorização. A T-18.6 (links do vídeo e do deploy) e a T-18.7 (roteiro) fecham quando o vídeo e o deploy existirem. Em seguida, pela `HL-26` e no Sonnet (`HL-27`): US-16, US-11, US-17 e US-12. Gates de integração com `--filter "Categoria!=Medicao"`. Pendências: o nome do serviço do frontend (`web` na arquitetura, `frontend` no compose; dono: `arquiteto`); os comandos dos itens BE-23 e BE-15 do checklist (`arquiteto`); `Proxy__ForwardedLimit=2` no deploy; `CreatedAtAction` na T-11.1; o MCP `mssql` com `AUTH_FAILED` (`CG-05`).
 
 ## Etapas
 
@@ -32,15 +32,15 @@
 | US-07 Catálogo de clientes e produtos para as telas | backend | Concluída (PR #9) | 1 / 1 | 61bb1c2 |
 | US-08 Listar pedidos com filtros e paginação | backend | Concluída (PR #9) | 2 / 2 | 8b98d09, 59eae2d |
 | US-09 Relatório de top 5 clientes | backend | Concluída (PR #9) | 2 / 2 | 15ae8c8, 9caca95 |
-| US-10 Parte 4: debug e otimização da query | backend | Commitada, PR pendente | 3 / 3 | f37e391, 894a406, 9eb76b7 |
+| US-10 Parte 4: debug e otimização da query | backend | Concluída (PR #15) | 3 / 3 | f37e391, 894a406, 9eb76b7 |
 | US-11 Consultar pedido por id | backend | Pendente | 0 / 2 | — |
 | US-12 Idempotência na criação | backend | Pendente | 0 / 2 | — |
-| US-13 Aplicação completa com um comando | backend | Commitada, PR pendente | 2 / 2 | ba65994, ffca2da |
+| US-13 Aplicação completa com um comando | backend | Concluída (PR #15) | 2 / 2 | ba65994, ffca2da |
 | US-14 Tela de listagem de pedidos | frontend | Concluída (PR #9; contrato da T-14.2 a conferir na T-11.2) | 5 / 5 | 1779aa4, 9c9d50c, d1318ef, fe9cb83 |
 | US-15 Tela de criação de pedido | frontend | Concluída (PR #9) | 3 / 3 | c757543, 32bc744 |
 | US-16 Teste end to end com Playwright | frontend | Pendente | 0 / 1 | — |
 | US-17 Deploy online | backend | Pendente | 0 / 2 | — |
-| US-18 README e entrega | orquestrador | Pendente | 0 / 7 | — |
+| US-18 README e entrega | orquestrador | Commitada, PR pendente (T-18.6 e T-18.7 abertas) | 5 / 7 | 2a47d6e, 061162b, e48c12e, 2e88278, 8e7c669 |
 
 ## Achados abertos
 
