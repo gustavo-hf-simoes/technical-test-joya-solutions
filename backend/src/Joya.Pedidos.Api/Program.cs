@@ -3,7 +3,9 @@ using FluentValidation;
 using Joya.Pedidos.Api.Erros;
 using Joya.Pedidos.Api.Limites;
 using Joya.Pedidos.Api.Saude;
+using Joya.Pedidos.Core.Clientes;
 using Joya.Pedidos.Core.Pedidos;
+using Joya.Pedidos.Core.Produtos;
 using Joya.Pedidos.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -22,6 +24,8 @@ builder.Services.AddControllers(mvc => mvc.Filters.Add<ValidationFilter>()) // T
 // --- T-06.6: casos de uso, validators e relógio (UTC, RN-13) ---
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddSingleton<IValidator<CriarPedidoRequest>, CriarPedidoValidator>();
 builder.Services.AddProblemDetails(opcoes => opcoes.CustomizeProblemDetails = contexto =>
     contexto.ProblemDetails.Extensions.TryAdd(

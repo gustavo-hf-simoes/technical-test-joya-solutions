@@ -35,4 +35,12 @@ public sealed class ProdutoRepository(PedidosDbContext contexto) : IProdutoRepos
             .Select(p => new { p.Id, p.Estoque })
             .ToDictionaryAsync(p => p.Id, p => p.Estoque, ct);
     }
+
+    public async Task<IReadOnlyList<ProdutoResponse>> ListarAsync(bool? ativo, CancellationToken ct) =>
+        await contexto.Produtos
+            .AsNoTracking()
+            .Where(p => ativo == null || p.Ativo == ativo)
+            .OrderBy(p => p.Nome).ThenBy(p => p.Id)
+            .Select(p => new ProdutoResponse(p.Id, p.Sku, p.Nome, p.Preco, p.Estoque))
+            .ToListAsync(ct);
 }

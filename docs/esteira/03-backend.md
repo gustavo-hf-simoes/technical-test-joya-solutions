@@ -734,3 +734,14 @@ Resultado: 20 sessões enfileiradas em todas as execuções; estoque final 0 (CA
 ### Resposta a achados (US-06, delegação 4)
 
 Nenhum achado recebido.
+
+## US-07 — Catálogo para os seletores (T-07.1)
+
+- Commit previsto: `feat(api): expõe clientes e produtos ativos para os seletores`.
+- Arquivos: `Core/Clientes/{ClienteResponse,IClienteService}.cs`, `Core/Produtos/{ProdutoResponse,IProdutoService}.cs`, `ListarAsync(bool? ativo, ct)` nas portas e repositórios, `Api/Controllers/{Clientes,Produtos}Controller.cs`, registro em `Program.cs`.
+- Consulta: `AsNoTracking`, `Where(ativo == null || Ativo == ativo)`, `OrderBy(Nome).ThenBy(Id)`, projeção direta para o DTO. `ativo` não booleano vira 400 `VALIDACAO` pelo `InvalidModelStateResponseFactory` existente.
+- Testes (`IntegrationTests/Catalogo/CatalogoTests.cs`): `GetClientes_FiltroAtivo_RetornaSoAtivosOrdenadosPorNome` e `GetProdutos_FiltroAtivo_...` (CA-35), `GetClientes_SemFiltroAtivo_RetornaTodos`, `GetClientes_AtivoFalse_RetornaSoInativos`, `GetCatalogo_AtivoInvalido_Retorna400` (clientes e produtos, HL-18).
+- Verificação: build 0 aviso, unitários, integração e `dotnet format` verdes.
+- Evidência MCP: não coletada (CG-05, AUTH_FAILED). Sem índice novo: listagem de catálogo pequeno ordenada por `Nome`.
+- Bloqueio: `git checkout -b us-07-catalogo` foi barrado pelo `guard-bash.sh`; o trabalho está na branch corrente (main), sem commit.
+- Sem desvio da spec, sem PROP.

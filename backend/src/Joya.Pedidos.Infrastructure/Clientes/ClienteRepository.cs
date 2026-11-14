@@ -13,4 +13,12 @@ public sealed class ClienteRepository(PedidosDbContext contexto) : IClienteRepos
             .Where(c => c.Id == id)
             .Select(c => new ClienteResumo(c.Id, c.Nome, c.Ativo))
             .FirstOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<ClienteResponse>> ListarAsync(bool? ativo, CancellationToken ct) =>
+        await contexto.Clientes
+            .AsNoTracking()
+            .Where(c => ativo == null || c.Ativo == ativo)
+            .OrderBy(c => c.Nome).ThenBy(c => c.Id)
+            .Select(c => new ClienteResponse(c.Id, c.Nome, c.Ativo))
+            .ToListAsync(ct);
 }
