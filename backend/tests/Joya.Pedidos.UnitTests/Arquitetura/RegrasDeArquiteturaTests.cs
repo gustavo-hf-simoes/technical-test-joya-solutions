@@ -11,9 +11,9 @@ namespace Joya.Pedidos.UnitTests.Arquitetura;
 
 /// <summary>
 /// Regras do CLAUDE.md e de docs/esteira/02-arquitetura.md §3 transformadas em testes (HL-08, ENU-L019).
-/// Hoje há poucos tipos de produção. As regras são escritas por assembly, namespace ou sufixo de nome, para
-/// valerem sem alteração quando entidades, DTOs e controllers aparecerem. Onde o conjunto de alvos pode estar
-/// vazio, o teste diz isso (WithoutRequiringPositiveResults ou comentário) e não finge verificar o que não existe.
+/// As regras são escritas por assembly, namespace (ResideInNamespaceOrBelow) ou sufixo de nome. Nenhuma usa
+/// WithoutRequiringPositiveResults: o ArchUnitNET reprova a regra se o seletor ficar vazio, então o teste
+/// não passa sem verificar nada (ARQ-02). O assembly do EF Core entra no modelo para a regra dos controllers.
 /// </summary>
 public sealed class RegrasDeArquiteturaTests
 {
@@ -28,7 +28,7 @@ public sealed class RegrasDeArquiteturaTests
     private static readonly Assembly[] _producao = [_core, _infra, _api];
 
     private static readonly Architecture _arquitetura = new ArchLoader()
-        .LoadAssemblies(_core, _infra, _api, typeof(RegrasDeArquiteturaTests).Assembly)
+        .LoadAssemblies(_core, _infra, _api, typeof(RegrasDeArquiteturaTests).Assembly, typeof(Microsoft.EntityFrameworkCore.DbContext).Assembly)
         .Build();
 
     private static readonly string[] _referenciasProibidasNoCore =
@@ -43,7 +43,7 @@ public sealed class RegrasDeArquiteturaTests
 
     private static readonly string[] _sufixosDeDto = ["Request", "Query", "Response"];
 
-    // Nomes de entidade de domínio (spec 6): ainda não existem no Core; a regra vale quando nascerem.
+    // Nomes de entidade de domínio (spec 6): Pedido e ItemPedido no Core; Cliente e Produto na Infrastructure.
     private static readonly string[] _entidades = ["Pedido", "ItemPedido", "Cliente", "Produto"];
 
     [Fact]
@@ -65,9 +65,9 @@ public sealed class RegrasDeArquiteturaTests
     [Fact]
     public void Core_Dependencias_NaoReferenciaInfrastructureNemApi()
     {
-        Types().That().ResideInNamespace(Regex(_nsCore))
-            .Should().NotDependOnAny(Types().That().ResideInNamespace(Regex(_nsInfra)).Or().ResideInNamespace(Regex(_nsApi)))
-            .WithoutRequiringPositiveResults() // o conjunto proibido (Infrastructure) ainda não tem tipos
+        Types().That().ResideInNamespaceOrBelow(_nsCore)
+            .Should().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsInfra)
+            .AndShould().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsApi)
             .Check(_arquitetura);
 
         _core.GetReferencedAssemblies().Select(a => a.Name)
@@ -77,11 +77,8 @@ public sealed class RegrasDeArquiteturaTests
     [Fact]
     public void Infrastructure_Dependencias_NaoReferenciaApi()
     {
-        // A Infrastructure ainda não tem tipos: sem WithoutRequiringPositiveResults o ArchUnitNET reprovaria
-        // a regra por falta de objetos. A checagem por assembly abaixo vale desde já.
-        Types().That().ResideInNamespace(Regex(_nsInfra))
-            .Should().NotDependOnAny(Types().That().ResideInNamespace(Regex(_nsApi)))
-            .WithoutRequiringPositiveResults()
+        Types().That().ResideInNamespaceOrBelow(_nsInfra)
+            .Should().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsApi)
             .Check(_arquitetura);
 
         var referencias = _infra.GetReferencedAssemblies().Select(a => a.Name ?? string.Empty).ToList();
@@ -92,11 +89,9 @@ public sealed class RegrasDeArquiteturaTests
     [Fact]
     public void Controllers_Dependencias_NaoAcessamDbContext()
     {
-        // Ainda não há controllers: a regra vale quando eles aparecerem (sufixo Controller).
-        Classes().That().HaveNameEndingWith("Controller")
-            .Should().NotDependOnAny(Types().That().ResideInNamespace(Regex("Microsoft.EntityFrameworkCore"))
-                .Or().ResideInNamespace(Regex(_nsInfra)))
-            .WithoutRequiringPositiveResults()
+        Classes().That().HaveNameEndingWith("Controller").And().ResideInNamespaceOrBelow(_nsApi)
+            .Should().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsInfra)
+            .AndShould().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow("Microsoft.EntityFrameworkCore")
             .Check(_arquitetura);
     }
 
@@ -107,7 +102,7 @@ public sealed class RegrasDeArquiteturaTests
             .Where(t => _sufixosDeDto.Any(s => NomeSemAridade(t).EndsWith(s, StringComparison.Ordinal)))
             .ToList();
 
-        // Hoje: PaginaResponse<T>. Um record gerado pelo compilador tem o método <Clone>$.
+        // Um record gerado pelo compilador tem o método <Clone>$.
         dtos.ShouldNotBeEmpty("PaginaResponse<T> já é um DTO do Core");
         var violacoes = dtos
             .Where(t => !t.IsSealed || t.GetMethod("<Clone>$", BindingFlags.Public | BindingFlags.Instance) is null)
@@ -120,9 +115,12 @@ public sealed class RegrasDeArquiteturaTests
     [Fact]
     public void Entidades_Propriedades_NaoTemSetterPublico()
     {
-        // As entidades ainda não existem no Core: a lista fica vazia e o teste passa sem verificar nada por ora.
-        // Entra em vigor quando Pedido/ItemPedido/Cliente/Produto forem criados. `init` também conta como setter público.
-        var entidades = TiposDeclarados(_core).Where(t => _entidades.Contains(t.Name)).ToList();
+        // `init` também conta como setter público. Procura no Core e na Infrastructure, onde as entidades vivem.
+        var entidades = TiposDeclarados(_core).Concat(TiposDeclarados(_infra))
+            .Where(t => _entidades.Contains(t.Name))
+            .ToList();
+
+        entidades.Select(t => t.Name).ShouldBe(_entidades, ignoreOrder: true, "as quatro entidades da spec 6 devem ser encontradas");
 
         var violacoes = entidades
             .SelectMany(t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -166,7 +164,6 @@ public sealed class RegrasDeArquiteturaTests
             .And().DoNotHaveName("Program")
             .And().DoNotHaveFullNameContaining("<")
             .Should().BeSealed()
-            .WithoutRequiringPositiveResults()
             .Check(_arquitetura);
     }
 
@@ -174,15 +171,12 @@ public sealed class RegrasDeArquiteturaTests
     public void TestesDeRegra_Dependencias_NaoUsamInfrastructureNemApi()
     {
         // Os testes de regra (fora de .Arquitetura) não podem tocar Infrastructure nem Api: continuam sem I/O.
-        Types().That().ResideInNamespace(Regex(_nsTestes))
-            .And().DoNotResideInNamespace(Regex($"{_nsTestes}.Arquitetura"))
-            .Should().NotDependOnAny(Types().That().ResideInNamespace(Regex(_nsInfra)).Or().ResideInNamespace(Regex(_nsApi)))
-            .WithoutRequiringPositiveResults() // Infrastructure ainda sem tipos; UnitTests/Common continua avaliado
+        Types().That().ResideInNamespaceOrBelow(_nsTestes)
+            .And().DoNotResideInNamespaceOrBelow($"{_nsTestes}.Arquitetura")
+            .Should().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsInfra)
+            .AndShould().NotDependOnAnyTypesThat().ResideInNamespaceOrBelow(_nsApi)
             .Check(_arquitetura);
     }
-
-    // ResideInNamespace recebe expressão regular: casa o namespace e os filhos dele.
-    private static string Regex(string ns) => $"^{System.Text.RegularExpressions.Regex.Escape(ns)}(\\..*)?$";
 
     private static IEnumerable<Type> TiposDeclarados(Assembly assembly) =>
         assembly.GetTypes().Where(t => !t.IsDefined(typeof(CompilerGeneratedAttribute), false) && !t.IsNested);
