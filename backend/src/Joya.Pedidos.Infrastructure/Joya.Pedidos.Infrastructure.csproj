@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Joya.Pedidos.Core\Joya.Pedidos.Core.csproj" />
+  </ItemGroup>
+
+</Project>
