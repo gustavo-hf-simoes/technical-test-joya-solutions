@@ -36,7 +36,7 @@
 | ENU-L025 | Obrigatório | RNF-09 | US-04 | T-04.1 | `Schema_ScriptsAplicados_CriaTabelasChavesEConstraints` | — |
 | ENU-L027 | Obrigatório | RF-07, RNF-02 | US-04 | T-04.1, T-04.2 | `Schema_ScriptsAplicados_CriaTabelasChavesEConstraints`, `Indices_ScriptAplicado_ExistemIndicesDaSpec` | — |
 | ENU-L028 | Obrigatório | RF-08 | US-04 | T-04.1, T-04.4 | `Carga_AplicadaDuasVezes_NaoDuplicaLinhas` | — |
-| ENU-L029 | Obrigatório | RNF-09, RNF-03 | US-02 | T-02.1 | Manual: dotnet build da solução net8.0 termina com 0 warnings | — |
+| ENU-L029 | Obrigatório | RNF-09, RNF-03 | US-02 | T-02.1 | Manual: dotnet build da solução net8.0 termina com 0 warnings | 088ea5b |
 | ENU-L031 | Obrigatório | RF-01, RNF-01 | US-06 | T-06.1, T-06.2, T-06.3, T-06.4, T-06.5, T-06.6, T-06.7 | `PostPedidos_PedidoValido_Retorna201ComLocationEDebitaEstoque`, `PostPedidos_ClienteInexistente_Retorna422`, `PostPedidos_EstoqueInsuficiente_Retorna409SemGravarNada`, `PostPedidos_VinteRequisicoesSimultaneas_EstoqueNuncaFicaNegativo` | — |
 | ENU-L032 | Obrigatório | RF-02 | US-08 | T-08.1, T-08.2 | `GetPedidos_FiltroCliente_RetornaSoDoCliente`, `GetPedidos_FiltroPeriodo_IncluiAsDuasPontas`, `GetPedidos_PercorreTodasAsPaginas_NaoRepeteNemOmite` | — |
 | ENU-L033 | Obrigatório | RF-03 | US-09 | T-09.1, T-09.2 | `GetTopClientes_OitoClientes_RetornaCincoEmOrdemDecrescente`, `GetTopClientes_PedidosForaDoPeriodo_NaoContam`, `GetTopClientes_Homonimos_NaoSomaNomesIguais` | — |

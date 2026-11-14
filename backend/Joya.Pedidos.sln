@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2BFE26A8-2AC5-41FD-BBC5-43E81CAC964C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joya.Pedidos.Api", "src\Joya.Pedidos.Api\Joya.Pedidos.Api.csproj", "{5AB217F9-DD4A-4CE7-A1E6-6B835316C886}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joya.Pedidos.Core", "src\Joya.Pedidos.Core\Joya.Pedidos.Core.csproj", "{73585F7A-6E15-4DA9-AB55-5815A9A82132}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joya.Pedidos.Infrastructure", "src\Joya.Pedidos.Infrastructure\Joya.Pedidos.Infrastructure.csproj", "{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A6589523-8C09-4ADF-889B-9C7DDBC5755A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joya.Pedidos.IntegrationTests", "tests\Joya.Pedidos.IntegrationTests\Joya.Pedidos.IntegrationTests.csproj", "{D4EC7006-A2E1-418E-A95D-D929AED4062A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joya.Pedidos.UnitTests", "tests\Joya.Pedidos.UnitTests\Joya.Pedidos.UnitTests.csproj", "{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5AB217F9-DD4A-4CE7-A1E6-6B835316C886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AB217F9-DD4A-4CE7-A1E6-6B835316C886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AB217F9-DD4A-4CE7-A1E6-6B835316C886}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AB217F9-DD4A-4CE7-A1E6-6B835316C886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73585F7A-6E15-4DA9-AB55-5815A9A82132}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73585F7A-6E15-4DA9-AB55-5815A9A82132}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73585F7A-6E15-4DA9-AB55-5815A9A82132}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73585F7A-6E15-4DA9-AB55-5815A9A82132}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4EC7006-A2E1-418E-A95D-D929AED4062A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4EC7006-A2E1-418E-A95D-D929AED4062A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4EC7006-A2E1-418E-A95D-D929AED4062A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4EC7006-A2E1-418E-A95D-D929AED4062A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5AB217F9-DD4A-4CE7-A1E6-6B835316C886} = {2BFE26A8-2AC5-41FD-BBC5-43E81CAC964C}
+		{73585F7A-6E15-4DA9-AB55-5815A9A82132} = {2BFE26A8-2AC5-41FD-BBC5-43E81CAC964C}
+		{B45EA879-CD18-4226-A2F6-4F1FFEAD45C7} = {2BFE26A8-2AC5-41FD-BBC5-43E81CAC964C}
+		{D4EC7006-A2E1-418E-A95D-D929AED4062A} = {A6589523-8C09-4ADF-889B-9C7DDBC5755A}
+		{35997CBE-BAE5-424C-9F71-DD4BAC9CADB8} = {A6589523-8C09-4ADF-889B-9C7DDBC5755A}
+	EndGlobalSection
+EndGlobal
