@@ -5,6 +5,9 @@ namespace Joya.Pedidos.Core.Pedidos;
 /// <summary>Falhas de negócio do pedido (catálogo da spec 5.1).</summary>
 public static class PedidoErrors
 {
+    public static Error NaoEncontrado(int id) =>
+        Error.NotFound("PEDIDO_NAO_ENCONTRADO", $"O pedido {id} não existe.");
+
     public static Error ClienteNaoEncontrado(int clienteId) =>
         Error.Unprocessable("CLIENTE_NAO_ENCONTRADO", $"O cliente {clienteId} não existe.");
 

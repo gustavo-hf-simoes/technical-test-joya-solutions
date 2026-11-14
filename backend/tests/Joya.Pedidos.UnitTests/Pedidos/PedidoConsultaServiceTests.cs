@@ -64,4 +64,30 @@ public sealed class PedidoConsultaServiceTests
 
         await _consultas.Received(1).ListarAsync(null, Arg.Any<Periodo>(), 1, 20, cts.Token);
     }
+
+    [Fact] // CA-34
+    public async Task ObterPorIdAsync_Inexistente_RetornaPedidoNaoEncontrado()
+    {
+        _consultas.ObterPorIdAsync(999999, Arg.Any<CancellationToken>()).Returns((PedidoResponse?)null);
+
+        var resultado = await CriarSut().ObterPorIdAsync(999999, CancellationToken.None);
+
+        resultado.IsFailure.ShouldBeTrue();
+        resultado.Error.Code.ShouldBe("PEDIDO_NAO_ENCONTRADO");
+        resultado.Error.Tipo.ShouldBe(TipoErro.NaoEncontrado);
+    }
+
+    [Fact] // CA-34
+    public async Task ObterPorIdAsync_Existente_RetornaOPedidoComItens()
+    {
+        var pedido = new PedidoResponse(
+            1042, 7, "Cliente", new DateTime(2026, 5, 1, 10, 0, 0, DateTimeKind.Utc), 299.80m,
+            [new PedidoItemResponse(12, "Teclado", 2, 149.90m, 299.80m)]);
+        _consultas.ObterPorIdAsync(1042, Arg.Any<CancellationToken>()).Returns(pedido);
+
+        var resultado = await CriarSut().ObterPorIdAsync(1042, CancellationToken.None);
+
+        resultado.IsSuccess.ShouldBeTrue();
+        resultado.Value.ShouldBe(pedido);
+    }
 }

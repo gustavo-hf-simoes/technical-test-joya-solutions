@@ -25,7 +25,7 @@ public sealed class PedidosController(IPedidoService service, IPedidoConsultaSer
     {
         var resultado = await service.CriarAsync(request, ct);
 
-        // Location relativo, como na spec 5.2. O GET /pedidos/{id} chega na T-11.1; até lá não há action para o CreatedAtAction.
+        // Location relativo, como na spec 5.2 (aponta para ObterPorIdAsync). Mantém o Created com URL relativa, não o helper por nome de action.
         return resultado.Match<IActionResult>(
             pedido => Created($"/pedidos/{pedido.Id}", pedido),
             erro => erro.ToProblem(HttpContext));
@@ -41,6 +41,19 @@ public sealed class PedidosController(IPedidoService service, IPedidoConsultaSer
 
         return resultado.Match<IActionResult>(
             pagina => Ok(pagina),
+            erro => erro.ToProblem(HttpContext));
+    }
+
+    /// <summary>Obtém um pedido com os itens e os preços praticados (spec 5.2).</summary>
+    [HttpGet("{id:int}")]
+    [ProducesResponseType<PedidoResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ObterPorIdAsync(int id, CancellationToken ct)
+    {
+        var resultado = await consultas.ObterPorIdAsync(id, ct);
+
+        return resultado.Match<IActionResult>(
+            pedido => Ok(pedido),
             erro => erro.ToProblem(HttpContext));
     }
 }

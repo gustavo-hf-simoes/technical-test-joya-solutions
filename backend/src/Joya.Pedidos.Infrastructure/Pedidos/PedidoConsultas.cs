@@ -53,4 +53,32 @@ public sealed class PedidoConsultas(PedidosDbContext contexto) : IPedidoConsulta
 
         return new PaginaResponse<PedidoResumoResponse>(itens, page, pageSize, total);
     }
+
+    public async Task<PedidoResponse?> ObterPorIdAsync(int id, CancellationToken ct)
+    {
+        // Projeção única, sem Include: o EF traduz a coleção aninhada em um só comando, com o preço gravado no item (RN-09).
+        var pedido = await (
+                from p in contexto.Pedidos.AsNoTracking()
+                where p.Id == id
+                join c in contexto.Clientes.AsNoTracking() on p.ClienteId equals c.Id
+                select new
+                {
+                    p.Id,
+                    p.ClienteId,
+                    ClienteNome = c.Nome,
+                    p.DataPedido,
+                    p.ValorTotal,
+                    Itens = (
+                        from i in p.Itens
+                        join pr in contexto.Produtos.AsNoTracking() on i.ProdutoId equals pr.Id
+                        orderby i.ProdutoId
+                        select new PedidoItemResponse(
+                            i.ProdutoId, pr.Nome, i.Quantidade, i.PrecoUnitario, i.Quantidade * i.PrecoUnitario)).ToList(),
+                })
+            .SingleOrDefaultAsync(ct);
+
+        return pedido is null
+            ? null
+            : new PedidoResponse(pedido.Id, pedido.ClienteId, pedido.ClienteNome, pedido.DataPedido, pedido.ValorTotal, pedido.Itens);
+    }
 }

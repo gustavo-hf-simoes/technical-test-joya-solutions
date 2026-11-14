@@ -11,4 +11,7 @@ public interface IPedidoConsultas
     /// </summary>
     Task<PaginaResponse<PedidoResumoResponse>> ListarAsync(
         int? clienteId, Periodo periodo, int page, int pageSize, CancellationToken ct);
+
+    /// <summary>Pedido com os itens (projeção única, spec 5.2); <c>null</c> se o id não existe (CA-34).</summary>
+    Task<PedidoResponse?> ObterPorIdAsync(int id, CancellationToken ct);
 }
