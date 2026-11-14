@@ -42,7 +42,7 @@ Durante a análise, a IA afirmou que "subagentes não podem criar subagentes". *
 | Agente | Arquivo | Modelo · esforço | Escreve em | Não pode |
 |---|---|---|---|---|
 | Orquestrador (sessão principal) | [skill `/esteira`](../../.claude/skills/esteira/SKILL.md) | Opus 5.5 · high | `status.md`, `docs/ia/`, `plan.md` (HL), `spec.md` (só com `HL-xx`), README raiz, commits autorizados | Implementar no lugar do agente; aprovar gate sem verificação independente |
-| `product-owner` | [agente](../../.claude/agents/product-owner.md) | Opus · high | `01-requisitos.md`, `backlog.md`, `rastreabilidade.md` | Decidir arquitetura; editar a spec |
+| `product-owner` | [agente](../../.claude/agents/product-owner.md) | Opus · medium (`HL-09`) | `01-requisitos.md`, `backlog.md`, `rastreabilidade.md` | Decidir arquitetura; editar a spec |
 | `arquiteto` | [agente](../../.claude/agents/arquiteto.md) | Opus · high | `02-arquitetura.md`, `docs/adr/`, `revisoes/` | Escrever código |
 | `backend` | [agente](../../.claude/agents/backend.md) | **por tarefa**: C1 Haiku · C2 Sonnet · C3 Opus | `backend/`, `database/`, `docs/contratos/`, compose, CI, `deploy/`, `03-backend.md` | Tocar `frontend/`; fazer commit |
 | `frontend` | [agente](../../.claude/agents/frontend.md) | **por tarefa**: C1 Haiku · C2 Sonnet · C3 Opus | `frontend/`, `e2e/`, `04-frontend.md` | Alterar a API ou o contrato; fazer commit |

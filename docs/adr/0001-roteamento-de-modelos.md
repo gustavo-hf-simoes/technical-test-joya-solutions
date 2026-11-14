@@ -32,7 +32,7 @@ O `effort` segue a mesma lógica: a chamada prevalece sobre o frontmatter. Um su
 | Agente | Modelo | Esforço | Justificativa |
 |---|---|---|---|
 | Orquestrador (sessão principal) | Opus 5.5 | high | Gates, roteamento e decisões. Escolhido pelo desenvolvedor na sessão |
-| `product-owner` | `opus` | high | Um requisito perdido aqui se propaga para todas as etapas |
+| `product-owner` | `opus` | medium | Um requisito perdido aqui se propaga para todas as etapas. O esforço caiu de `high` para `medium` pela `HL-09`: no `high`, o PO raciocinou 13 min sem gravar nenhum artefato |
 | `arquiteto` | `opus` | high | Desenho e revisão de conformidade exigem julgamento |
 | `ciberseguranca` | `opus` | high | Falso negativo em segurança tem o custo mais alto |
 | `backend` | `sonnet` | medium | Padrão; o orquestrador sobe ou desce por tarefa (item 2) |
