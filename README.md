@@ -59,6 +59,21 @@ npm --prefix frontend run lint
 npm --prefix frontend run build
 ```
 
+## Configuração AI-first (`.claude/` e `CLAUDE.md`)
+
+| Item | Arquivo | Uso real |
+|---|---|---|
+| **Rules** | [CLAUDE.md](CLAUDE.md) | Arquitetura, 12 regras de ouro, nomenclatura, comandos de build e teste, regras de commit. Todo agente parte dele |
+| **Hook de qualidade** | [.claude/hooks/post-edit.sh](.claude/hooks/post-edit.sh) | Depois de cada edição em arquivo do backend, roda `dotnet build` e os testes unitários e devolve a falha ao Claude. Disparou em todas as histórias de backend |
+| **Hooks de limite** | [guard-paths.sh](.claude/hooks/guard-paths.sh), [guard-bash.sh](.claude/hooks/guard-bash.sh) | `PreToolUse` declarados no frontmatter de cada agente: escrita fora dos caminhos do agente, `git` que altera histórico, leitura de `.env`, `curl \| sh` |
+| **Skill `/new-endpoint`** | [.claude/skills/new-endpoint/](.claude/skills/new-endpoint/) | Passo a passo do endpoint no padrão do projeto (Request → Validator → Service → Controller → testes). Usada na T-06.6 e na T-07.1 |
+| **Skill `/esteira`** | [.claude/skills/esteira/](.claude/skills/esteira/) | O orquestrador: delega, roda os gates, roteia achados, pede decisões e propõe commits |
+| **Agentes** | [.claude/agents/](.claude/agents/) | `product-owner`, `arquiteto`, `backend`, `frontend`, `ciberseguranca`, `qa` e `verificador`, cada um com modelo, esforço, ferramentas e hooks no frontmatter |
+| **Skills vendorizadas** | [VENDORED.md](.claude/skills/VENDORED.md) | `dotnet-webapi`, `optimizing-ef-core-queries`, `testcontainers-dotnet`, `angular-developer`, `security-review` e as de qualidade de testes, com procedência e auditoria |
+| **MCP `mssql`** | [.mcp.json](.mcp.json) | Acesso **somente leitura** ao SQL Server pelo login `claude_mcp` (`db_datareader`, `SHOWPLAN`, `VIEW DATABASE STATE`), para conferir o schema real e analisar planos |
+
+**Sobre o MCP.** O login `claude_mcp` não consegue escrever, e isso é provado por teste (`LoginMcp_TentaEscrever_PermissaoNegada`). Na Parte 4, a conexão do MCP falhou com `AUTH_FAILED` (`CG-05`). Então os planos foram colhidos **com o mesmo login e os mesmos comandos** (`SHOWPLAN_XML`, `STATISTICS XML`, `STATISTICS IO`) dentro de um teste de integração. O resultado é reproduzível por qualquer pessoa com Docker, e não depende da sessão do Claude. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/parte4/investigacao.md).
+
 ## Links de entrega
 
 | O quê | Link |
