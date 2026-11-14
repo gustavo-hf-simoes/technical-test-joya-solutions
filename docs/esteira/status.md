@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**PR da US-18** (`us-18-readme` → `main`: README, T-18.1 a T-18.5), só com autorização. A T-18.6 (links do vídeo e do deploy) e a T-18.7 (roteiro) fecham quando o vídeo e o deploy existirem. Em seguida, pela `HL-26` e no Sonnet (`HL-27`): US-16, US-11, US-17 e US-12. Gates de integração com `--filter "Categoria!=Medicao"`. Pendências: o nome do serviço do frontend (`web` na arquitetura, `frontend` no compose; dono: `arquiteto`); os comandos dos itens BE-23 e BE-15 do checklist (`arquiteto`); `Proxy__ForwardedLimit=2` no deploy; `CreatedAtAction` na T-11.1; o MCP `mssql` com `AUTH_FAILED` (`CG-05`).
+**PR da US-16** (`us-16-e2e` → `main`: E2E com Playwright, T-16.1), só com autorização. Em seguida, pela `HL-26` e no Sonnet (`HL-27`): US-11, US-17 e US-12. A T-18.6 (links do vídeo e do deploy) e a T-18.7 (roteiro) fecham quando o vídeo e o deploy existirem. Gates de integração com `--filter "Categoria!=Medicao"`. Pendências: o nome do serviço do frontend (`web` na arquitetura, `frontend` no compose; dono: `arquiteto`); os comandos dos itens BE-23 e BE-15 do checklist (`arquiteto`); `Proxy__ForwardedLimit=2` no deploy; `CreatedAtAction` na T-11.1; o MCP `mssql` com `AUTH_FAILED` (`CG-05`); a T-03.5 (E2E no CI).
 
 ## Etapas
 
@@ -38,9 +38,9 @@
 | US-13 Aplicação completa com um comando | backend | Concluída (PR #15) | 2 / 2 | ba65994, ffca2da |
 | US-14 Tela de listagem de pedidos | frontend | Concluída (PR #9; contrato da T-14.2 a conferir na T-11.2) | 5 / 5 | 1779aa4, 9c9d50c, d1318ef, fe9cb83 |
 | US-15 Tela de criação de pedido | frontend | Concluída (PR #9) | 3 / 3 | c757543, 32bc744 |
-| US-16 Teste end to end com Playwright | frontend | Pendente | 0 / 1 | — |
+| US-16 Teste end to end com Playwright | frontend | Commitada, PR pendente | 1 / 1 | b292800 |
 | US-17 Deploy online | backend | Pendente | 0 / 2 | — |
-| US-18 README e entrega | orquestrador | Commitada, PR pendente (T-18.6 e T-18.7 abertas) | 5 / 7 | 2a47d6e, 061162b, e48c12e, 2e88278, 8e7c669 |
+| US-18 README e entrega | orquestrador | Integrada (PR #16, merge `287eb42`); T-18.6 e T-18.7 abertas | 5 / 7 | 2a47d6e, 061162b, e48c12e, 2e88278, 8e7c669 |
 
 ## Achados abertos
 
@@ -85,6 +85,7 @@
 | 2026-11-14 | Etapa 3, US-09, T-09.2 | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 121.362 |
 | 2026-11-14 | Etapa 3, US-13, T-13.1 e T-13.2 (com 1 rodada de CORRECAO: erro 904 do db-init na recuperação do banco) | C2 | backend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 58.799 |
 | 2026-11-14 | Etapa 3, US-10, T-10.1 a T-10.3 (41 min: 21,5 min em testes com carga de 800 mil linhas; ver `HL-27`) | C3 | backend | opus | high | 1 | Aprovado na rodada 1 | Não | 111.236 |
+| 2026-11-14 | Etapa 4, US-16, T-16.1 (com 1 rodada de CORRECAO: quantidade 1 → 2 unidades do CA-30, erro da instrução do orquestrador) | C2 | frontend | sonnet | medium | 1 | Aprovado na rodada 2 | Não | 86.031 (42.127 + 43.904) |
 
 ## Log de gates
 
@@ -120,3 +121,4 @@
 | 2026-11-14 | 3, US-09 (T-09.2) | Os do backend | Aprovado: 0 aviso, busca limpa; 109/109 e 118/118. MCP não verificado (`CG-05`); SQL gerado no relatório |
 | 2026-11-14 | 3, US-13 (T-13.1 e T-13.2) | `docker compose config -q`, `docker compose up -d`, `curl` em 8 rotas de `:4200` (inclusive o proxy `/api`) e `:8080/swagger`, `id -u` nos contêineres, `docker compose down` sem `-v` | Rodada 1: `db-init` falhou com erro 904 (banco em recuperação), devolvido. Rodada 2: aprovado; `db`, `api` e `frontend` saudáveis, `db-init` com saída 0, 8/8 rotas com 200, uid 1654 (api) e 101 (frontend) |
 | 2026-11-14 | 3, US-10 com US-13 (T-10.1 a T-10.3) | Os do backend, com a integração inteira (inclui a medição) | Aprovado: 0 aviso; 109/109 e 126/126 (6 min 24 s, dos quais 2 a 3 min da medição); format sem mudanças; busca limpa; matriz com 0 erro; configuração válida. MCP não verificado (`CG-05`); planos colhidos com o login `claude_mcp` no Testcontainers |
+| 2026-11-14 | 4, US-16 (T-16.1) | `docker compose up -d`, `npm --prefix e2e test` três vezes seguidas sem limpar o banco, `docker compose down` sem `-v`, matriz e configuração | Aprovado: 1/1 nas três execuções (3,4 s na última); matriz com 0 erro; configuração válida. Lint, build e testes do frontend não rodados: `frontend/` não mudou |
