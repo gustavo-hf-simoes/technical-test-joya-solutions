@@ -57,6 +57,23 @@ fi
 
 [ "${#scripts[@]}" -gt 0 ] || falhar "nenhum script NN-*.sql encontrado em $DIR."
 
+# --- 1b. Espera o banco de usuário existente abrir -----------------------------
+# Num segundo `up` o SQL Server responde antes de recuperar o JoyaPedidos (erro 904).
+# Retentativa limitada (60 x 3 s): se o banco existe, ele precisa abrir; se ainda não
+# existe (clone limpo), não há o que esperar.
+SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+pronto=0
+for _ in $(seq 1 60); do
+  existe="$("$SQLCMD" -S "$HOST" -U sa -C -h -1 -W -l 30 -Q "SET NOCOUNT ON; SELECT CASE WHEN DB_ID(N'JoyaPedidos') IS NULL THEN 0 ELSE 1 END" 2>/dev/null | tr -d '[:space:]' || true)"
+  if [ "$existe" = "0" ] || { [ "$existe" = "1" ] && "$SQLCMD" -S "$HOST" -U sa -C -b -l 30 -d JoyaPedidos -Q "SELECT 1" >/dev/null 2>&1; }; then
+    pronto=1
+    break
+  fi
+  echo "init.sh: aguardando o banco ficar disponível..." >&2
+  sleep 3
+done
+[ "$pronto" -eq 1 ] || falhar "o banco não ficou disponível a tempo."
+
 # --- 2. Aplica cada script ----------------------------------------------------
 for nome in "${scripts[@]}"; do
   arquivo="$DIR/$nome"

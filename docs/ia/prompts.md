@@ -288,3 +288,31 @@
 **2026-11-14**. Depois do gate da US-07, com a pergunta se a autorização de commit vale para a rodada inteira.
 
 > Sim, esta rodada
+
+## Prompt 31
+<a id="prompt-31"></a>
+
+**2026-11-14**. Depois do gate da rodada das US-07, US-08, US-09, US-14 e US-15, com o PR proposto.
+
+> Sim, push e PR
+
+## Prompt 32
+<a id="prompt-32"></a>
+
+**2026-11-14**. Depois de o CI do PR #9 passar.
+
+> Sim, merge
+
+## Prompt 33
+<a id="prompt-33"></a>
+
+**2026-11-14**. Depois de a US-10 levar 41 minutos.
+
+> 41 minutos pra validar um banco não é aceitável, estamos na etapa final do projeto em termos de prazo (9h -> 15h), precisamos otimizar, qual é exatamente o problema com o banco / docker?
+
+## Prompt 34
+<a id="prompt-34"></a>
+
+**2026-11-14**. Depois do diagnóstico e das quatro otimizações propostas (`HL-27`).
+
+> Sim, aplique

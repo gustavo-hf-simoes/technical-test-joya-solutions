@@ -284,7 +284,18 @@
 - **Gate (rodado pelo orquestrador):** aprovado. Backend: 0 aviso, 109/109 unitários e 118/118 de integração. Frontend: lint limpo, build sem aviso, 24/24. MCP `mssql` não verificado (`CG-05`); a T-09.2 trouxe o SQL gerado pelo EF como evidência.
 - **Modelo:** orquestrador no Opus 5.5; `backend` e `frontend` no Sonnet `medium` (C2) e `backend` no Opus `high` (T-09.2).
 
-<!-- Próximas entradas: E14 — Etapa 3 (backend), ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E14 — Etapa 3: US-13 (compose completo) e US-10 (Parte 4) · 2026-11-14
+
+- **Pedido** ([prompt 31](prompts.md#prompt-31) a [prompt 34](prompts.md#prompt-34)): push, PR e merge da rodada anterior (PR #9, merge commit `4e1cdb4`); depois, otimizar o tempo da esteira, porque a US-10 levou 41 min.
+- **Duas delegações em paralelo:** US-13 (Sonnet `medium`) e US-10 (Opus `high`, C3). A US-13 voltou em CORRECAO uma vez: o `db-init` rodava enquanto o JoyaPedidos ainda se recuperava (erro 904); o healthcheck do `db` passou a exigir todos os bancos `ONLINE` e o `init.sh` passou a esperar o banco abrir.
+- **Diagnóstico do tempo (pedido pelo desenvolvedor):** pela transcrição do agente, 21,5 dos 41 min foram rodando ou esperando testes (cada rodada recarrega 800 mil linhas num SQL Server novo do Testcontainers, 87 a 115 s só a carga), cerca de 15 min foram raciocínio do Opus e 2 min o hook de edição. Agravantes: MCP fora do ar (`CG-05`), gate do orquestrador concorrendo pelo Docker e disco C: quase cheio. Banco e Docker sem defeito.
+- **Decisão humana:** `HL-27` (medição fora do gate, suíte inteira só uma vez por história pelo orquestrador, Sonnet nas histórias restantes, limpeza do cache de build). O `docker builder prune` liberou 2,59 GB dentro do Docker, mas o C: não ganhou espaço, porque o disco virtual do WSL não encolhe sozinho.
+- **Parte 4:** a `02` corrige os quatro defeitos (homônimos, ordem crescente, função sobre a coluna e `LEFT JOIN` anulado) sem índice novo: leituras lógicas de 4 779 para 3 589 e tempo de 715 para 352 ms sobre 200 mil pedidos. A variante sobre `ValorTotal` (`03`) cai para 311 leituras e 85 ms; a comparação vai para o README.
+- **Desvio de processo:** o `docker-compose.yml` e o `QueryRankingTests.cs` atendem a duas tarefas cada; o orquestrador montou versões intermediárias no índice do git para manter um commit por tarefa. A seção da US-13 em `03-backend.md` entrou no commit da T-10.3, junto com a da US-10.
+- **Gate (rodado pelo orquestrador):** aprovado. 0 aviso, 109/109 unitários, 126/126 de integração, format sem mudanças, busca limpa, matriz com 0 erro. Compose: quatro serviços bem, 8/8 rotas com 200, contêineres sem root.
+- **Modelo:** orquestrador no Opus 5.5; `backend` no Sonnet `medium` (US-13) e no Opus `high` (US-10).
+
+<!-- Próximas entradas: E15 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -292,9 +303,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 26 |
+| Decisões humanas registradas (`HL`) | 27 |
 | Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
 | Perguntas estruturadas da IA ao desenvolvedor | 27, em 9 rodadas |
-| Compactações de contexto da sessão | 8 |
+| Compactações de contexto da sessão | 9 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
-| Taxa de escalonamento de modelo | 0 de 21 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
+| Taxa de escalonamento de modelo | 0 de 23 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |
