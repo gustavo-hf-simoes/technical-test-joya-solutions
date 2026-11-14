@@ -303,7 +303,15 @@
 - **Gate:** `validar_config.py` (links) e `validar_rastreabilidade.py` verdes. Os comandos do README não foram reexecutados num clone limpo; são os mesmos dos gates desta rodada.
 - **Modelo:** orquestrador no Opus 5.5.
 
-<!-- Próximas entradas: E16 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E16 — US-16: E2E com Playwright (frontend) · 2026-11-14
+
+- **Pedido** ([prompt 37](prompts.md#prompt-37) e [prompt 38](prompts.md#prompt-38)): PR e merge do README (PR #16, merge commit `287eb42`); em seguida, a US-16 pela `HL-26`.
+- **Produzido pelo `frontend`:** `e2e/` com `@playwright/test` 1.49.1, o Chrome instalado (`channel: 'chrome'`, sem baixar navegador no C:), `baseURL` em `E2E_BASE_URL` e o teste `CriarPedido_FluxoCompleto_ApareceNoTopoDaListagem` (CA-30). O agente corrigiu sozinho uma corrida na leitura das opções do select.
+- **Erro do orquestrador corrigido:** a delegação mandou usar 1 unidade; o CA-30 pede 2. O orquestrador notou na conferência da spec e devolveu numa rodada de CORRECAO.
+- **Gate (rodado pelo orquestrador):** aprovado. E2E 1/1 três vezes seguidas contra o compose, sem limpar o banco; matriz com 0 erro; configuração válida. Cada execução consome 2 unidades de estoque da carga.
+- **Modelo:** orquestrador no Opus 5.5; `frontend` no Sonnet `medium` (`HL-27`).
+
+<!-- Próximas entradas: E17 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
