@@ -911,3 +911,20 @@ Nenhum índice novo, de acordo com a arquitetura Q12.
 **Evidência MCP:** não coletada nesta rodada (o banco de teste é efêmero, via Testcontainers). A consulta é por `PK_Pedidos` e `PK_ItensPedido` (spec 6.3). O plano de execução não foi medido.
 
 **Desvios da spec:** nenhum, sem PROP.
+
+## US-03 — Jobs de CI (T-03.3, T-03.4, T-03.5)
+
+**Tarefas prontas** (alteração única em `.github/workflows/ci.yml`). Commits previstos: `ci: roda os testes de integração contra SQL Server`, `ci: valida lint, build e testes do frontend`, `ci: roda os testes end to end com Playwright`.
+
+- `integracao`: suíte de integração com `--filter "Categoria!=Medicao"` (HL-27); o Docker do runner serve o Testcontainers. Limite de 20 min.
+- `frontend`: `npm ci`, lint, testes em ChromeHeadless e build, Node 22 (igual ao `frontend/Dockerfile`), cache npm. Limite de 15 min.
+- `e2e`: depende de `backend` e `frontend`; `docker compose up -d --build --wait frontend` com as senhas padrão de desenvolvimento do compose (sem arquivo de variáveis e sem segredo), `npm ci` e `npm test` em `e2e/` com o Chrome do runner. Relatório do Playwright e logs do compose só em falha; `docker compose down -v` ao final. Limite de 25 min.
+- Segurança: `contents: read`, sem `pull_request_target`, sem dados do evento em `run:`, `persist-credentials: false`, actions fixadas por SHA de commit (`setup-node` v7.1.0 e `upload-artifact` v7.0.2, SHAs resolvidos pela API do GitHub), `timeout-minutes` em todos.
+
+**Verificações:** YAML válido e `validar_config.py` executados localmente. Os jobs só se provam verdes no GitHub após o push; sem Docker local.
+
+**Estimativa:** integração 6 a 10 min; frontend 3 a 5 min; e2e 8 a 12 min, depois de backend e frontend.
+
+**Riscos:** `--wait` exige healthcheck na API e no frontend (existem); se o `db-init` (one-shot) atrapalhar o `--wait` no compose do runner, trocar por `up -d` e uma espera explícita. O filtro pressupõe o Trait `Categoria`, como em `InvestigacaoTests`.
+
+**Desvios da spec:** nenhum, sem PROP.
