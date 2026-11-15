@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import { ClienteResponse } from '../core/api/clientes.models';
 import { ProdutoResponse } from '../core/api/produtos.models';
+import { botaoComTexto, obter } from '../testing/dom';
 import { PedidoFormComponent } from './pedido-form.component';
 import { PedidoListaComponent } from './pedido-lista.component';
 
@@ -19,7 +20,7 @@ const PRODUTOS: ProdutoResponse[] = [
   { id: 31, sku: 'MP-1', nome: 'Mouse Pad', preco: 29.95, estoque: 10 },
 ];
 
-describe('PedidoFormComponent', () => {
+describe('PedidoFormComponent (CA-30, CA-31, CA-32)', () => {
   let http: HttpTestingController;
   let harness: RouterTestingHarness;
   let el: HTMLElement;
@@ -33,27 +34,24 @@ describe('PedidoFormComponent', () => {
     el = harness.routeNativeElement as HTMLElement;
   }
 
-  const botaoConfirmar = () =>
-    el.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const botaoConfirmar = () => obter<HTMLButtonElement>(el, 'button[type="submit"]');
 
   function escolher(id: string, valor: string): void {
-    const s = el.querySelector<HTMLSelectElement>(id)!;
+    const s = obter<HTMLSelectElement>(el, id);
     s.value = valor;
     s.dispatchEvent(new Event('change'));
     harness.detectChanges();
   }
 
   function digitar(id: string, valor: string): void {
-    const i = el.querySelector<HTMLInputElement>(id)!;
+    const i = obter<HTMLInputElement>(el, id);
     i.value = valor;
     i.dispatchEvent(new Event('input'));
     harness.detectChanges();
   }
 
   function adicionarItem(): void {
-    Array.from(el.querySelectorAll<HTMLButtonElement>('button'))
-      .find((b) => b.textContent?.includes('Adicionar item'))!
-      .click();
+    botaoComTexto(el, 'Adicionar item').click();
     harness.detectChanges();
   }
 
@@ -87,6 +85,7 @@ describe('PedidoFormComponent', () => {
 
   afterEach(() => http.verify());
 
+  // CA-31: validacao antes do envio
   it('PedidoFormComponent_SemItens_DesabilitaConfirmar', async () => {
     await abrir();
     escolher('#pedido-cliente', '7');
@@ -138,6 +137,7 @@ describe('PedidoFormComponent', () => {
     expect(el.textContent).toMatch(/Total estimado: R\$\s299,80/);
   });
 
+  // CA-30: criar e voltar a listagem
   it('PedidoFormComponent_Confirmar_RedirecionaParaListagemComSucesso', async () => {
     await abrir();
     preencherValido();
@@ -161,6 +161,7 @@ describe('PedidoFormComponent', () => {
 
     const primeira = confirmar();
     const chave = primeira.request.headers.get('Idempotency-Key');
+    if (chave === null) throw new Error('Idempotency-Key ausente');
     expect(chave).toMatch(/^[0-9a-f-]{36}$/);
     primeira.error(new ProgressEvent('error'), { status: 0 });
     harness.detectChanges();
@@ -168,12 +169,13 @@ describe('PedidoFormComponent', () => {
     expect(botaoConfirmar().disabled).toBeFalse();
     expect(el.textContent).toContain('Seus dados foram mantidos');
     const segunda = confirmar();
-    expect(segunda.request.headers.get('Idempotency-Key')).toBe(chave!);
+    expect(segunda.request.headers.get('Idempotency-Key')).toBe(chave);
     segunda.flush({ id: 1, clienteId: 7, clienteNome: 'x', dataPedido: '2026-11-14T10:00:00Z', valorTotal: 1, itens: [] });
     await harness.fixture.whenStable();
     http.match(() => true);
   });
 
+  // CA-32: erros 409/422 no item afetado
   it('PedidoFormComponent_Resposta409_DestacaItensEPreservaDados', async () => {
     await abrir();
     preencherValido();
@@ -194,8 +196,8 @@ describe('PedidoFormComponent', () => {
 
     expect(el.querySelector('#erro-produto-0')?.textContent).toContain('disponível 1');
     expect(el.querySelector('#item-produto-0')?.getAttribute('aria-invalid')).toBe('true');
-    expect(el.querySelector<HTMLSelectElement>('#pedido-cliente')!.value).toBe('7');
-    expect(el.querySelector<HTMLInputElement>('#item-quantidade-0')!.value).toBe('2');
+    expect(obter<HTMLSelectElement>(el, '#pedido-cliente').value).toBe('7');
+    expect(obter<HTMLInputElement>(el, '#item-quantidade-0').value).toBe('2');
     expect(el.textContent).toContain('estoque 1');
     expect(el.querySelector('[role="alert"]')?.textContent).toContain('Estoque insuficiente');
     expect(botaoConfirmar().disabled).toBeFalse();
@@ -212,7 +214,56 @@ describe('PedidoFormComponent', () => {
     harness.detectChanges();
 
     expect(el.querySelector('#erro-cliente')?.textContent).toContain('inativo');
-    expect(el.querySelector<HTMLInputElement>('#item-quantidade-0')!.value).toBe('2');
+    expect(obter<HTMLInputElement>(el, '#item-quantidade-0').value).toBe('2');
+  });
+
+  // CA-31 (UX, QA-07): produto sem estoque nao e selecionavel
+  it('PedidoFormComponent_ProdutoSemEstoque_OpcaoDesabilitada', async () => {
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/pedidos/novo', PedidoFormComponent);
+    http.expectOne((r) => r.url === '/api/clientes').flush(CLIENTES);
+    http
+      .expectOne((r) => r.url === '/api/produtos')
+      .flush([...PRODUTOS, { id: 40, sku: 'AG-1', nome: 'Agenda', preco: 39.9, estoque: 0 }]);
+    harness.detectChanges();
+    el = harness.routeNativeElement as HTMLElement;
+    escolher('#pedido-cliente', '7');
+    adicionarItem();
+
+    expect(obter<HTMLOptionElement>(el, '#item-produto-0 option[value="40"]').disabled).toBeTrue();
+    expect(obter<HTMLOptionElement>(el, '#item-produto-0 option[value="12"]').disabled).toBeFalse();
+  });
+
+  // CA-31/CA-32 (UX, QA-07): aviso nao bloqueante; o 409 segue como garantia
+  it('PedidoFormComponent_QuantidadeAcimaDoEstoque_AvisaSemBloquearEnvio', async () => {
+    await abrir();
+    preencherValido();
+    expect(el.querySelector('#aviso-estoque-0')).toBeNull();
+
+    digitar('#item-quantidade-0', '6'); // estoque exibido = 5
+    expect(obter<HTMLElement>(el, '#aviso-estoque-0').textContent).toContain('acima do estoque exibido (5)');
+    expect(obter<HTMLElement>(el, '#item-quantidade-0').getAttribute('aria-describedby')).toContain('aviso-estoque-0');
+    expect(botaoConfirmar().disabled).toBeFalse();
+
+    digitar('#item-quantidade-0', '5');
+    expect(el.querySelector('#aviso-estoque-0')).toBeNull();
+  });
+
+  // CA-30 (QA-06): homonimos distinguidos por #id no seletor de cliente
+  it('PedidoFormComponent_ClientesHomonimos_MostraIdNoRotulo', async () => {
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/pedidos/novo', PedidoFormComponent);
+    http.expectOne((r) => r.url === '/api/clientes').flush([
+      { id: 1, nome: 'Maria Silva', ativo: true },
+      { id: 2, nome: 'Maria Silva', ativo: true },
+      { id: 3, nome: 'João Souza', ativo: true },
+    ]);
+    http.expectOne((r) => r.url === '/api/produtos').flush(PRODUTOS);
+    harness.detectChanges();
+    el = harness.routeNativeElement as HTMLElement;
+
+    const rotulos = Array.from(el.querySelectorAll('#pedido-cliente option')).map((o) => o.textContent?.trim());
+    expect(rotulos).toEqual(['Selecione um cliente', 'Maria Silva (#1)', 'Maria Silva (#2)', 'João Souza']);
   });
 
   it('PedidoFormComponent_ErroAoCarregarApoio_PermiteTentarNovamente', async () => {
@@ -223,12 +274,12 @@ describe('PedidoFormComponent', () => {
     harness.detectChanges();
     expect(el.textContent).toContain('Não foi possível carregar clientes e produtos');
 
-    Array.from(el.querySelectorAll<HTMLButtonElement>('button'))
-      .find((b) => b.textContent?.includes('Tentar novamente'))!
-      .click();
+    botaoComTexto(el, 'Tentar novamente').click();
     http.expectOne((r) => r.url === '/api/clientes').flush(CLIENTES);
     // o forkJoin cancelou o primeiro GET de produtos quando clientes falhou
-    http.match((r) => r.url === '/api/produtos').find((r) => !r.cancelled)!.flush(PRODUTOS);
+    const vivo = http.match((r) => r.url === '/api/produtos').find((r) => !r.cancelled);
+    if (vivo === undefined) throw new Error('GET /produtos nao reenviado');
+    vivo.flush(PRODUTOS);
     harness.detectChanges();
     expect(el.querySelector('#pedido-cliente')).not.toBeNull();
   });

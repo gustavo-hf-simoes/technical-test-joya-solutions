@@ -59,6 +59,11 @@ public sealed class GetPedidoPorIdTests(SqlServerFixture banco) : IAsyncLifetime
         item.GetProperty("quantidade").GetInt32().ShouldBe(2);
         item.GetProperty("precoUnitario").GetDecimal().ShouldBe(149.90m);
         item.GetProperty("subtotal").GetDecimal().ShouldBe(299.80m);
+
+        // QA-05: o JSON bruto do subtotal sai com 2 casas, igual ao POST (e não 299.8000).
+        item.GetProperty("subtotal").GetRawText().ShouldBe("299.80");
+        var itemOutro = itens.Single(i => i.GetProperty("produtoId").GetInt32() == outro);
+        itemOutro.GetProperty("subtotal").GetRawText().ShouldBe("29.95");
     }
 
     [Fact]

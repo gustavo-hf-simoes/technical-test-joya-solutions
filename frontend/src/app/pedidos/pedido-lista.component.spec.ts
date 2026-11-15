@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import { ClienteResponse } from '../core/api/clientes.models';
 import { PaginaResponse, PedidoResumoResponse } from '../core/api/pedidos.models';
+import { botaoComTexto, obter } from '../testing/dom';
 import { PedidoListaComponent } from './pedido-lista.component';
 
 const CLIENTES: ClienteResponse[] = [
@@ -18,14 +19,14 @@ function pagina(items: PedidoResumoResponse[], extra: Partial<PaginaResponse<unk
   return { items, page: 1, pageSize: 20, totalItems: items.length, totalPages: items.length ? 1 : 0, ...extra };
 }
 
-describe('PedidoListaComponent', () => {
+describe('PedidoListaComponent (CA-28, CA-29)', () => {
   let http: HttpTestingController;
   let harness: RouterTestingHarness;
 
-  async function abrir(url = '/pedidos') {
+  async function abrir(url = '/pedidos', clientes: ClienteResponse[] = CLIENTES) {
     harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url, PedidoListaComponent);
-    http.expectOne((r) => r.url === '/api/clientes').flush(CLIENTES);
+    http.expectOne((r) => r.url === '/api/clientes').flush(clientes);
     return harness.routeNativeElement as HTMLElement;
   }
 
@@ -43,21 +44,22 @@ describe('PedidoListaComponent', () => {
 
   afterEach(() => http.verify());
 
+  // CA-28: filtros de cliente e período refletidos na URL
   it('PedidoListaComponent_FiltrosAplicados_AtualizaQueryString', async () => {
     const el = await abrir();
     http.expectOne((r) => r.url === '/api/pedidos').flush(pagina([]));
     harness.detectChanges();
 
-    const select = el.querySelector<HTMLSelectElement>('#filtro-cliente');
-    const inicio = el.querySelector<HTMLInputElement>('#filtro-data-inicio');
-    const fim = el.querySelector<HTMLInputElement>('#filtro-data-fim');
-    select!.value = '7';
-    select!.dispatchEvent(new Event('change'));
-    inicio!.value = '2026-01-01';
-    inicio!.dispatchEvent(new Event('input'));
-    fim!.value = '2026-12-31';
-    fim!.dispatchEvent(new Event('input'));
-    el.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    const select = obter<HTMLSelectElement>(el, '#filtro-cliente');
+    const inicio = obter<HTMLInputElement>(el, '#filtro-data-inicio');
+    const fim = obter<HTMLInputElement>(el, '#filtro-data-fim');
+    select.value = '7';
+    select.dispatchEvent(new Event('change'));
+    inicio.value = '2026-01-01';
+    inicio.dispatchEvent(new Event('input'));
+    fim.value = '2026-12-31';
+    fim.dispatchEvent(new Event('input'));
+    obter<HTMLButtonElement>(el, 'button[type="submit"]').click();
     await harness.fixture.whenStable();
 
     const url = TestBed.inject(Router).url;
@@ -71,6 +73,7 @@ describe('PedidoListaComponent', () => {
     req.flush(pagina([]));
   });
 
+  // CA-28/CA-29: link compartilhado restaura filtros e página
   it('PedidoListaComponent_QueryStringNaEntrada_PreencheFiltrosEConsulta', async () => {
     const el = await abrir('/pedidos?clienteId=7&dataInicio=2026-01-01&dataFim=2026-12-31&page=2');
     const req = http.expectOne((r) => r.url === '/api/pedidos');
@@ -79,9 +82,9 @@ describe('PedidoListaComponent', () => {
     req.flush(pagina([], { page: 2 }));
     harness.detectChanges();
 
-    expect(el.querySelector<HTMLSelectElement>('#filtro-cliente')!.value).toBe('7');
-    expect(el.querySelector<HTMLInputElement>('#filtro-data-inicio')!.value).toBe('2026-01-01');
-    expect(el.querySelector<HTMLInputElement>('#filtro-data-fim')!.value).toBe('2026-12-31');
+    expect(obter<HTMLSelectElement>(el, '#filtro-cliente').value).toBe('7');
+    expect(obter<HTMLInputElement>(el, '#filtro-data-inicio').value).toBe('2026-01-01');
+    expect(obter<HTMLInputElement>(el, '#filtro-data-fim').value).toBe('2026-12-31');
   });
 
   it('PedidoListaComponent_PeriodoInvertido_NaoConsultaEMostraErro', async () => {
@@ -89,13 +92,13 @@ describe('PedidoListaComponent', () => {
     http.expectOne((r) => r.url === '/api/pedidos').flush(pagina([]));
     harness.detectChanges();
 
-    const fim = el.querySelector<HTMLInputElement>('#filtro-data-fim')!;
+    const fim = obter<HTMLInputElement>(el, '#filtro-data-fim');
     fim.value = '2026-01-01';
     fim.dispatchEvent(new Event('input'));
-    el.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    obter<HTMLButtonElement>(el, 'button[type="submit"]').click();
     harness.detectChanges();
 
-    expect(el.querySelector('#erro-periodo')!.textContent).toContain('posterior');
+    expect(obter<HTMLElement>(el, '#erro-periodo').textContent).toContain('posterior');
     http.expectNone((r) => r.url === '/api/pedidos');
   });
 
@@ -115,7 +118,7 @@ describe('PedidoListaComponent', () => {
     );
     harness.detectChanges();
 
-    const texto = (el.querySelector('tbody')!.textContent ?? '').replace(/\s+/g, ' ');
+    const texto = (obter<HTMLElement>(el, 'tbody').textContent ?? '').replace(/\s+/g, ' ');
     expect(texto).toContain('13/11/2026');
     expect(texto).toContain('R$ 1.234,50');
     expect(texto).toContain('Mercado Bom Preço Ltda');
@@ -148,15 +151,33 @@ describe('PedidoListaComponent', () => {
 
     const alertas = Array.from(el.querySelectorAll('[role="alert"]')).map((a) => a.textContent);
     expect(alertas.join(' ')).toContain('Não foi possível carregar');
-    const botao = Array.from(el.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Tentar novamente'),
-    );
-    expect(botao).toBeDefined();
+    const botao = botaoComTexto(el, 'Tentar novamente');
 
-    botao!.click();
+    botao.click();
     http.expectOne((r) => r.url === '/api/pedidos').flush(pagina([]));
     harness.detectChanges();
 
     expect(el.textContent).toContain('Nenhum pedido encontrado');
+  });
+
+  // CA-28 (QA-06): homônimos distinguidos por #id no filtro e na coluna Cliente
+  it('PedidoListaComponent_ClientesHomonimos_MostraIdNoFiltroENaTabela', async () => {
+    const el = await abrir('/pedidos', [
+      { id: 1, nome: 'Maria Silva', ativo: true },
+      { id: 2, nome: 'Maria Silva', ativo: true },
+      { id: 3, nome: 'João Souza', ativo: true },
+    ]);
+    http.expectOne((r) => r.url === '/api/pedidos').flush(
+      pagina([
+        { id: 1, clienteId: 2, clienteNome: 'Maria Silva', dataPedido: '2026-11-13T14:00:00Z', valorTotal: 10, quantidadeItens: 1 },
+        { id: 2, clienteId: 3, clienteNome: 'João Souza', dataPedido: '2026-11-13T15:00:00Z', valorTotal: 20, quantidadeItens: 1 },
+      ]),
+    );
+    harness.detectChanges();
+
+    const opcoes = Array.from(el.querySelectorAll('#filtro-cliente option')).map((o) => o.textContent?.trim());
+    expect(opcoes).toEqual(['Todos os clientes', 'Maria Silva (#1)', 'Maria Silva (#2)', 'João Souza']);
+    const linhas = Array.from(el.querySelectorAll('tbody th')).map((c) => c.textContent?.trim());
+    expect(linhas).toEqual(['Maria Silva (#2)', 'João Souza']);
   });
 });

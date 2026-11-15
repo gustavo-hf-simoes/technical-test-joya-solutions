@@ -428,3 +428,31 @@
 **2026-11-14**. Com as revisões 4b e 5 fechadas e os gates verdes: autorização dos commits por achado na `chore/achados-revisao-1` e do merge do PR #20.
 
 > Sim, os dois
+
+## Prompt 51
+<a id="prompt-51"></a>
+
+**2026-11-14**. Com os commits feitos e o PR #20 integrado: push e PR da `chore/achados-revisao-1` (PR #21).
+
+> Sim, push e PR
+
+## Prompt 52
+<a id="prompt-52"></a>
+
+**2026-11-14**. Início do QA final (etapa 6).
+
+> Perfeito, prossiga e me dê o mapeamento do resultado final.
+
+## Prompt 53
+<a id="prompt-53"></a>
+
+**2026-11-14**. Resposta à pergunta sobre os 8 achados do QA final (HL-31).
+
+> Corrigir todos agora
+
+## Prompt 54
+<a id="prompt-54"></a>
+
+**2026-11-15**. Depois da correção parcial dos achados do QA final (HL-32). Respostas: "Só A e refazer correção" (descartar só as correções parciais) e "Sim, liberar (Recommended)" (permissão de escrita nos arquivos do frontend).
+
+> Descarte o que foi executado parcialmente e execute a ação do QA novamente

@@ -1,0 +1,10 @@
+QA-06 FILTRO opcoes: ["Todos os clientes","Ana Pereira","Beatriz Rocha","Carlos Lima","Fernanda Costa","João Souza (#3)","João Souza (#4)","Luciana Barros","Marcos Teixeira","Maria Silva (#1)","Maria Silva (#2)","Paulo Almeida","Rafael Mendes"]
+QA-06 TABELA clientes (1a pagina): ["Ana Pereira","Maria Silva (#1)","Rafael Mendes","Maria Silva (#2)"]
+QA-06 FORM cliente opcoes: ["Selecione um cliente","Ana Pereira","Beatriz Rocha","Carlos Lima","Fernanda Costa","João Souza (#3)","João Souza (#4)","Maria Silva (#1)","Maria Silva (#2)","Paulo Almeida","Rafael Mendes"]
+QA-07 PRODUTOS: [{"t":"Selecione um produto","d":false},{"t":"Agenda 2026 — R$ 39,90 (estoque 0)","d":true},{"t":"Borracha branca — R$ 1,20 (estoque 269)","d":false},{"t":"Caderno universitário — R$ 24,90 (estoque 117)","d":false},{"t":"Calculadora científica — R$ 89,00 (estoque 25)","d":false},{"t":"Caneta esferográfica azul — R$ 2,50 (estoque 498)","d":false},{"t":"Estojo duplo — R$ 27,50 (estoque 60)","d":false},{"t":"Lápis preto HB — R$ 1,80 (estoque 800)","d":false},{"t":"Marcador de texto amarelo — R$ 5,90 (estoque 250)","d":false},{"t":"Mochila escolar — R$ 149,90 (estoque 40)","d":false},{"t":"Papel sulfite A4 (500 fls) — R$ 32,00 (estoque 200)","d":false},{"t":"Pasta com elástico — R$ 12,30 (estoque 0)","d":true},{"t":"Régua de 30 cm — R$ 4,75 (estoque 0)","d":true}]
+QA-07 produtos estoque 0: 3 todos desabilitados: true
+QA-07 AVISO visivel: 1 ["Quantidade acima do estoque exibido (269). O pedido pode ser recusado."]
+QA-07 aria-describedby: aviso-estoque-0
+QA-07 botao habilitado (nao bloqueia, 409 e a garantia): true
+QA-07 409 TELA: Novo pedido Estoque insuficiente. Ajuste as quantidades dos itens destacados. A lista de produtos foi atualizada. Cliente Selecione um cliente Ana Pereira Beatriz Rocha Carlos Lima Fernanda Costa João Souza (#3) João Souza (#4) Maria Silva (#1) Maria Silva (#2) Paulo Almeida Rafael Mendes Itens do pedido Produto (item 1) Selecione um produto Agenda 2026 — R$ 39,90 (estoque 0) Borracha branca — R$ 
+ERROS DE PAGINA: []

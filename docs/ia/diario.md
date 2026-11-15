@@ -334,7 +334,17 @@
 - **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; lint limpo e 27/27; E2E 2/2 (CA-30 e o teste novo de cabeçalhos); cabeçalhos e CSP conferidos por `curl` e no console do navegador.
 - **Modelo:** `frontend` e `backend` no Sonnet `medium`; revisores no Opus.
 
-<!-- Próximas entradas: E20 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E20 — QA final e correção dos achados QA-01 a QA-08 · 2026-11-14 e 15
+
+- **Rodada 1 (`qa`):** matriz do enunciado inteiro e de CA-01 a CA-38, clone limpo, mutação do CA-10 e roteiro no navegador. 8 achados, nenhum Crítico ou Alto: QA-01 a QA-03 no README e no uso do MCP (orquestrador), QA-04 e QA-05 na API (`backend`), QA-06 a QA-08 no frontend (`frontend`).
+- **Decisão humana:** `HL-32`: descartar as correções parciais e refazer QA-01 a QA-08, mantendo o relatório do QA.
+- **Produzido:** `ErrosDoModelState` em `Program.cs` (mensagem em português e chave em camelCase nos erros de binding), subtotal arredondado em `GET /pedidos/{id}`, rótulo para clientes homônimos e aviso de estoque no frontend, helpers de teste, `docs/ia/mcp-uso.md` com 4 usos reais do MCP e o README revisto.
+- **Erro da IA pego no gate:** a 1ª correção do QA-04 passou nos unitários e falhou na integração (129/130): o `ModelError` do binding não traz `Exception`, e a mensagem continuou em inglês. Devolvida; a tentativa 2 passou.
+- **Achado pelo MCP:** o índice `IDX_Pedidos_DataPedidos`, que não existe em nenhum script nem no histórico do git. Some ao recriar o volume.
+- **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; lint limpo e 34/34; E2E 2/2; matriz com 0 erro. Re-revisão do `qa`: os 8 achados Resolvidos; 37 de 39 linhas obrigatórias Atende, as 2 restantes são o e-mail e o vídeo.
+- **Modelo:** `backend` e `frontend` no Sonnet `medium`; `qa` no Opus `high`; orquestrador no Opus 5.5.
+
+<!-- Próximas entradas: E21 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -342,7 +352,7 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 30 |
+| Decisões humanas registradas (`HL`) | 32 |
 | Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 alegação técnica falsa do `backend` derrubada pelo revisor com teste de mutação (ARQ-02), mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
 | Perguntas estruturadas da IA ao desenvolvedor | 30, em 12 rodadas |
 | Compactações de contexto da sessão | 10 |

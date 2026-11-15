@@ -32,7 +32,7 @@
       >
         <option value="">Todos os clientes</option>
         @for (cliente of clientes(); track cliente.id) {
-          <option [value]="cliente.id">{{ cliente.nome }}</option>
+          <option [value]="cliente.id">{{ rotulo(cliente) }}</option>
         }
       </select>
     </div>
@@ -126,7 +126,7 @@
                 @for (pedido of e.pagina.items; track pedido.id) {
                   <tr class="border-t border-slate-200">
                     <td class="px-4 py-3">{{ pedido.dataPedido | date: 'dd/MM/yyyy' }}</td>
-                    <th scope="row" class="px-4 py-3 font-normal">{{ pedido.clienteNome }}</th>
+                    <th scope="row" class="px-4 py-3 font-normal">{{ rotuloPedido(pedido) }}</th>
                     <td class="px-4 py-3 text-right">{{ pedido.quantidadeItens }}</td>
                     <td class="px-4 py-3 text-right">{{ pedido.valorTotal | currency: 'BRL' }}</td>
                   </tr>

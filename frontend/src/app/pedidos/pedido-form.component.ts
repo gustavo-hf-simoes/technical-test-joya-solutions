@@ -31,6 +31,7 @@ import { ClientesApi } from '../core/api/clientes-api';
 import { ClienteResponse } from '../core/api/clientes.models';
 import { PedidosApi } from '../core/api/pedidos-api';
 import { CriarPedidoRequest } from '../core/api/pedidos.models';
+import { nomesRepetidos, rotuloCliente } from '../core/rotulo-cliente';
 import { gerarUuid } from '../core/uuid';
 import { ProblemaApi } from '../core/api/problema-api.model';
 import { ProdutosApi } from '../core/api/produtos-api';
@@ -96,6 +97,7 @@ export class PedidoFormComponent {
   readonly clientes = signal<ClienteResponse[]>([]);
   readonly produtos = signal<ProdutoResponse[]>([]);
   readonly estadoApoio = signal<EstadoApoio>('carregando');
+  readonly repetidos = computed(() => nomesRepetidos(this.clientes()));
   readonly enviando = signal(false);
   readonly erroServidor = signal<ErroServidor | null>(null);
   private readonly resumoErro = viewChild<ElementRef<HTMLElement>>('resumoErro');
@@ -178,6 +180,28 @@ export class PedidoFormComponent {
     if (c.hasError('required')) return 'Informe a quantidade.';
     if (c.hasError('inteiro')) return 'A quantidade deve ser um número inteiro.';
     return `A quantidade deve estar entre ${QTD_MIN} e ${QTD_MAX}.`;
+  }
+
+  /** QA-07: aviso (não bloqueante) quando a quantidade passa do estoque exibido; o 409 segue como garantia. */
+  avisoEstoque(item: ItemForm): string | null {
+    const id = item.controls.produtoId.value;
+    const qtd = Number(item.controls.quantidade.value);
+    const produto = id ? this.produtos().find((p) => String(p.id) === id) : undefined;
+    if (!produto || !Number.isFinite(qtd) || qtd <= produto.estoque) return null;
+    return `Quantidade acima do estoque exibido (${produto.estoque}). O pedido pode ser recusado.`;
+  }
+
+  /** Ids que descrevem o campo quantidade (erro de validação e/ou aviso de estoque). */
+  descricaoQuantidade(item: ItemForm, indice: number): string | null {
+    const ids = [
+      this.erroQuantidade(item) ? `erro-quantidade-${indice}` : null,
+      this.avisoEstoque(item) ? `aviso-estoque-${indice}` : null,
+    ].filter((v): v is string => v !== null);
+    return ids.length ? ids.join(' ') : null;
+  }
+
+  rotulo(cliente: ClienteResponse): string {
+    return rotuloCliente(cliente, this.repetidos());
   }
 
   erroProduto(item: ItemForm): string | null {

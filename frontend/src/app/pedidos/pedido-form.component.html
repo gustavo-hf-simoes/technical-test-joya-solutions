@@ -50,7 +50,7 @@
         >
           <option value="">Selecione um cliente</option>
           @for (cliente of clientes(); track cliente.id) {
-            <option [value]="cliente.id">{{ cliente.nome }}</option>
+            <option [value]="cliente.id">{{ rotulo(cliente) }}</option>
           }
         </select>
         @if (erroCliente(); as msg) {
@@ -84,7 +84,7 @@
                 >
                   <option value="">Selecione um produto</option>
                   @for (produto of produtos(); track produto.id) {
-                    <option [value]="produto.id">
+                    <option [value]="produto.id" [disabled]="produto.estoque <= 0">
                       {{ produto.nome }} — {{ produto.preco | currency: 'BRL' }} (estoque {{ produto.estoque }})
                     </option>
                   }
@@ -107,11 +107,14 @@
                   step="1"
                   formControlName="quantidade"
                   [attr.aria-invalid]="erroQuantidade(item) ? 'true' : null"
-                  [attr.aria-describedby]="erroQuantidade(item) ? 'erro-quantidade-' + i : null"
+                  [attr.aria-describedby]="descricaoQuantidade(item, i)"
                   class="rounded border border-slate-400 px-2 py-2 text-slate-900"
                 />
                 @if (erroQuantidade(item); as msg) {
                   <p [id]="'erro-quantidade-' + i" class="text-sm text-red-700">{{ msg }}</p>
+                }
+                @if (avisoEstoque(item); as aviso) {
+                  <p [id]="'aviso-estoque-' + i" role="status" class="text-sm text-amber-900">{{ aviso }}</p>
                 }
               </div>
 

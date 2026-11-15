@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**Commits da correção dos achados** (branch `chore/achados-revisao-1`, sobre a `us-03-ci`), só com autorização: um por achado e um de docs. Antes, o **merge do PR #20** (CI de integração, frontend e E2E; os 8 checks verdes). Depois: QA final (etapa 6, agente `qa`), US-17 e US-12, e a T-11.2 (`HL-28`). Pendências: `Proxy__ForwardedLimit=2`, `ASPNETCORE_ENVIRONMENT=Production` e `/api/swagger` com 404 no deploy (US-17); reavaliar a base Alpine antes do deploy (`HL-30`); MCP `mssql` com `AUTH_FAILED` (`CG-05`); T-18.6 e T-18.7.
+**Commits da correção QA-01 a QA-08** (branch nova `chore/achados-qa-final`, a partir da `main`), só com autorização: um por achado ou grupo e um de docs; depois, push e PR. Para fechar o gate da etapa 6 faltam só ações do desenvolvedor: enviar o e-mail (L072) e gravar o vídeo (L082), antes recriando o banco com `docker compose down -v` (limpa o índice `IDX_Pedidos_DataPedidos` fora dos scripts e os pedidos de teste). Fora do escopo por `HL-28`: US-17 (deploy), US-12 (idempotência) e T-11.2.
 
 ## Etapas
 
@@ -17,7 +17,7 @@
 | 4 | Frontend, por história | frontend | US-14, US-15 e US-16 integradas | 1 (US-16 na rodada 2) | US-16 aprovada: E2E 1/1 três vezes contra o compose | 2026-11-14 |
 | 4b | Revisão de arquitetura | arquiteto | Concluída (`HL-28`: antes da US-17 e da US-12) | 3 | Aprovado: 4 achados (ARQ-01 a ARQ-04), todos Resolvidos; ARQ-02 precisou de 2 rodadas de correção, com prova de mutação repetida pelo orquestrador | 2026-11-14 |
 | 5 | Segurança | ciberseguranca | Concluída (`HL-28`) | 3 | Aprovado: 0 Crítico/Alto; SEC-02 a SEC-04 e SEC-06 a SEC-08 Resolvidos; SEC-01 e SEC-05 aceitos (`HL-29`); resíduo da base Alpine aceito (`HL-30`) | 2026-11-14 |
-| 6 | QA final | qa | Pendente | — | — | — |
+| 6 | QA final | qa | Rodada 2 entregue: QA-01 a QA-08 Resolvidos; gate **pendente só por ações do desenvolvedor** | 2 | 39 linhas obrigatórias: 37 Atende, 2 Pendente (dev: L072 e-mail, L082 vídeo), 0 Não atende. Diferenciais: 3 Atende, 1 Pendente por `HL-28` (L087 deploy). CA: 36 Atende, 2 Pendente por `HL-28` (CA-13, CA-37). Correções refeitas do zero (`HL-32`); gate técnico conferido pelo orquestrador | 2026-11-15 |
 
 ## Histórias
 
@@ -46,7 +46,15 @@
 
 | ID | Severidade | Dono | Rodada | Status | Resumo |
 |---|---|---|---|---|---|
-| — | — | — | — | — | Nenhum aberto. Revisões 4b e 5 fechadas em 2026-11-14: ver [arquitetura-1.md](revisoes/arquitetura-1.md) e [05-seguranca.md](05-seguranca.md) |
+| QA-01 | Média | orquestrador | 1 | Aberto | Uso real do MCP não registrado no README e no diário (ENU-L022 parcial) |
+| QA-02 | Baixa | orquestrador | 1 | Aberto | README com contagens (109/125/24) e "27 HL" desatualizados |
+| QA-03 | Média | orquestrador | 1 | Aberto | README não declara idempotência (US-12) e deploy (US-17) como pendentes; a `Idempotency-Key` hoje é ignorada |
+| QA-04 | Baixa | backend | 1 | Aberto | 400 de model binding expõe o tipo interno, em inglês |
+| QA-05 | Baixa | backend | 1 | Aberto | `subtotal` em `GET /pedidos/{id}` sai com 4 casas (`1.2000`) |
+| QA-06 | Baixa | frontend | 1 | Aberto | Clientes homônimos indistinguíveis nos selects e na tabela |
+| QA-07 | Baixa | frontend | 1 | Aberto | Produto com estoque 0 selecionável no formulário (o 409 funciona) |
+| QA-08 | Baixa | frontend | 1 | Aberto | `!` em `pedido-lista.component.spec.ts:154-157`; testes sem nome por CA |
+| — | — | — | — | — | Revisões 4b e 5 fechadas em 2026-11-14: ver [arquitetura-1.md](revisoes/arquitetura-1.md) e [05-seguranca.md](05-seguranca.md) |
 
 ## Decisões humanas pendentes
 
@@ -96,6 +104,11 @@
 | 2026-11-14 | CORRECAO rodada 2: ARQ-02 (seletores do ArchUnitNET) | C2 | backend | sonnet | medium | 2 | Aprovado; mutação repetida pelo orquestrador | Não | 88.025 (cumulativo da instância da rodada 1) |
 | 2026-11-14 | Etapa 5, re-revisão rodadas 2 e 3 (SEC-01 a SEC-08) | — | ciberseguranca | opus | high | 1 | Rodada 2: SEC-02 Parcial e SEC-08 novo (Média). Rodada 3: todos Resolvidos ou aceitos | Não | 120.271 (cumulativo da mesma instância; inclui a troca para "Aceito (HL-30)") |
 | 2026-11-14 | CORRECAO rodada 2: SEC-02 (teste de cabeçalhos), SEC-08 (Nginx 1.30) e remoção do `curl` (`HL-30`) | C2 | frontend | sonnet | medium | 2 | Aprovado no gate do orquestrador | Não | 57.357 (cumulativo da instância da rodada 1) |
+| 2026-11-14 | Etapa 6, QA final rodada 1 (enunciado inteiro, CA-01 a CA-38, clone limpo, mutação do CA-10, roteiro no navegador) | — | qa | opus | high | 1 | Gate não passa ainda (QA-01 e pendências do dev); nenhum defeito bloqueante | Não | 63.857 só na retomada; a 1ª parte foi interrompida pelo limite de uso de 5 h e não teve o número informado |
+| 2026-11-15 | CORRECAO QA-06 a QA-08, tentativa descartada (`HL-32`) | C2 | frontend | sonnet | medium | 1 | Descartada a pedido do desenvolvedor | Não | 63.786 |
+| 2026-11-15 | CORRECAO QA-04 e QA-05 (`HL-32`) | C2 | backend | sonnet | medium | 2 | Tentativa 1 reprovada na integração (mensagem do binding ainda em inglês: o `ModelError` não traz `Exception`); tentativa 2 aprovada | Não | 47.217 + 53.626 |
+| 2026-11-15 | CORRECAO QA-06 a QA-08 (`HL-32`) | C2 | frontend | sonnet | medium | 1 | Aprovado no gate do orquestrador | Não | 76.750 |
+| 2026-11-15 | Etapa 6, re-revisão rodada 2 (QA-01 a QA-08, reteste no navegador e pelo MCP) | — | qa | opus | high | 1 | 8 achados Resolvidos; gate pendente só por L072 e L082 | Não | 125.553 (cumulativo da instância) |
 
 ## Log de gates
 
@@ -136,3 +149,4 @@
 | 2026-11-14 | 3, US-03 (T-03.3 a T-03.5) | SHAs de `setup-node` e `upload-artifact` conferidos pela API do GitHub; `gh pr checks 20` e log do job de integração | Aprovado: os 8 checks verdes; o job de integração rodou 128 testes (32 s); E2E contra o compose em 1 min 54 s |
 | 2026-11-14 | Correção de achados, rodada 1 (`HL-29`) | Backend completo; frontend (lint, build, testes, `tsc` do e2e); `docker compose up -d --build --wait frontend`; `curl -D -` em `/`, `/pedidos`, `/api/clientes`, `/api/pedidos?dataFim=9999-12-31` e `main-*.js`; `docker compose ps`; `npm --prefix e2e test`; console do navegador | Aprovado: 0 aviso; 113/113 e 130/130; format e busca limpos; matriz com 0 erro; lint limpo, 27/27; os 4 cabeçalhos e a CSP em todas as respostas; `dataFim=9999-12-31` → 400; portas só em 127.0.0.1; E2E 1/1; nenhuma violação de CSP e CSS sem `media=print` |
 | 2026-11-14 | Correção de achados, rodada 2 (ARQ-02, SEC-02, SEC-08, `HL-30`) | Build, unitários, format, busca; mutação independente (controller temporário dependendo do `PedidosDbContext`); `docker compose build --pull frontend` e `up --wait`; `nginx -t`, `nginx -v`, `id -u`, `command -v curl` no contêiner; `npm --prefix e2e test`; `docker scout cves --only-severity critical,high` | Aprovado: 0 aviso, 113/113; regra dos controllers vermelha com a mutação e verde sem ela; nginx 1.30.6, uid 101, sem `curl`, healthy; E2E 2/2 (CA-30 e cabeçalhos); resíduo crítico/alto só em brotli, expat, libxml2, libxslt, musl e zlib (aceito, `HL-30`) |
+| 2026-11-15 | Correção QA-01 a QA-08 (`HL-32`) | Backend: build, unitários, integração `Categoria!=Medicao`, format, busca por silenciamento, `git grep CreatedAtAction`. Frontend: lint, build, testes ChromeHeadless, `tsc` do e2e. `docker compose up -d --build`, `npm --prefix e2e test`. Os 2 validadores | Aprovado: 0 aviso; 113/113 e 130/130 (1ª tentativa do backend: 129/130, devolvida); format e busca limpos; `CreatedAtAction` 0; lint limpo, build ok, 34/34; E2E 2/2; matriz com 0 erro; configuração válida |

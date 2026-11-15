@@ -273,7 +273,16 @@ public sealed class PostPedidosTests(SqlServerFixture banco) : IAsyncLifetime
     {
         var resposta = await PostAsync(new { clienteId = "abc", itens = Array.Empty<object>() });
 
-        await LerProblemaAsync(resposta, HttpStatusCode.BadRequest, "VALIDACAO");
+        var problema = await LerProblemaAsync(resposta, HttpStatusCode.BadRequest, "VALIDACAO");
+
+        // QA-04: mensagem fixa em português, chave em camelCase, sem tipo interno nem posição de byte.
+        var erros = problema.GetProperty("errors");
+        erros.TryGetProperty("clienteId", out var mensagens).ShouldBeTrue();
+        mensagens[0].GetString().ShouldBe("O corpo da requisição é inválido.");
+        erros.TryGetProperty("$.clienteId", out _).ShouldBeFalse();
+        erros.TryGetProperty("request", out _).ShouldBeFalse();
+        erros.GetRawText().ShouldNotContain("Joya.Pedidos");
+        erros.GetRawText().ShouldNotContain("BytePositionInLine");
     }
 
     private async Task<HttpResponseMessage> PostAsync(object corpo)
