@@ -949,3 +949,14 @@ A alegação da rodada 1 estava errada: na ArchUnitNET 0.13.x `ResideInNamespace
 - Removido `WithoutRequiringPositiveResults()` das três regras; removidas as asserções `ShouldNotBeEmpty` redundantes; comentário XML corrigido.
 - Regra dos controllers: `NotDependOnAnyTypesThat()` para Infrastructure e, com `AndShould`, para `Microsoft.EntityFrameworkCore`. O assembly do EF Core agora é carregado no modelo.
 - Prova de mutação: arquivo temporário `Api/Controllers/MutacaoTempController.cs` com propriedade do tipo `Infrastructure.Clientes.Cliente`. Resultado: `Controllers_Dependencias_NaoAcessamDbContext` vermelho ("MutacaoTempController does depend on ...Cliente"). Arquivo removido; 113 testes unitários verdes e `dotnet format` limpo.
+
+## Resposta a achados (QA final, rodada 1 refeita, HL-32)
+
+| Achado | O que foi feito | Onde | Teste que prova |
+|---|---|---|---|
+| QA-04 | A falha de *model binding* sai com mensagem fixa "O corpo da requisição é inválido." (erros com exceção de leitura), chave sem o prefixo `$.` e em `camelCase`, e o ruído `request` do framework é descartado quando há campo culpado. Status e `code` inalterados. | `backend/src/Joya.Pedidos.Api/Program.cs` (`ErrosDoModelState`, `NormalizarChave`) | `PostPedidos_TipoInvalidoNoCorpo_Retorna400` estendido: chave `clienteId`, mensagem fixa, sem `$.clienteId`, `request`, `Joya.Pedidos` nem `BytePositionInLine` |
+| QA-05 | O subtotal é arredondado a 2 casas na materialização (o SQL gera `DECIMAL(18,4)`, e `Math.Round` seria traduzido para `ROUND`, que mantém a escala). | `backend/src/Joya.Pedidos.Infrastructure/Pedidos/PedidoConsultas.cs` (`ObterPorIdAsync`) | `GetPedidoPorId_PrecoDeTabelaAlterado_MantemPrecoPraticado` com `GetRawText()` do subtotal = `299.80` e `29.95` |
+
+Verificação: build 0 avisos, 113 unitários verdes, `dotnet format` limpo. **Integração não executada**: o Docker Desktop estava parado (`npipe://./pipe/docker_engine` inacessível), então os dois testes novos ainda não rodaram. Sem alteração de contrato (`openapi.json` intacto). Sem `PROP-xx`.
+
+**Correção da tentativa 2 (QA-04).** Causa: o formatter JSON registra a falha de leitura com a chave `$.clienteId` e `ErrorMessage` preenchida, **sem** `Exception` no `ModelError`; a primeira versão só normalizava erros com `Exception`. Agora toda chave iniciada por `$` (erro do formatter de entrada) recebe a mensagem fixa "O corpo da requisição é inválido." (`Program.cs`, `ErrosDoModelState`). Verificação com Docker no ar: build 0 avisos, 113 unitários, 130 integração (`--filter "Categoria!=Medicao"`), `dotnet format` limpo. Os testes novos de QA-04 e QA-05 passaram.

@@ -141,3 +141,19 @@ Verificação: lint limpo; build ok; testes 27/27 (ChromeHeadless); `tsc --noEmi
 | SEC-08 | 1 | Imagem `nginxinc/nginx-unprivileged:1.30-alpine`; `nginx.conf` e `seguranca.inc` usam só `include`, `add_header`, `proxy_pass`, `try_files`, `expires` (diretivas estáveis), sem mudança | `frontend/Dockerfile:10` | `nginx -t` e E2E a cargo do orquestrador (Docker proibido) | Corrigido, a validar no gate |
 
 Complemento da SEC-08 (HL-30): `frontend/Dockerfile` remove o `curl` da base com `USER root` + `RUN apk del --no-cache curl` + `USER 101` (uid original da imagem). O `HEALTHCHECK` segue usando `wget` (busybox, não afetado). Build, scan e E2E a cargo do orquestrador.
+
+## Correção, QA final rodada 1 (HL-31/HL-32): QA-06, QA-07, QA-08
+
+### Resposta a achados
+
+| Achado | Resposta | O que mudou | Testes |
+|---|---|---|---|
+| QA-06 | Corrigido | Funções puras `nomesRepetidos` e `rotuloCliente` em `core/rotulo-cliente.ts`. `Nome (#id)` só quando o nome (sem distinguir caixa nem espaços nas pontas) se repete entre os clientes carregados. Aplicado ao filtro e à coluna Cliente da lista e ao seletor do formulário. Sem mudança de contrato. | `rotulo-cliente.spec.ts` (3); `PedidoListaComponent_ClientesHomonimos_MostraIdNoFiltroENaTabela`; `PedidoFormComponent_ClientesHomonimos_MostraIdNoRotulo` |
+| QA-07 | Corrigido | Opção de produto com `estoque <= 0` fica `disabled`. `avisoEstoque` mostra aviso inline (`role="status"`, ligado ao campo por `aria-describedby` junto do erro de validação) quando a quantidade passa do estoque exibido. Não bloqueia o envio; o 409 do CA-32 continua sendo a garantia. | `PedidoFormComponent_ProdutoSemEstoque_OpcaoDesabilitada`; `PedidoFormComponent_QuantidadeAcimaDoEstoque_AvisaSemBloquearEnvio` |
+| QA-08 | Corrigido | Nenhum `!` (null-forgiving) restante nos specs. Helpers `obter<T>` e `botaoComTexto` em `testing/dom.ts` lançam erro claro quando o elemento não existe; `chave` e o `find` de produtos são estreitados com `if`. Os `describe` e comentários citam CA-28, CA-29, CA-30, CA-31 e CA-32. | todos os specs de `pedidos/` |
+
+Nomes de testes existentes: nenhum `it` foi renomeado (só os `describe` ganharam o sufixo com os CAs). Os testes citados em `rastreabilidade.md` continuam com o mesmo nome.
+
+Verificações (npm_config_cache=D:/.cache/npm): `lint` limpo; `build` ok; `test` com ChromeHeadless: 34 de 34 passando (eram 27; +3 de `rotulo-cliente`, +2 QA-06, +2 QA-07). E2E não reexecutado (sem alteração de fluxo).
+
+Mensagem de commit prevista: `fix(frontend): distingue clientes homônimos, avisa estoque e higieniza specs (QA-06 a QA-08)`

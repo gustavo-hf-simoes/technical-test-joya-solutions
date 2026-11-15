@@ -1,0 +1,17 @@
+QA final, rodada 1, complemento. Chamadas reais ao MCP mssql (somente leitura), apos a pilha ja estar no ar e o MCP voltar a responder.
+Base de demonstracao: 61 pedidos, 12 clientes, 15 produtos (dados sujos pelos cenarios exploratorios do QA).
+
+1) SELECT COUNT(*) ...                      -> success (Pedidos 61, Clientes 12, Produtos 15)
+2) Query ORIGINAL (01-query-original.sql)    -> 9 linhas, agrupadas por Nome, ordem CRESCENTE:
+   Rafael Mendes 1.20; Marcos Teixeira 3.60; Joao Souza 53.89 (ids 3+4 somados);
+   Fernanda Costa 134.75; Paulo Almeida 291.66; Carlos Lima 345.70; Beatriz Rocha 1425.00;
+   Maria Silva 1884.47 (ids 1+2 somados); Ana Pereira 2029.85
+3) Query CORRIGIDA (02-query-corrigida.sql)  -> 11 linhas, ordem DECRESCENTE, homonimos separados:
+   5 Ana Pereira 2029.85; 9 Beatriz Rocha 1425.00; 2 Maria Silva 1028.37; 1 Maria Silva 856.10;
+   6 Carlos Lima 345.70; 8 Paulo Almeida 291.66; 7 Fernanda Costa 134.75; 4 Joao Souza 36.39;
+   3 Joao Souza 17.50; 12 Marcos Teixeira 3.60; 10 Rafael Mendes 1.20
+   Conferencia: 1028.37 + 856.10 = 1884.47 (Maria Silva) ; 36.39 + 17.50 = 53.89 (Joao Souza). Totais batem com a original.
+4) Ultimo pedido (Id 4010): ValorTotal 1.20 == SUM(Quantidade*PrecoUnitario) dos itens 1.20 (preco gravado coerente).
+5) UPDATE de teste de escrita pelo MCP: NEGADO PELO CLASSIFICADOR DE PERMISSOES da sessao antes de chegar ao banco.
+   Nao retentei. A recusa no banco (login claude_mcp sem escrita) segue provada apenas pelo teste de integracao
+   LoginMcp_TentaEscrever_PermissaoNegada.
