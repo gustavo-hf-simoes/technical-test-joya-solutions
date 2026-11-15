@@ -1,4 +1,4 @@
-using Joya.Pedidos.Api.Erros;
+using Joya.Pedidos.Api.Errors;
 using Joya.Pedidos.Core.Relatorios;
 using Microsoft.AspNetCore.Mvc;
 

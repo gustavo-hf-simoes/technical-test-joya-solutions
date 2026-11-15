@@ -960,3 +960,72 @@ A alegação da rodada 1 estava errada: na ArchUnitNET 0.13.x `ResideInNamespace
 Verificação: build 0 avisos, 113 unitários verdes, `dotnet format` limpo. **Integração não executada**: o Docker Desktop estava parado (`npipe://./pipe/docker_engine` inacessível), então os dois testes novos ainda não rodaram. Sem alteração de contrato (`openapi.json` intacto). Sem `PROP-xx`.
 
 **Correção da tentativa 2 (QA-04).** Causa: o formatter JSON registra a falha de leitura com a chave `$.clienteId` e `ErrorMessage` preenchida, **sem** `Exception` no `ModelError`; a primeira versão só normalizava erros com `Exception`. Agora toda chave iniciada por `$` (erro do formatter de entrada) recebe a mensagem fixa "O corpo da requisição é inválido." (`Program.cs`, `ErrosDoModelState`). Verificação com Docker no ar: build 0 avisos, 113 unitários, 130 integração (`--filter "Categoria!=Medicao"`), `dotnet format` limpo. Os testes novos de QA-04 e QA-05 passaram.
+
+## Refatoração estrutural (HL-33)
+
+Rodada 1. Escopo: EST-01 a EST-05 e PROP-17 (`docs/esteira/revisoes/refatoracao-estrutural-1.md`). Nenhuma mudança de comportamento, contrato HTTP, SQL ou nome público. Sem dependência nova, sem `#pragma`, `NoWarn`, `!` ou skip. Mensagem de commit prevista: `refactor(backend): organiza arquivos e namespaces sem mudar comportamento (EST-01 a EST-05, PROP-17)`.
+
+### O que mudou
+
+- **PROP-17.** `backend/.editorconfig` ganhou `dotnet_style_namespace_match_folder = true` e `dotnet_diagnostic.IDE0130.severity = warning`.
+- **EST-02.** `IVerificadorDeBanco` está em `Core.Saude`. `using` ajustados em `BancoDeDadosHealthCheck`, `VerificadorDeBanco` e `DependencyInjection` (este mantém `Core.Common` por causa do `IUnitOfWork`).
+- **EST-01.** Interface e classe em arquivos próprios: `ClienteService.cs`, `ProdutoService.cs`, `IPedidoConsultaService.cs` e `IRelatorioService.cs` são novos. Os 4 originais ficam com um tipo cada. O código dos tipos não mudou.
+- **EST-03.** `ErrosDoModelState` (public static) e `NormalizarChave` (private static) foram para `Api/Erros/ProblemasHttp.cs`, com o corpo copiado. `Program.cs` chama `ProblemasHttp.ErrosDoModelState`.
+- **EST-04/EST-05.** Os 6 arquivos de `IntegrationTests/Apoio/` estão no namespace `...IntegrationTests.Apoio`, e `RelatorioConsultasTests` em `.Persistencia`. Os `using` dos testes foram ajustados: `Infra` e `Api` viraram `Apoio`, e os `using ...Persistencia` que só existiam por causa do `Arranjo` foram removidos. `LimitesHttpTests` e `PipelineDeErrosTests` ganharam `using ...Apoio`. A pasta `Infra/` vazia foi removida.
+- **HL-34.** Pasta e namespace do health check renomeados de `Saude` para `Health` (`Api.Health`, `Core.Health`, `Infrastructure.Health`), com `using` reordenados. Rotas `/health/live` e `/health/ready` e nomes de classe (`BancoDeDadosHealthCheck`, `VerificadorDeBanco`, `IVerificadorDeBanco`) não mudaram. Sem mudança de comportamento. As menções a `Core.Saude` acima registram o estado da EST-02 e ficam como histórico.
+
+### Evidência da PROP-17
+
+Com a regra ligada e os arquivos já movidos pelo orquestrador (namespaces antigos), o `dotnet build` de linha de comando falhou com:
+
+`Core\Saude\IVerificadorDeBanco.cs(1,11): error IDE0130: O namespace "Joya.Pedidos.Core.Common" não corresponde à estrutura da pasta. Esperava-se "Joya.Pedidos.Core.Saude"`
+
+Ou seja, a regra dispara no build, sem mudança em `Directory.Build.props` (`EnforceCodeStyleInBuild` e `TreatWarningsAsErrors` já estavam ligados). A divergência veio da própria refatoração, sem edição de teste. Depois de corrigidos os namespaces, o build ficou limpo. A PROP-17 está **mantida**.
+
+### Resultados
+
+| Verificação | Resultado |
+|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | 0 aviso, 0 erro |
+| `dotnet format --verify-no-changes` | exit 0 |
+| `dotnet test ...UnitTests` | 113 aprovados (inclui `Arquitetura/`) |
+| `dotnet test ...IntegrationTests --filter "Categoria!=Medicao"` | 130 aprovados, 0 falhas |
+| `dotnet test --list-tests` | Unit 113, Integration 131 (igual à linha de base; a diferença de 1 para os 130 é o teste de `Medicao`, excluído pelo filtro) |
+
+Não foi necessário usar o MCP `mssql`: não há mudança de dados ou de SQL.
+
+### Resposta a achados
+
+| Achado | O que foi feito | Onde | Prova |
+|---|---|---|---|
+| EST-01 a EST-05 | Ver "O que mudou" | `backend/src`, `backend/tests` | Build, format e testes acima |
+| PROP-17 | IDE0130 como warning | `backend/.editorconfig` | Erro IDE0130 no build, descrito acima |
+| ARQ-01 | Removida a linha `using Joya.Pedidos.IntegrationTests.Apoio;` de `Apoio/Arranjo.cs` (o próprio namespace do arquivo) | `backend/tests/Joya.Pedidos.IntegrationTests/Apoio/Arranjo.cs` | Busca V4 (`^using <namespace-próprio>;`) em todo `backend/`: após a remoção, só havia a ocorrência em `Arranjo.cs:2`, agora zerada. Nos demais arquivos, o `using ...Apoio` aponta para outro namespace e foi mantido. `dotnet build backend/Joya.Pedidos.sln`: 0 aviso, 0 erro. `dotnet format backend/Joya.Pedidos.sln --verify-no-changes`: exit 0. Mudança só de `using`, sem efeito de comportamento. |
+
+### HL-35: nomenclatura de pastas e namespaces
+
+Decisão do desenvolvedor: pastas técnicas em inglês, features do domínio em português. Os `git mv` foram feitos pelo orquestrador. Nesta rodada, o backend ajustou os namespaces, os `using`, a classe da Parte 4, os caminhos e a divisão do teste de catálogo. Sem mudança de comportamento, de contrato HTTP ou de SQL.
+
+- **Api:** `Erros` → `Errors` (`Joya.Pedidos.Api.Errors`); `Limites` → `Limits` (`Joya.Pedidos.Api.Limits`).
+- **Infrastructure:** `Persistencia` → `Persistence`; `Persistence/Configuracoes` → `Configurations` (`Joya.Pedidos.Infrastructure.Persistence.Configurations`).
+- **IntegrationTests:** `Apoio` → `Fixtures`; `Banco` → `Database`; `Persistencia` → `Persistence`; `Parte4/` → `Database/RankingQuery/` (`...IntegrationTests.Database.RankingQuery`), com `ScriptsParte4` → `RankingQueryScripts`.
+- **UnitTests:** `Apoio` → `Fakes`; `Arquitetura` → `Architecture`.
+- **Parte 4 em `database/ranking-query/`:** o caminho `database/parte4` virou `database/ranking-query` em `RankingQueryScripts.Pasta`. O marcador de consulta `-- parte4:<nome>` virou `-- ranking-query:<nome>` nos três `.sql` e no regex do teste. Nos `.sql`, só linhas de comentário mudaram (verificado no diff). A pasta de planos da saída do teste, `parte4-planos`, virou `ranking-query-planos`, e `investigacao.md` foi atualizado, inclusive o filtro `FullyQualifiedName~RankingQuery`.
+- **Catálogo dividido:** `Catalogo/CatalogoTests.cs` deu lugar a `IntegrationTests/Clientes/ClientesEndpointTests.cs` (`ClientesEndpointTests`) e `IntegrationTests/Produtos/ProdutosEndpointTests.cs` (`ProdutosEndpointTests`). A theory `GetCatalogo_AtivoInvalido_Retorna400` virou `GetClientes_AtivoInvalido_Retorna400` (rota `/clientes?ativo=talvez`) e `GetProdutos_AtivoInvalido_Retorna400` (rota `/produtos?ativo=talvez`), com um caso cada. Os demais nomes ficaram iguais. A soma continua 2 casos.
+- **Regras de arquitetura:** `RegrasDeArquiteturaTests` passou a excluir `{_nsTestes}.Architecture`, e o comentário foi atualizado. O `csproj` de testes unitários também teve o comentário atualizado.
+- **Conflito de nome encontrado:** dentro do namespace `Joya.Pedidos.UnitTests.Architecture`, o alias `using Architecture = ArchUnitNET.Domain.Architecture;` deixou de funcionar (CS0118, o nome resolve para o namespace). Correção: tipo escrito como `ArchUnitNET.Domain.Architecture` e alias removido. Não há mudança de regra.
+- **Restos:** a busca por `Apoio`, `Banco`, `Persistencia`, `Configuracoes`, `Erros`, `Limites`, `Arquitetura`, `Parte4`, `ScriptsParte4`, `Catalogo` e `parte4` em `backend/` e `database/` só acha prosa ("Banco de dados indisponível", "Limites contra abuso", "Limites desta investigação"), a constante `SqlServerFixture.Banco` (membro, não namespace) e o nome de tipo `ErrosDoModelState`. Nenhum desses é namespace, pasta ou caminho.
+
+Verificação (rodada HL-35):
+
+| Verificação | Resultado |
+|---|---|
+| `dotnet build backend/Joya.Pedidos.sln` | 0 aviso, 0 erro |
+| `dotnet test backend/tests/Joya.Pedidos.UnitTests` | 113 aprovados, 0 falhas |
+| `dotnet format backend/Joya.Pedidos.sln --verify-no-changes` | exit 0 |
+| `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --list-tests` | 131 (linha de base) |
+| `dotnet test ...IntegrationTests --filter "FullyQualifiedName~Clientes\|FullyQualifiedName~Produtos"` | 28 aprovados, 0 falhas (o filtro também pega `GetTopClientesTests`, cujo nome completo contém "Clientes") |
+
+Não executada nesta rodada: a suíte de integração completa e a Parte 4 (`QueryRankingTests`, `InvestigacaoTests`). Ficam para o orquestrador, porque o marcador `ranking-query:` mudou e precisa ser provado pela suíte completa. Não é bloqueio, é a divisão combinada.
+
+Mensagem de commit prevista (quem commita é o orquestrador, com autorização): `refactor(backend): renomeia pastas e namespaces técnicos para inglês (HL-35)`.

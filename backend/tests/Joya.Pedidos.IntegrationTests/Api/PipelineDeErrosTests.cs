@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Joya.Pedidos.IntegrationTests.Fixtures;
 using Shouldly;
 
 namespace Joya.Pedidos.IntegrationTests.Api;
