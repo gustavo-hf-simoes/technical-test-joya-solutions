@@ -79,6 +79,8 @@ public sealed class PedidoConsultas(PedidosDbContext contexto) : IPedidoConsulta
 
         return pedido is null
             ? null
-            : new PedidoResponse(pedido.Id, pedido.ClienteId, pedido.ClienteNome, pedido.DataPedido, pedido.ValorTotal, pedido.Itens);
+            : new PedidoResponse(pedido.Id, pedido.ClienteId, pedido.ClienteNome, pedido.DataPedido, pedido.ValorTotal,
+                // O SQL multiplica em DECIMAL(18,4); o arredondamento em memória leva o subtotal a 2 casas (QA-05).
+                [.. pedido.Itens.Select(i => i with { Subtotal = decimal.Round(i.Subtotal, 2) })]);
     }
 }
