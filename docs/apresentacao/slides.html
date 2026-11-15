@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Gestão de Pedidos — Joya Solutions</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg2: #121a33;
+    --card: #161f3d;
+    --line: #2a3766;
+    --text: #e8ecf8;
+    --muted: #9aa6c8;
+    --accent: #4f8cff;
+    --opus: #b18cff;
+    --sonnet: #4fb3ff;
+    --haiku: #43d19e;
+    --human: #ffb84d;
+    --danger: #ff6b81;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #05070f; color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; overflow: hidden; }
+
+  .viewport { position: fixed; inset: 0; }
+  .stage { width: 1280px; height: 720px; position: absolute; left: 50%; top: calc(50% - 20px); transform-origin: center center; }
+  .slide { position: absolute; inset: 0; padding: 40px 56px; display: none; flex-direction: column;
+    background: radial-gradient(ellipse at top right, #1a2550 0%, var(--bg) 55%);
+    border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); overflow: hidden; }
+  .slide.active { display: flex; }
+
+  .kicker { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: 36px; font-weight: 700; margin-top: 6px; }
+  .sub { color: var(--muted); font-size: 15px; margin-top: 6px; }
+  .footer { position: absolute; left: 56px; right: 56px; bottom: 18px; display: flex; justify-content: space-between;
+    color: var(--muted); font-size: 12px; }
+
+  /* ---------- Slide 1 ---------- */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; flex: 1; margin-bottom: 26px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 10px; }
+  .card h2 { font-size: 16px; display: flex; align-items: center; gap: 10px; }
+  .card h2 .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12.5px; padding: 4px 9px; border-radius: 999px; background: var(--bg2);
+    border: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+  .chip b { color: var(--muted); font-weight: 500; }
+  .note { font-size: 12px; color: var(--muted); margin-top: auto; line-height: 1.4; }
+
+  /* ---------- Slide 2 ---------- */
+  .flow { margin-top: 10px; flex: 1; }
+  .flow svg { width: 100%; height: 100%; display: block; }
+  .legend { display: flex; gap: 22px; font-size: 12px; color: var(--muted); margin-bottom: 22px; align-items: center; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* ---------- Navegação ---------- */
+  .nav { position: fixed; bottom: 14px; right: 18px; display: flex; gap: 8px; align-items: center; z-index: 10;
+    font-size: 13px; color: var(--muted); }
+  .nav button { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer; font-size: 14px; }
+  .nav button:hover { border-color: var(--accent); }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    html, body { overflow: visible; background: var(--bg); }
+    .viewport { position: static; display: block; }
+    .stage { transform: none !important; position: static; width: 1280px; height: auto; }
+    .slide { display: flex !important; position: relative; height: 720px; border-radius: 0; box-shadow: none;
+      page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <!-- ===================== SLIDE 1 — TECNOLOGIAS ===================== -->
+    <section class="slide active" aria-label="Tecnologias utilizadas">
+      <div class="kicker">Mini Gestão de Pedidos · Joya Solutions</div>
+      <h1>Tecnologias utilizadas</h1>
+      <p class="sub">Clean Architecture enxuta em .NET 8 + Angular 19 + SQL Server 2022, tudo em Docker, construída por uma esteira de agentes de IA.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h2><span class="dot" style="background:#7c6cff"></span>Backend</h2>
+          <div class="chips">
+            <span class="chip">.NET 8</span>
+            <span class="chip">C# 12</span>
+            <span class="chip">ASP.NET Core Web API</span>
+            <span class="chip">Entity Framework Core 8</span>
+            <span class="chip">FluentValidation</span>
+            <span class="chip">Swagger / OpenAPI <b>Swashbuckle</b></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="dot" style="background:#e5484d"></span>Banco de dados</h2>
+          <div class="chips">
+            <span class="chip">SQL Server 2022</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="dot" style="background:#dd0031"></span>Frontend</h2>
+          <div class="chips">
+            <span class="chip">Angular 19 <b>standalone</b></span>
+            <span class="chip">TypeScript 5.7</span>
+            <span class="chip">RxJS</span>
+            <span class="chip">Tailwind CSS 4</span>
+            <span class="chip">ESLint <b>angular-eslint</b></span>
+            <span class="chip">Nginx</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="dot" style="background:var(--haiku)"></span>Testes e qualidade</h2>
+          <div class="chips">
+            <span class="chip">xUnit</span>
+            <span class="chip">NSubstitute</span>
+            <span class="chip">Shouldly</span>
+            <span class="chip">ArchUnitNET</span>
+            <span class="chip">Testcontainers</span>
+            <span class="chip">Respawn</span>
+            <span class="chip">WebApplicationFactory</span>
+            <span class="chip">Jasmine + Karma</span>
+            <span class="chip">Playwright <b>E2E</b></span>
+            <span class="chip">dotnet format</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="dot" style="background:#2496ed"></span>Infra, CI e segurança</h2>
+          <div class="chips">
+            <span class="chip">Docker</span>
+            <span class="chip">Docker Compose</span>
+            <span class="chip">GitHub Actions</span>
+            <span class="chip">CodeQL</span>
+            <span class="chip">Git</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="dot" style="background:var(--opus)"></span>Desenvolvimento com IA</h2>
+          <div class="chips">
+            <span class="chip">Claude Code</span>
+            <span class="chip">Opus · Sonnet · Haiku</span>
+            <span class="chip">Subagentes por papel</span>
+            <span class="chip">Skills <b>/esteira, /new-endpoint</b></span>
+            <span class="chip">Hooks de limite</span>
+            <span class="chip">MCP mssql <b>somente leitura</b></span>
+            <span class="chip">Spec-Driven Development</span>
+            <span class="chip">ADRs - Registros de Decisão de Arquitetura</span>
+          </div>
+          <p class="note">Skills oficiais vendorizadas e auditadas; diário de IA com cada decisão humana (HL).</p>
+        </div>
+      </div>
+
+      <div class="footer"><span>Joya Solutions · Teste técnico</span><span>1 / 2</span></div>
+    </section>
+
+    <!-- ===================== SLIDE 2 — ESTEIRA ===================== -->
+    <section class="slide" aria-label="Esteira de desenvolvimento com IA">
+      <div class="kicker">Spec-Driven Development · Claude Code</div>
+      <h1>Esteira de desenvolvimento com IA</h1>
+      <p class="sub">A sessão principal orquestra com <b style="color:var(--text)">/esteira</b>; cada etapa tem um agente dono, um artefato e um gate. Quem revisa não corrige, e quem corrige não aprova a si mesmo.</p>
+
+      <div class="flow">
+        <svg viewBox="0 0 1168 470" role="img" aria-label="Fluxograma da esteira">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#8fa0d0"/>
+            </marker>
+            <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ff6b81"/>
+            </marker>
+            <style>
+              .n { fill: #161f3d; stroke-width: 1.6; rx: 10; }
+              .t { fill: #e8ecf8; font-size: 14px; font-weight: 600; text-anchor: middle; }
+              .s { fill: #9aa6c8; font-size: 11.5px; text-anchor: middle; }
+              .m { font-size: 10.5px; font-weight: 700; text-anchor: middle; letter-spacing: .04em; }
+              .e { stroke: #8fa0d0; stroke-width: 1.6; fill: none; marker-end: url(#arr); }
+              .r { stroke: #ff6b81; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; marker-end: url(#arrR); }
+              .g { fill: #1d2440; stroke-width: 1.6; }
+              .gl { fill: #e8ecf8; font-size: 11.5px; font-weight: 600; text-anchor: middle; }
+              .lbl { fill: #9aa6c8; font-size: 11px; text-anchor: middle; }
+            </style>
+          </defs>
+
+          <!-- ===== Linha 1: requisitos e desenho ===== -->
+          <!-- Enunciado -->
+          <path d="M10,30 h120 v44 l-12,12 h-108 z" fill="#1d2440" stroke="#8fa0d0" stroke-width="1.4"/>
+          <text class="t" x="70" y="54">Enunciado</text>
+          <text class="s" x="70" y="72">+ spec.md</text>
+
+          <line class="e" x1="132" y1="58" x2="174" y2="58"/>
+
+          <!-- 1 PO -->
+          <rect class="n" x="176" y="28" width="180" height="62" stroke="var(--opus)"/>
+          <text class="t" x="266" y="51">1 · Product Owner</text>
+          <text class="s" x="266" y="68">requisitos + backlog</text>
+          <text class="m" x="266" y="83" fill="var(--opus)">OPUS</text>
+
+          <line class="e" x1="356" y1="59" x2="398" y2="59"/>
+
+          <!-- Gate 1 (humano) -->
+          <polygon class="g" points="450,25 502,59 450,93 398,59" stroke="var(--human)"/>
+          <text class="gl" x="450" y="56">Gate 1</text>
+          <text class="m" x="450" y="70" fill="var(--human)">HUMANO</text>
+          <text class="lbl" x="450" y="110">aprova PROPs</text>
+
+          <line class="e" x1="502" y1="59" x2="544" y2="59"/>
+
+          <!-- 2 Arquiteto desenho -->
+          <rect class="n" x="546" y="28" width="190" height="62" stroke="var(--opus)"/>
+          <text class="t" x="641" y="51">2 · Arquiteto</text>
+          <text class="s" x="641" y="68">desenho + ADRs + contratos</text>
+          <text class="m" x="641" y="83" fill="var(--opus)">OPUS</text>
+
+          <line class="e" x1="736" y1="59" x2="778" y2="59"/>
+
+          <!-- Gate 2 -->
+          <polygon class="g" points="830,25 882,59 830,93 778,59" stroke="var(--human)"/>
+          <text class="gl" x="830" y="56">Gate 2</text>
+          <text class="m" x="830" y="70" fill="var(--human)">HUMANO</text>
+
+          <!-- Painel transversal -->
+          <rect x="920" y="22" width="240" height="196" rx="12" fill="#10172e" stroke="#2a3766"/>
+          <text x="938" y="46" fill="#4f8cff" font-size="12" font-weight="700" letter-spacing=".12em">TRANSVERSAL</text>
+          <g font-size="12" fill="#e8ecf8">
+            <text x="938" y="72"><tspan font-weight="700">Orquestrador</tspan><tspan fill="#9aa6c8"> · sessão principal</tspan></text>
+            <text x="938" y="88" fill="#9aa6c8">delega, roda os gates, pede decisões</text>
+            <text x="938" y="112"><tspan font-weight="700">Verificador</tspan><tspan fill="var(--haiku)" font-weight="700"> · HAIKU</tspan></text>
+            <text x="938" y="128" fill="#9aa6c8">executa build/lint/testes, só o veredito</text>
+            <text x="938" y="152"><tspan font-weight="700">Hooks</tspan><tspan fill="#9aa6c8"> guard-paths · guard-bash</tspan></text>
+            <text x="938" y="168" fill="#9aa6c8">cada agente só escreve no que é seu</text>
+            <text x="938" y="192"><tspan font-weight="700">Diário de IA</tspan><tspan fill="#9aa6c8"> · HL / CG / modelo</tspan></text>
+            <text x="938" y="208" fill="#9aa6c8">auditoria de cada passo</text>
+          </g>
+
+          <!-- Gate 2 -> loop -->
+          <path class="e" d="M830,93 V128"/>
+
+          <!-- ===== Linha 2: implementação por história ===== -->
+          <rect x="10" y="130" width="890" height="128" rx="14" fill="none" stroke="#4f8cff" stroke-dasharray="6 5" stroke-width="1.3"/>
+          <text x="26" y="150" fill="#4f8cff" font-size="11.5" font-weight="700" letter-spacing=".1em">POR ONDA / HISTÓRIA (US-xx)</text>
+
+          <!-- 3 Backend -->
+          <rect class="n" x="30" y="162" width="180" height="66" stroke="var(--sonnet)"/>
+          <text class="t" x="120" y="186">3 · Backend</text>
+          <text class="s" x="120" y="203">SQL + API + testes</text>
+          <text class="m" x="120" y="219" fill="var(--sonnet)">C1 · C2 · C3 POR TAREFA</text>
+
+          <line class="e" x1="210" y1="195" x2="244" y2="195"/>
+
+          <!-- Gate backend -->
+          <polygon class="g" points="300,165 356,195 300,225 244,195" stroke="var(--haiku)"/>
+          <text class="gl" x="300" y="192">build +</text>
+          <text class="gl" x="300" y="206">testes</text>
+
+          <line class="e" x1="356" y1="195" x2="390" y2="195"/>
+
+          <!-- 4 Frontend -->
+          <rect class="n" x="392" y="162" width="180" height="66" stroke="var(--sonnet)"/>
+          <text class="t" x="482" y="186">4 · Frontend</text>
+          <text class="s" x="482" y="203">telas + testes + E2E</text>
+          <text class="m" x="482" y="219" fill="var(--sonnet)">C1 · C2 · C3 POR TAREFA</text>
+
+          <line class="e" x1="572" y1="195" x2="606" y2="195"/>
+
+          <!-- Gate frontend -->
+          <polygon class="g" points="672,163 738,195 672,227 606,195" stroke="var(--haiku)"/>
+          <text class="gl" x="672" y="192">lint · build</text>
+          <text class="gl" x="672" y="206">testes · E2E</text>
+
+          <line class="e" x1="738" y1="195" x2="770" y2="195"/>
+
+          <!-- Commit -->
+          <rect class="n" x="772" y="168" width="116" height="54" stroke="var(--human)"/>
+          <text class="t" x="830" y="191">Commit</text>
+          <text class="s" x="830" y="208">1 por tarefa · autorizado</text>
+
+          <!-- Loop de volta para próxima história -->
+          <path class="e" d="M830,222 V246 H120 V230"/>
+          <text class="lbl" x="475" y="240">próxima história</text>
+
+          <!-- ===== Linha 3: revisões e QA ===== -->
+          <path class="e" d="M300,258 V300"/>
+          <path class="e" d="M300,276 H120 V300"/>
+          <path class="e" d="M300,276 H480 V300"/>
+
+          <!-- 4b Arquiteto revisão -->
+          <rect class="n" x="30" y="302" width="180" height="62" stroke="var(--opus)"/>
+          <text class="t" x="120" y="325">4b · Arquiteto</text>
+          <text class="s" x="120" y="342">revisão de conformidade</text>
+          <text class="m" x="120" y="357" fill="var(--opus)">OPUS · achados ARQ</text>
+
+          <!-- 5 Cibersegurança -->
+          <rect class="n" x="390" y="302" width="180" height="62" stroke="var(--opus)"/>
+          <text class="t" x="480" y="325">5 · Cibersegurança</text>
+          <text class="s" x="480" y="342">OWASP, deps, Docker, CI</text>
+          <text class="m" x="480" y="357" fill="var(--opus)">OPUS · achados SEC</text>
+
+          <!-- Dono corrige -->
+          <rect class="n" x="210" y="398" width="180" height="62" stroke="var(--danger)"/>
+          <text class="t" x="300" y="421">Dono corrige</text>
+          <text class="s" x="300" y="438">+ responde ao achado</text>
+          <text class="m" x="300" y="453" fill="var(--danger)">2 RODADAS → DEV DECIDE (HL)</text>
+
+          <!-- Achados para o dono -->
+          <path class="r" d="M150,364 V420 H208"/>
+          <path class="r" d="M450,364 V420 H392"/>
+          <!-- Re-revisão -->
+          <path class="r" d="M240,398 V384 H90 V366"/>
+          <path class="r" d="M360,398 V384 H510 V366"/>
+          <text class="lbl" x="165" y="379" fill="#ff6b81">re-revisão</text>
+          <text class="lbl" x="435" y="379" fill="#ff6b81">relatório + código</text>
+
+          <line class="e" x1="570" y1="333" x2="618" y2="333"/>
+
+          <!-- 6 QA -->
+          <rect class="n" x="620" y="302" width="180" height="62" stroke="var(--sonnet)"/>
+          <text class="t" x="710" y="325">6 · QA</text>
+          <text class="s" x="710" y="342">produto rodando × enunciado</text>
+          <text class="m" x="710" y="357" fill="var(--sonnet)">SONNET · achados QA</text>
+
+          <!-- QA achados ao dono -->
+          <path class="r" d="M710,364 V445 H392"/>
+
+          <line class="e" x1="800" y1="333" x2="842" y2="333"/>
+
+          <!-- Gate final -->
+          <polygon class="g" points="900,295 958,333 900,371 842,333" stroke="var(--human)"/>
+          <text class="gl" x="900" y="330">Gate final</text>
+          <text class="m" x="900" y="344" fill="var(--human)">HUMANO</text>
+
+          <line class="e" x1="958" y1="333" x2="996" y2="333"/>
+
+          <!-- Entrega -->
+          <rect x="998" y="306" width="160" height="54" rx="27" fill="#13324a" stroke="var(--haiku)" stroke-width="1.6"/>
+          <text class="t" x="1078" y="329">Entrega</text>
+          <text class="s" x="1078" y="346">matriz requisito × evidência</text>
+        </svg>
+      </div>
+
+      <div class="legend">
+        <span><i class="sw" style="background:var(--opus)"></i>Opus · análise e revisão</span>
+        <span><i class="sw" style="background:var(--sonnet)"></i>Sonnet / modelo por complexidade</span>
+        <span><i class="sw" style="background:var(--haiku)"></i>Haiku · gates automáticos</span>
+        <span><i class="sw" style="background:var(--human)"></i>Decisão humana</span>
+        <span><i class="sw" style="background:var(--danger)"></i>Achado e retorno ao dono</span>
+      </div>
+
+      <div class="footer"><span>Joya Solutions · Teste técnico</span><span>2 / 2</span></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="Slide anterior">◀</button>
+  <span id="pos">1 / 2</span>
+  <button id="next" aria-label="Próximo slide">▶</button>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const stage = document.getElementById('stage');
+  const pos = document.getElementById('pos');
+  let atual = 0;
+
+  function mostrar(i) {
+    atual = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('active', k === atual));
+    pos.textContent = `${atual + 1} / ${slides.length}`;
+  }
+  function ajustar() {
+    const escala = Math.min(innerWidth / 1280, (innerHeight - 50) / 720) * 0.97;
+    stage.style.transform = `translate(-50%, -50%) scale(${escala})`;
+  }
+  document.getElementById('prev').onclick = () => mostrar(atual - 1);
+  document.getElementById('next').onclick = () => mostrar(atual + 1);
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) mostrar(atual + 1);
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) mostrar(atual - 1);
+    if (e.key === 'f') document.documentElement.requestFullscreen?.();
+  });
+  addEventListener('resize', ajustar);
+  ajustar();
+</script>
+</body>
+</html>
