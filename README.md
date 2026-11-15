@@ -54,10 +54,10 @@ Execute a partir da raiz do repositório.
 
 | Suíte | Comando | O que exige | Quantidade |
 |---|---|---|---|
-| Unitários (regras, validações, arquitetura) | `dotnet test backend/tests/Joya.Pedidos.UnitTests` | .NET 8 SDK | 109 |
-| Integração (endpoints contra SQL Server real) | `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "Categoria!=Medicao"` | .NET 8 SDK e Docker em execução | 125 |
+| Unitários (regras, validações, arquitetura) | `dotnet test backend/tests/Joya.Pedidos.UnitTests` | .NET 8 SDK | 113 |
+| Integração (endpoints contra SQL Server real) | `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "Categoria!=Medicao"` | .NET 8 SDK e Docker em execução | 130 |
 | Medição da Parte 4 (carga de 800 mil linhas, 2 a 3 min) | `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "Categoria=Medicao"` | Os mesmos | 1 |
-| Frontend (unitários) | `npm --prefix frontend ci` e depois `npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless` | Node 22 e Chrome | 24 |
+| Frontend (unitários) | `npm --prefix frontend ci` e depois `npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless` | Node 22 e Chrome | 34 |
 
 - **Integração:** o Testcontainers sobe um SQL Server 2022 descartável e aplica os **mesmos** scripts `database/*.sql` do compose, pelo mesmo `init.sh` ([ADR-0003](docs/adr/0003-banco-real-nos-testes-de-integracao.md)). O Respawn limpa as tabelas entre os testes. Não há banco em memória: o schema, os índices, a baixa atômica de estoque e os logins são testados de verdade.
 - **Arquitetura:** os testes unitários incluem regras de dependência (ArchUnitNET). Exemplos: o `Core` não referencia EF, ASP.NET nem SqlClient; DTOs são `sealed record`; métodos `Async` recebem `CancellationToken` por último.
@@ -99,7 +99,7 @@ A lista completa, com alternativas descartadas, está em [docs/plan.md](docs/pla
 
 ### O fluxo
 
-1. **Spec antes de código.** Com o Claude em *plan mode*, escrevi [docs/spec.md](docs/spec.md) (regras `RN-xx`, contratos e critérios `CA-xx`) e [docs/plan.md](docs/plan.md). Cada ponto em que discordei ou ajustei o plano da IA virou uma linha `HL-xx` na seção *Human-in-the-Loop*, com o motivo. São 27 até agora.
+1. **Spec antes de código.** Com o Claude em *plan mode*, escrevi [docs/spec.md](docs/spec.md) (regras `RN-xx`, contratos e critérios `CA-xx`) e [docs/plan.md](docs/plan.md). Cada ponto em que discordei ou ajustei o plano da IA virou uma linha `HL-xx` na seção *Human-in-the-Loop*, com o motivo. São 32 até agora.
 2. **Esteira por etapas, não uma conversa só** (`HL-01`). A sessão principal é o orquestrador (skill `/esteira`) e delega cada etapa a um agente com papel e caminhos próprios: `product-owner` → `arquiteto` → `backend` / `frontend` → `ciberseguranca` → `qa`. O orquestrador roda os gates pessoalmente: o "passou" do agente não vale como evidência.
 3. **Modelo por complexidade** ([ADR-0001](docs/adr/0001-roteamento-de-modelos.md)). Cada tarefa do backlog tem `C1`/`C2`/`C3`, e isso decide entre Haiku, Sonnet e Opus. O Opus ficou para as tarefas críticas: a baixa atômica de estoque, o relatório e a Parte 4.
 4. **Tudo auditável.** O [diário](docs/ia/diario.md) registra cada etapa (pedido, saída, modelo, gate). Os [prompts](docs/ia/prompts.md) do desenvolvedor estão copiados sem edição. A tabela *Execuções de agentes* em [status.md](docs/esteira/status.md) mede modelo, tentativas e tokens.
@@ -120,7 +120,7 @@ A lista completa, com alternativas descartadas, está em [docs/plan.md](docs/pla
 | `CG-02` | Afirmou que o git não estava instalado; ele estava, só a pasta não era repositório | A própria saída do comando | Regra: afirmação sobre o ambiente só com a saída que a comprova |
 | `CG-03` | `default!` (*null-forgiving*) num teste, contra a regra de ouro 1. Build, testes e format passavam | Busca por silenciamento no gate | Devolvido ao agente; a busca passou a fazer parte de todo gate. O mesmo erro voltou na T-08.2 e foi pego da mesma forma |
 | `CG-04` | Consultas de catálogo misturando collations (erro 468) | Testes de integração contra SQL Server real | Collation explícita nas consultas |
-| `CG-05` | Senha padrão do MCP contendo o nome do login, que o SQL Server recusa (erro 33064) | Falha ao subir o banco | Senha trocada. O MCP ainda falhou com `AUTH_FAILED` nesta sessão (ver [Limitações](#limitações)) |
+| `CG-05` | Senha padrão do MCP contendo o nome do login, que o SQL Server recusa (erro 33064) | Falha ao subir o banco | Senha trocada. O processo do MCP aberto antes da troca seguiu com `AUTH_FAILED`. Depois de reiniciar a sessão, o MCP passou a responder ([mcp-uso.md](docs/ia/mcp-uso.md)) |
 | `CG-06` | `title` do Problem Details genérico, fora dos exemplos da spec 5.2 | Leitura do código pelo orquestrador, com os testes verdes | Títulos alinhados à spec |
 | Gate da US-13 | O `db-init` rodava enquanto o banco ainda se recuperava (erro 904) | Subida do compose no gate | Healthcheck do banco exige todos os bancos `ONLINE`; o `init.sh` espera o banco abrir |
 
@@ -143,7 +143,12 @@ Também aceitei, como exceção registrada (`HL-24`), remover o *gateway* local 
 | **Skills vendorizadas** | [VENDORED.md](.claude/skills/VENDORED.md) | `dotnet-webapi`, `optimizing-ef-core-queries`, `testcontainers-dotnet`, `angular-developer`, `security-review` e as de qualidade de testes, com procedência e auditoria |
 | **MCP `mssql`** | [.mcp.json](.mcp.json) | Acesso **somente leitura** ao SQL Server pelo login `claude_mcp` (`db_datareader`, `SHOWPLAN`, `VIEW DATABASE STATE`), para conferir o schema real e analisar planos |
 
-**Sobre o MCP.** O login `claude_mcp` não consegue escrever, e isso é provado por teste (`LoginMcp_TentaEscrever_PermissaoNegada`). Na Parte 4, a conexão do MCP falhou com `AUTH_FAILED` (`CG-05`). Então os planos foram colhidos **com o mesmo login e os mesmos comandos** (`SHOWPLAN_XML`, `STATISTICS XML`, `STATISTICS IO`) dentro de um teste de integração. O resultado é reproduzível por qualquer pessoa com Docker, e não depende da sessão do Claude. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/parte4/investigacao.md).
+**Sobre o MCP.** O login `claude_mcp` não consegue escrever, e isso é provado por teste (`LoginMcp_TentaEscrever_PermissaoNegada`). Durante a Parte 4, o processo do MCP ainda devolvia `AUTH_FAILED` (`CG-05`). Por isso os planos foram colhidos **com o mesmo login e os mesmos comandos** (`SHOWPLAN_XML`, `STATISTICS XML`, `STATISTICS IO`) dentro de um teste de integração, que qualquer pessoa com Docker reproduz. Com a sessão reiniciada, o MCP voltou e foi usado de verdade. O registro está em [mcp-uso.md](docs/ia/mcp-uso.md):
+
+- O agente `qa` rodou a query original e a corrigida contra a base de demonstração.
+- O plano da query original mostra o `datepart(year, ...)` como predicado residual, depois de um *seek* que usa só o `ClienteId`.
+- Uma consulta conferiu que nenhum dos 61 pedidos da base em 2026-11-15 tinha `ValorTotal` diferente da soma dos itens.
+- Ao listar os índices, o MCP encontrou o `IDX_Pedidos_DataPedidos`, que não está em nenhum script de `database/`. É um desvio do banco local, que some ao recriar o volume. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/parte4/investigacao.md).
 
 ## Parte 4: debug da query
 
@@ -191,14 +196,15 @@ O problema nunca foi a falta de índice, e sim a função sobre a coluna, que im
 
 - **Sem autenticação nem autorização**, por decisão de escopo (spec 2.2). Em produção, a API ficaria atrás de um gateway com OIDC.
 - **Sem CRUD de clientes e produtos, e sem edição ou cancelamento de pedido** (spec 2.2). Os cadastros vêm da carga inicial.
-- **MCP `mssql`:** a conexão falhou com `AUTH_FAILED` na sessão da Parte 4 (`CG-05`). As evidências foram colhidas com o mesmo login, por teste.
+- **MCP `mssql`:** durante a Parte 4, a conexão falhou com `AUTH_FAILED` (`CG-05`), e as evidências foram colhidas com o mesmo login, por teste. O MCP só voltou a responder no fim do projeto ([mcp-uso.md](docs/ia/mcp-uso.md)).
+- **Idempotência e deploy não foram entregues** (`HL-28`, CA-13 e CA-37). O frontend envia o cabeçalho `Idempotency-Key`, mas a API o ignora: reenviar o mesmo `POST /api/pedidos` cria outro pedido. A coluna `ChaveIdempotencia` e o índice único já existem no schema.
 - **Medição da Parte 4 fora do gate** (`HL-27`). Ela leva de 2 a 3 minutos e roda sob demanda. Uma regressão de desempenho na query só aparece se alguém rodá-la.
 - **Corpo *chunked* acima do limite:** o 413 foi testado com `Content-Length`, mas não com corpo *chunked* contra o Kestrel real.
 - **Senhas padrão do compose** são de desenvolvimento. Em produção, viriam de um cofre de segredos. O mesmo vale para o `TrustServerCertificate=True` da API e para o MCP, que conectam sem validar o certificado do SQL Server local (`HL-29`).
 - **Angular 19 e .NET 8 fora de suporte** (`SEC-01`, `HL-29`). A linha 19 do Angular não recebe mais correções, e os advisories publicados só são corrigidos na 22; nenhum deles é explorável no código atual. O .NET 8 saiu do suporte em 2026-11-10. As duas atualizações de versão major ficam para depois da entrega.
 - **Permissões do `joya_app`:** o login da API tem `UPDATE` e `INSERT` nas tabelas que a criação de pedido altera, conforme a spec 6.5 (`SEC-05`, aceito na `HL-29`).
 - **Limite de taxa só no `POST /pedidos`** e relatório sem período máximo ([ADR-0002](docs/adr/0002-limites-contra-abuso.md)). Uma consulta de período longo é cara, mas não altera dados (`HL-29`).
-- **Histórias opcionais** (E2E com Playwright, contrato OpenAPI conferido no CI, deploy e idempotência) entram na ordem da `HL-26`, conforme o prazo. O estado de cada uma está em [status.md](docs/esteira/status.md).
+- **Histórias opcionais:** o E2E com Playwright e o contrato OpenAPI conferido no CI foram entregues. Deploy, idempotência e a `T-11.2` ficaram de fora pela `HL-28`. O estado de cada uma está em [status.md](docs/esteira/status.md).
 
 ## Custo medido da esteira
 
