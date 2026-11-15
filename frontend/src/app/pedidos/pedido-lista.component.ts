@@ -7,7 +7,7 @@ import { BehaviorSubject, catchError, combineLatest, map, of, startWith, switchM
 
 import { ClientesApi } from '../core/api/clientes-api';
 import { PedidosApi } from '../core/api/pedidos-api';
-import { nomesRepetidos, rotuloCliente } from '../core/rotulo-cliente';
+import { nomesRepetidos, rotuloCliente } from './rotulo-cliente';
 import { FiltroPedidos, PaginaResponse, PedidoResumoResponse } from '../core/api/pedidos.models';
 
 const TAMANHO_PAGINA = 20;

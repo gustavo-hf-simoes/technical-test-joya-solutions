@@ -157,3 +157,18 @@ Nomes de testes existentes: nenhum `it` foi renomeado (só os `describe` ganhara
 Verificações (npm_config_cache=D:/.cache/npm): `lint` limpo; `build` ok; `test` com ChromeHeadless: 34 de 34 passando (eram 27; +3 de `rotulo-cliente`, +2 QA-06, +2 QA-07). E2E não reexecutado (sem alteração de fluxo).
 
 Mensagem de commit prevista: `fix(frontend): distingue clientes homônimos, avisa estoque e higieniza specs (QA-06 a QA-08)`
+
+## Refatoração estrutural (HL-33): EST-06
+
+Mudança só estrutural, sem alteração de comportamento nem visual (HL-33).
+
+| Item | Mudança |
+|---|---|
+| `rotulo-cliente.ts` e `rotulo-cliente.spec.ts` | Movidos de `core/` para `pedidos/`, já que só `pedidos/` os usa. |
+| `pedido-form.component.ts` e `pedido-lista.component.ts` | Import ajustado de `'../core/rotulo-cliente'` para `'./rotulo-cliente'`. |
+
+Referências antigas: a única outra menção a `core/rotulo-cliente` é o registro histórico da linha QA-06 acima, que descreve o local na época da correção. Ela foi mantida sem reescrita, porque o histórico da rodada não deve ser alterado.
+
+Verificações (npm_config_cache=D:/.cache/npm; CHROME_BIN apontando para o Chrome): `lint` limpo (`All files pass linting.`); `build` ok (exit 0); `test` com ChromeHeadless: 34 de 34 passando (exit 0).
+
+Mensagem de commit prevista: `refactor(frontend): move rotulo-cliente para pedidos/ (EST-06)`
