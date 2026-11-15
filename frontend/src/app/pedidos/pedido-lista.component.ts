@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { BehaviorSubject, catchError, combineLatest, map, of, startWith, switchM
 
 import { ClientesApi } from '../core/api/clientes-api';
 import { PedidosApi } from '../core/api/pedidos-api';
+import { nomesRepetidos, rotuloCliente } from '../core/rotulo-cliente';
 import { FiltroPedidos, PaginaResponse, PedidoResumoResponse } from '../core/api/pedidos.models';
 
 const TAMANHO_PAGINA = 20;
@@ -34,6 +35,17 @@ export class PedidoListaComponent {
     this.clientesApi.listar().pipe(catchError(() => of([]))),
     { initialValue: [] },
   );
+
+  readonly repetidos = computed(() => nomesRepetidos(this.clientes()));
+
+  rotulo(cliente: { id: number; nome: string }): string {
+    return rotuloCliente(cliente, this.repetidos());
+  }
+
+  /** Coluna Cliente da tabela: o resumo traz `clienteId` e `clienteNome`. */
+  rotuloPedido(pedido: PedidoResumoResponse): string {
+    return rotuloCliente({ id: pedido.clienteId, nome: pedido.clienteNome }, this.repetidos());
+  }
 
   readonly filtros = inject(NonNullableFormBuilder).group({
     clienteId: [''],
