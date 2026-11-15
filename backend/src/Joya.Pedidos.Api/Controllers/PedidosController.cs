@@ -1,5 +1,5 @@
-using Joya.Pedidos.Api.Erros;
-using Joya.Pedidos.Api.Limites;
+using Joya.Pedidos.Api.Errors;
+using Joya.Pedidos.Api.Limits;
 using Joya.Pedidos.Core.Common;
 using Joya.Pedidos.Core.Pedidos;
 using Microsoft.AspNetCore.Mvc;

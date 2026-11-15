@@ -1,5 +1,5 @@
 using Joya.Pedidos.Core.Estoque;
-using Joya.Pedidos.Infrastructure.Persistencia;
+using Joya.Pedidos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Joya.Pedidos.Infrastructure.Estoque;

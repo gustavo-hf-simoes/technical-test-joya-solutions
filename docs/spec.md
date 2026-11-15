@@ -58,7 +58,7 @@ Os itens E4, E5 e E7 não estão no enunciado. São o mínimo necessário para q
 | **Baixa de estoque** | Decremento de `Produtos.Estoque` pela quantidade vendida. |
 | **Período** | Intervalo de datas `[dataInicio, dataFim]`, inclusivo nas duas pontas, em UTC. |
 
-A linguagem do domínio é **português** (as tabelas e rotas do enunciado já são). Sufixos técnicos ficam em inglês (`Service`, `Repository`, `Controller`, `Request`, `Response`, `Validator`).
+A linguagem do domínio é **português** (as tabelas e rotas do enunciado já são). Sufixos técnicos ficam em inglês (`Service`, `Repository`, `Controller`, `Request`, `Response`, `Validator`). O mesmo vale para pastas e namespaces: features do domínio em português, pastas técnicas em inglês (`Errors`, `Persistence`, `Fixtures`) (`HL-35`).
 
 ## 4. Regras de negócio
 

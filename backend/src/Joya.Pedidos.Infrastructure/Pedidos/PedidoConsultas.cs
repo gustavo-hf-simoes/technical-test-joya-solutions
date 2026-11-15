@@ -1,6 +1,6 @@
 using Joya.Pedidos.Core.Common;
 using Joya.Pedidos.Core.Pedidos;
-using Joya.Pedidos.Infrastructure.Persistencia;
+using Joya.Pedidos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Joya.Pedidos.Infrastructure.Pedidos;

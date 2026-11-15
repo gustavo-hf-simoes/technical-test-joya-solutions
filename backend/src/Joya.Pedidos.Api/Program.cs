@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using FluentValidation;
-using Joya.Pedidos.Api.Erros;
-using Joya.Pedidos.Api.Limites;
-using Joya.Pedidos.Api.Saude;
+using Joya.Pedidos.Api.Errors;
+using Joya.Pedidos.Api.Health;
+using Joya.Pedidos.Api.Limits;
 using Joya.Pedidos.Core.Clientes;
 using Joya.Pedidos.Core.Pedidos;
 using Joya.Pedidos.Core.Produtos;
@@ -20,7 +20,7 @@ builder.Logging.AddJsonConsole(); // log estruturado em console (RNF-05)
 
 builder.Services.AddControllers(mvc => mvc.Filters.Add<ValidationFilter>()) // T-06.6: RN-01 a RN-04 antes da action
     .ConfigureApiBehaviorOptions(opcoes =>
-        opcoes.InvalidModelStateResponseFactory = contexto => ProblemasHttp.Validacao(ErrosDoModelState(contexto), contexto.HttpContext));
+        opcoes.InvalidModelStateResponseFactory = contexto => ProblemasHttp.Validacao(ProblemasHttp.ErrosDoModelState(contexto), contexto.HttpContext));
 
 // --- T-06.6: casos de uso, validators e relógio (UTC, RN-13) ---
 builder.Services.AddSingleton(TimeProvider.System);
@@ -103,48 +103,6 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 
 app.Run();
-
-// JSON malformado, tipo errado e cabeçalho inválido saem com o mesmo 400 VALIDACAO do ValidationFilter (arquitetura, item 3).
-// A falha de binding sai com mensagem fixa em português e chave em camelCase, sem nome de tipo nem posição de byte (QA-04).
-static Dictionary<string, string[]> ErrosDoModelState(ActionContext contexto)
-{
-    const string MensagemCorpoInvalido = "O corpo da requisição é inválido.";
-    var comFalhaDeLeitura = contexto.ModelState
-        .Where(par => par.Value is { Errors.Count: > 0 } && (par.Key.StartsWith('$') || par.Value.Errors.Any(e => e.Exception is not null)))
-        .Select(par => par.Key)
-        .ToList();
-    var temFalhaDeLeitura = comFalhaDeLeitura.Count > 0;
-
-    var resultado = new Dictionary<string, string[]>();
-    foreach (var (chave, entrada) in contexto.ModelState)
-    {
-        if (entrada is not { Errors.Count: > 0 })
-        {
-            continue;
-        }
-
-        // Com falha de leitura, o "request is required" do framework é ruído: o campo culpado já está na lista.
-        if (temFalhaDeLeitura && chave == "request")
-        {
-            continue;
-        }
-
-        var mensagens = entrada.Errors
-            .Select(e => e.Exception is not null || chave.StartsWith('$') ? MensagemCorpoInvalido
-                : string.IsNullOrEmpty(e.ErrorMessage) ? "Valor inválido." : e.ErrorMessage)
-            .Distinct()
-            .ToArray();
-        resultado[NormalizarChave(chave)] = mensagens;
-    }
-
-    return resultado;
-}
-
-static string NormalizarChave(string chave)
-{
-    var caminho = chave.StartsWith("$.", StringComparison.Ordinal) ? chave[2..] : chave;
-    return string.Join('.', caminho.Split('.').Select(s => s.Length > 0 ? char.ToLowerInvariant(s[0]) + s[1..] : s));
-}
 
 // Necessário para WebApplicationFactory nos testes de integração.
 public partial class Program;

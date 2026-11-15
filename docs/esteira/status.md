@@ -4,7 +4,7 @@
 
 ## Próximo passo
 
-**Commits da correção QA-01 a QA-08** (branch nova `chore/achados-qa-final`, a partir da `main`), só com autorização: um por achado ou grupo e um de docs; depois, push e PR. Para fechar o gate da etapa 6 faltam só ações do desenvolvedor: enviar o e-mail (L072) e gravar o vídeo (L082), antes recriando o banco com `docker compose down -v` (limpa o índice `IDX_Pedidos_DataPedidos` fora dos scripts e os pedidos de teste). Fora do escopo por `HL-28`: US-17 (deploy), US-12 (idempotência) e T-11.2.
+**Commits da refatoração estrutural** (`HL-33`, branch `chore/refatoracao-estrutural`), só com autorização: `refactor(backend)` (EST-01 a EST-05, PROP-17, ARQ-01, `HL-34`, `HL-35`), `refactor(frontend)` (EST-06) e `docs` (PROP-15, PROP-16, PROP-18, revisões e relatório); depois, push e PR. Continuam pendentes do desenvolvedor: o e-mail (L072) e o vídeo (L082), antes recriando o banco com `docker compose down -v`. Fora do escopo por `HL-28`: US-17, US-12 e T-11.2.
 
 ## Etapas
 
@@ -46,14 +46,15 @@
 
 | ID | Severidade | Dono | Rodada | Status | Resumo |
 |---|---|---|---|---|---|
-| QA-01 | Média | orquestrador | 1 | Aberto | Uso real do MCP não registrado no README e no diário (ENU-L022 parcial) |
-| QA-02 | Baixa | orquestrador | 1 | Aberto | README com contagens (109/125/24) e "27 HL" desatualizados |
-| QA-03 | Média | orquestrador | 1 | Aberto | README não declara idempotência (US-12) e deploy (US-17) como pendentes; a `Idempotency-Key` hoje é ignorada |
-| QA-04 | Baixa | backend | 1 | Aberto | 400 de model binding expõe o tipo interno, em inglês |
-| QA-05 | Baixa | backend | 1 | Aberto | `subtotal` em `GET /pedidos/{id}` sai com 4 casas (`1.2000`) |
-| QA-06 | Baixa | frontend | 1 | Aberto | Clientes homônimos indistinguíveis nos selects e na tabela |
-| QA-07 | Baixa | frontend | 1 | Aberto | Produto com estoque 0 selecionável no formulário (o 409 funciona) |
-| QA-08 | Baixa | frontend | 1 | Aberto | `!` em `pedido-lista.component.spec.ts:154-157`; testes sem nome por CA |
+| QA-01 | Média | orquestrador | 2 | Resolvido (`HL-32`) | Uso real do MCP não registrado no README e no diário (ENU-L022 parcial) |
+| QA-02 | Baixa | orquestrador | 2 | Resolvido (`HL-32`) | README com contagens (109/125/24) e "27 HL" desatualizados |
+| QA-03 | Média | orquestrador | 2 | Resolvido (`HL-32`) | README não declara idempotência (US-12) e deploy (US-17) como pendentes; a `Idempotency-Key` hoje é ignorada |
+| QA-04 | Baixa | backend | 2 | Resolvido (`HL-32`) | 400 de model binding expõe o tipo interno, em inglês |
+| QA-05 | Baixa | backend | 2 | Resolvido (`HL-32`) | `subtotal` em `GET /pedidos/{id}` sai com 4 casas (`1.2000`) |
+| QA-06 | Baixa | frontend | 2 | Resolvido (`HL-32`) | Clientes homônimos indistinguíveis nos selects e na tabela |
+| QA-07 | Baixa | frontend | 2 | Resolvido (`HL-32`) | Produto com estoque 0 selecionável no formulário (o 409 funciona) |
+| QA-08 | Baixa | frontend | 2 | Resolvido (`HL-32`) | `!` em `pedido-lista.component.spec.ts:154-157`; testes sem nome por CA |
+| ARQ-01 (refatoração) | Baixa | backend | 1 | Resolvido | `using` do próprio namespace em `IntegrationTests/Apoio/Arranjo.cs`; ver [refatoracao-estrutural-2.md](revisoes/refatoracao-estrutural-2.md) |
 | — | — | — | — | — | Revisões 4b e 5 fechadas em 2026-11-14: ver [arquitetura-1.md](revisoes/arquitetura-1.md) e [05-seguranca.md](05-seguranca.md) |
 
 ## Decisões humanas pendentes
@@ -109,6 +110,14 @@
 | 2026-11-15 | CORRECAO QA-04 e QA-05 (`HL-32`) | C2 | backend | sonnet | medium | 2 | Tentativa 1 reprovada na integração (mensagem do binding ainda em inglês: o `ModelError` não traz `Exception`); tentativa 2 aprovada | Não | 47.217 + 53.626 |
 | 2026-11-15 | CORRECAO QA-06 a QA-08 (`HL-32`) | C2 | frontend | sonnet | medium | 1 | Aprovado no gate do orquestrador | Não | 76.750 |
 | 2026-11-15 | Etapa 6, re-revisão rodada 2 (QA-01 a QA-08, reteste no navegador e pelo MCP) | — | qa | opus | high | 1 | 8 achados Resolvidos; gate pendente só por L072 e L082 | Não | 125.553 (cumulativo da instância) |
+| 2026-11-15 | Refatoração estrutural, DESENHO rodada 1 (diagnóstico e proposta EST-01 a EST-06, PROP-15 a PROP-18) | — | arquiteto | opus | — | 1 | Proposta aprovada (`HL-33`) | Não | 49.980 |
+| 2026-11-15 | Refatoração estrutural, DESENHO rodada 2 (PROP-16 e BE-28 no `02-arquitetura.md`) | — | arquiteto | opus | — | 1 | Aprovado | Não | 63.019 |
+| 2026-11-15 | Refatoração estrutural, EST-06 (`rotulo-cliente` para `pedidos/`) | C1 | frontend | haiku | medium | 1 | Aprovado no gate do orquestrador | Não | 35.095 |
+| 2026-11-15 | Refatoração estrutural, EST-01 a EST-05 e PROP-17 (`IDE0130`) | C2 | backend | sonnet | medium | 1 | Aprovado no gate do orquestrador | Não | 72.542 |
+| 2026-11-15 | Refatoração estrutural, REVISAO rodadas 2 e 3 (EST, PROP e ARQ-01) | — | arquiteto | opus | — | 1 | Rodada 2: 10 itens Resolvidos, ARQ-01 novo (Baixa). Rodada 3: ARQ-01 Resolvido | Não | 128.915 (cumulativo da instância, inclui o ajuste de um falso link) |
+| 2026-11-15 | CORRECAO ARQ-01 da refatoração | C1 | backend | haiku | medium | 1 | Aprovado no gate do orquestrador | Não | 43.270 |
+| 2026-11-15 | Pasta do health check `Saude/` → `Health/` (`HL-34`; `git mv` pelo orquestrador) | C1 | backend | haiku | medium | 1 | Aprovado no gate do orquestrador | Não | 41.496 |
+| 2026-11-15 | Nomes de pasta e namespaces técnicos em inglês, `Catalogo` dividido, `parte4` → `ranking-query` (`HL-35`; `git mv` pelo orquestrador) | C1 | backend | haiku | medium | 1 | Aprovado no gate do orquestrador | Não | 129.694 |
 
 ## Log de gates
 
@@ -150,3 +159,6 @@
 | 2026-11-14 | Correção de achados, rodada 1 (`HL-29`) | Backend completo; frontend (lint, build, testes, `tsc` do e2e); `docker compose up -d --build --wait frontend`; `curl -D -` em `/`, `/pedidos`, `/api/clientes`, `/api/pedidos?dataFim=9999-12-31` e `main-*.js`; `docker compose ps`; `npm --prefix e2e test`; console do navegador | Aprovado: 0 aviso; 113/113 e 130/130; format e busca limpos; matriz com 0 erro; lint limpo, 27/27; os 4 cabeçalhos e a CSP em todas as respostas; `dataFim=9999-12-31` → 400; portas só em 127.0.0.1; E2E 1/1; nenhuma violação de CSP e CSS sem `media=print` |
 | 2026-11-14 | Correção de achados, rodada 2 (ARQ-02, SEC-02, SEC-08, `HL-30`) | Build, unitários, format, busca; mutação independente (controller temporário dependendo do `PedidosDbContext`); `docker compose build --pull frontend` e `up --wait`; `nginx -t`, `nginx -v`, `id -u`, `command -v curl` no contêiner; `npm --prefix e2e test`; `docker scout cves --only-severity critical,high` | Aprovado: 0 aviso, 113/113; regra dos controllers vermelha com a mutação e verde sem ela; nginx 1.30.6, uid 101, sem `curl`, healthy; E2E 2/2 (CA-30 e cabeçalhos); resíduo crítico/alto só em brotli, expat, libxml2, libxslt, musl e zlib (aceito, `HL-30`) |
 | 2026-11-15 | Correção QA-01 a QA-08 (`HL-32`) | Backend: build, unitários, integração `Categoria!=Medicao`, format, busca por silenciamento, `git grep CreatedAtAction`. Frontend: lint, build, testes ChromeHeadless, `tsc` do e2e. `docker compose up -d --build`, `npm --prefix e2e test`. Os 2 validadores | Aprovado: 0 aviso; 113/113 e 130/130 (1ª tentativa do backend: 129/130, devolvida); format e busca limpos; `CreatedAtAction` 0; lint limpo, build ok, 34/34; E2E 2/2; matriz com 0 erro; configuração válida |
+| 2026-11-15 | Refatoração estrutural (`HL-33`) | Backend: build, unitários, integração `Categoria!=Medicao`, `--list-tests`, format, busca por silenciamento, BE-28, `git grep CreatedAtAction`, `git diff --check`, `git diff --stat -- database`. Depois do ARQ-01: build, format e integração de novo. Frontend: lint, build, testes ChromeHeadless, `tsc` do e2e. `docker compose config -q`, `docker compose up -d --build --wait`, `curl` em `/health/live`, `/health/ready`, `:4200/pedidos`, `:4200/api/clientes`, `:8080/swagger`; `npm --prefix e2e test`. Os 2 validadores e `testar_hooks.sh` | Aprovado: 0 aviso; 113/113 e 130/130; listagem 113/131, igual à linha de base; format, busca, BE-28 e `CreatedAtAction` vazios; `database/` sem diff; lint limpo, 34/34; serviços healthy, rotas 200; E2E 2/2; matriz com 0 erro; configuração válida na 2ª execução (a 1ª reprovou um regex entre crases lido como link no relatório do `arquiteto`, corrigido por ele); hooks ok. `npm ci` não rodado (lockfile inalterado) |
+| 2026-11-15 | Refatoração estrutural, `HL-34` (`Saude/` → `Health/`) | `git grep Saude -- backend`, build, unitários, integração `Categoria!=Medicao`, format, busca por silenciamento, `git diff --check`, os 2 validadores, `docker compose up -d --build --wait`, `curl` em `/health/live` e `/health/ready`, `npm --prefix e2e test` | Aprovado: nenhum `Saude` no backend; 0 aviso; 113/113 e 130/130; format e busca limpos; matriz com 0 erro; configuração válida; api healthy; as 2 rotas de saúde 200; E2E 2/2 |
+| 2026-11-15 | Refatoração estrutural, `HL-35` (nomes de pasta) | BE-29 (`find` de pastas com nome antigo), `git grep` de namespaces antigos, build, unitários, integração `Categoria!=Medicao`, `--list-tests`, format, busca por silenciamento, BE-28, `CreatedAtAction`, `git diff --check`, diff de `database/`, os 3 validadores, compose, `curl` e E2E | Aprovado: BE-29 e namespaces vazios; 0 aviso; 113/113 e 130/130; contagem 113/131; format, busca, BE-28 e `CreatedAtAction` limpos; `database/` só com comentários e prosa; matriz com 0 erro; configuração válida; hooks ok; compose healthy, as 5 rotas 200 (`/health/live`, `/health/ready`, `:4200/pedidos`, `:4200/api/clientes`, `/swagger`) e E2E 2/2 |

@@ -3,9 +3,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Joya.Pedidos.IntegrationTests.Api;
-using Joya.Pedidos.IntegrationTests.Infra;
-using Joya.Pedidos.IntegrationTests.Persistencia;
+using Joya.Pedidos.IntegrationTests.Fixtures;
 using Microsoft.Data.SqlClient;
 using Shouldly;
 

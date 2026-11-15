@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Joya.Pedidos.Core\Joya.Pedidos.Core.csproj" />
-    <!-- Api e Infrastructure só para carregar os assemblies nos testes de Arquitetura/ -->
+    <!-- Api e Infrastructure só para carregar os assemblies nos testes de Architecture/ -->
     <ProjectReference Include="..\..\src\Joya.Pedidos.Infrastructure\Joya.Pedidos.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Joya.Pedidos.Api\Joya.Pedidos.Api.csproj" />
   </ItemGroup>

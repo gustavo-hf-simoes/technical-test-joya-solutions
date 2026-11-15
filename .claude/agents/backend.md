@@ -65,7 +65,7 @@ O que está escrito no `CLAUDE.md` e na spec prevalece sobre qualquer skill.
   - Problem Details sem stack trace fora do ambiente de desenvolvimento;
   - segredos só por variável de ambiente, nunca no código.
 - **Concorrência:** a baixa de estoque é a instrução atômica da spec §4.3. O teste CA-10, com requisições paralelas, é obrigatório.
-- **Parte 4:** a investigação vai em `database/parte4/` (query original, corrigida, índices e carga de volume). As medições de antes e depois saem do MCP (`explain_sql`, `sys.dm_exec_query_stats`) e ficam registradas em `docs/esteira/03-backend.md` com os números reais. Sem medição não há afirmação.
+- **Parte 4:** a investigação vai em `database/ranking-query/` (query original, corrigida, índices e carga de volume). As medições de antes e depois saem do MCP (`explain_sql`, `sys.dm_exec_query_stats`) e ficam registradas em `docs/esteira/03-backend.md` com os números reais. Sem medição não há afirmação.
 - **Docker, CI e deploy:** a imagem da API, o `docker-compose.yml`, `.github/workflows/` e `deploy/` (compose de produção e Caddy na VM, ver `HL-04`) são seus. O `frontend/Dockerfile` e o `nginx.conf` são do agente `frontend`.
 
 ## Relatório `docs/esteira/03-backend.md`

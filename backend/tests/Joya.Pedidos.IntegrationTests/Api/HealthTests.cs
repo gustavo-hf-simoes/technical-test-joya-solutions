@@ -1,5 +1,5 @@
 using System.Net;
-using Joya.Pedidos.IntegrationTests.Infra;
+using Joya.Pedidos.IntegrationTests.Fixtures;
 using Shouldly;
 
 namespace Joya.Pedidos.IntegrationTests.Api;

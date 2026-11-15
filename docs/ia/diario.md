@@ -344,7 +344,26 @@
 - **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; lint limpo e 34/34; E2E 2/2; matriz com 0 erro. Re-revisão do `qa`: os 8 achados Resolvidos; 37 de 39 linhas obrigatórias Atende, as 2 restantes são o e-mail e o vídeo.
 - **Modelo:** `backend` e `frontend` no Sonnet `medium`; `qa` no Opus `high`; orquestrador no Opus 5.5.
 
-<!-- Próximas entradas: E21 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
+### E21 — Refatoração estrutural · 2026-11-15
+
+- **Pedido:** refatoração estrutural de pastas, namespaces e dependências, sem mudar comportamento. O pedido veio de um arquivo do desenvolvedor fora do repositório e foi conduzido pela `/esteira`.
+- **Diagnóstico (`arquiteto`):** a estrutura estava saudável. Seis ajustes locais (EST-01 a EST-06) e quatro propostas (PROP-15 a PROP-18). A árvore de referência do pedido, com pastas por tipo, foi recusada com justificativa, porque quebraria a organização por feature.
+- **Decisões humanas:** `HL-33`: executar EST-01 a EST-06 e aprovar PROP-15 a PROP-18. `HL-34`: na revisão do resultado, o desenvolvedor pediu `Health/` no lugar de `Saude/` nas 3 camadas. A pasta `Saude/` vinha da US-05, e o EST-02 tinha seguido esse nome sem questionar se termo técnico deveria ficar em português.
+- **Produzido:** 4 arquivos divididos em interface e implementação, a porta de saúde em `Core/Health`, o `400` do *binding* em `Api/Erros`, os ajudantes da integração em `Apoio/`, `rotulo-cliente` em `pedidos/`, o `IDE0130` no build, o BE-28 no checklist, a árvore do `CLAUDE.md`, a skill `/new-endpoint` e o relatório [refatoracao-estrutural.md](../esteira/refatoracao-estrutural.md). Os `git mv` foram feitos pelo orquestrador, porque os agentes não alteram a árvore pelo git.
+- **Achado na re-revisão:** ARQ-01 (Baixa): um `using` do próprio namespace, sobra da troca mecânica, que o build não pega. Foi corrigido pelo `backend` e conferido pelo mesmo revisor.
+- **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; a contagem de testes descobertos é igual à de antes (113/131); `database/` sem diff; lint limpo e 34/34; compose healthy e E2E 2/2.
+- **Modelo:** `frontend` e a correção do ARQ-01 no Haiku `medium` (C1); `backend` no Sonnet `medium` (C2); `arquiteto` no Opus; orquestrador no Opus 5.5.
+
+### E22 — Nomes de pasta e namespaces · 2026-11-15
+
+- **Pedido:** o desenvolvedor considerou `Parte4`, `Catalogo` e `Apoio` inaceitáveis num projeto profissional e perguntou por que a esteira gerou esses nomes.
+- **Causa levantada:** a regra de idioma da spec e do `CLAUDE.md` cobria só sufixos de classe. Os agentes traduziram as pastas técnicas (`Apoio`, `Banco`, `Persistencia`, `Erros`, `Limites`, `Arquitetura`). `database/parte4` nasceu no `plan.md`, nomeado pela seção do enunciado, e o backlog propagou o nome para os testes. `Catalogo` foi um agrupamento criado pelo `backend` na US de seletores. Nenhum gate avaliava nomes: o `IDE0130` só exige namespace igual à pasta, e as revisões comparavam o código com documentos que já tinham esses nomes.
+- **Decisão humana:** `HL-35`: pastas técnicas em inglês, features em português, nenhum nome pela estrutura da prova; aplicar a todas as pastas técnicas.
+- **Produzido:** os `git mv` (orquestrador); namespaces, `using`, `RankingQueryScripts` e a divisão de `Catalogo` em `Clientes/` e `Produtos/` (`backend`); a regra no `CLAUDE.md` e na spec §2; o item BE-29 no checklist; os caminhos `database/ranking-query` nos documentos ativos.
+- **Gate (orquestrador):** 0 aviso; 113/113 e 130/130; contagem 113/131; validadores ok; compose healthy, as 5 rotas 200 (`/health/live`, `/health/ready`, `:4200/pedidos`, `:4200/api/clientes`, `/swagger`) e E2E 2/2.
+- **Modelo:** `backend` no Haiku `medium` (C1); orquestrador no Opus 5.5.
+
+<!-- Próximas entradas: E23 — ... Uma por etapa da esteira, com o modelo usado, o gate e os HL/CG gerados. -->
 
 ## Números para a entrevista
 
@@ -352,9 +371,9 @@ Atualize a cada etapa.
 
 | Métrica | Valor |
 |---|---|
-| Decisões humanas registradas (`HL`) | 32 |
+| Decisões humanas registradas (`HL`) | 35 |
 | Erros da IA detectados e corrigidos (`CG`) | 6, mais 1 alegação técnica falsa do `backend` derrubada pelo revisor com teste de mutação (ARQ-02), mais 1 recomendação revista antes de virar código (NetArchTest → ArchUnitNET) |
-| Perguntas estruturadas da IA ao desenvolvedor | 30, em 12 rodadas |
-| Compactações de contexto da sessão | 10 |
+| Perguntas estruturadas da IA ao desenvolvedor | 38, em 15 rodadas |
+| Compactações de contexto da sessão | 11 |
 | Tarefas por nível (`C1`/`C2`/`C3`) | 7 / 35 / 15 (57 tarefas em 18 histórias) |
 | Taxa de escalonamento de modelo | 0 de 23 delegações (mais 2 que não rodaram por erro de ambiente, `HL-24`). O ajuste da `HL-09` baixou o esforço, e não subiu o modelo |

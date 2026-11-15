@@ -15,7 +15,7 @@ Siga as etapas **na ordem**. Cada etapa produz um arquivo (ou um trecho) e deixa
 1. Localize o endpoint em `docs/spec.md` (seção 5). Anote: rota, parâmetros, schema de resposta, códigos HTTP, regras `RN-xx` e critérios `CA-xx` envolvidos.
 2. **Se o endpoint não estiver na spec, pare.** Proponha ao desenvolvedor o trecho a acrescentar (contrato + regras + ao menos um critério de aceite) e só continue depois da aprovação. Código sem spec não entra.
 3. Decida a feature (pasta em `Joya.Pedidos.Core/`): `Pedidos`, `Relatorios`, `Clientes`, `Produtos` — ou uma nova, com nome no plural.
-4. Se houver consulta nova ao banco, confira pelo MCP `mssql` (`search_objects`) quais índices existem para as colunas filtradas e ordenadas. Índice faltando é alteração em `database/01_schema.sql`, feita antes do código.
+4. Se houver consulta nova ao banco, confira pelo MCP `mssql` (`search_objects`) quais índices existem para as colunas filtradas e ordenadas. Índice faltando é alteração em `database/02-indices.sql`, feita antes do código.
 
 ## Etapa 1 — Request e Response (`Core/<Feature>/`)
 
@@ -107,15 +107,21 @@ Se você sentir necessidade de um quarto tipo, pergunte antes de criar.
 
 ## Etapa 4 — Service (`Core/<Feature>/`)
 
-Interface + implementação `sealed` com *primary constructor*. É aqui que moram as regras que dependem de dados.
+Interface em `I<Recurso>Service.cs` e implementação `sealed`, com *primary constructor*, em `<Recurso>Service.cs`: um tipo de topo por arquivo (BE-28). É aqui que moram as regras que dependem de dados.
 
 ```csharp
+// Core/Pedidos/IPedidoService.cs
 namespace Joya.Pedidos.Core.Pedidos;
 
 public interface IPedidoService
 {
     Task<Result<PedidoResponse>> CriarAsync(CriarPedidoRequest request, Guid? chaveIdempotencia, CancellationToken ct);
 }
+```
+
+```csharp
+// Core/Pedidos/PedidoService.cs
+namespace Joya.Pedidos.Core.Pedidos;
 
 public sealed class PedidoService(
     IClienteRepository clientes,
@@ -229,7 +235,7 @@ Não teste o controller isoladamente: ele não tem lógica; quem o cobre é o te
 
 ## Etapa 7 — Teste de integração (`tests/Joya.Pedidos.IntegrationTests/<Feature>/`)
 
-Exercita HTTP → SQL Server real (Testcontainers), com o schema de `database/01_schema.sql`.
+Exercita HTTP → SQL Server real (Testcontainers), com o schema de `database/01-schema.sql` e os índices de `database/02-indices.sql`.
 
 - [ ] Um teste do caminho feliz conferindo **status, cabeçalhos e corpo**, e depois o **estado no banco**.
 - [ ] Um teste por status de erro do contrato, conferindo o `code` do Problem Details.

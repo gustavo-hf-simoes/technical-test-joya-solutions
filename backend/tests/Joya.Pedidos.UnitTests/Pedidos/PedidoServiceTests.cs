@@ -3,7 +3,7 @@ using Joya.Pedidos.Core.Common;
 using Joya.Pedidos.Core.Estoque;
 using Joya.Pedidos.Core.Pedidos;
 using Joya.Pedidos.Core.Produtos;
-using Joya.Pedidos.UnitTests.Apoio;
+using Joya.Pedidos.UnitTests.Fakes;
 using NSubstitute;
 using Shouldly;
 

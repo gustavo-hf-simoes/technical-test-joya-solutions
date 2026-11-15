@@ -31,7 +31,7 @@ import { ClientesApi } from '../core/api/clientes-api';
 import { ClienteResponse } from '../core/api/clientes.models';
 import { PedidosApi } from '../core/api/pedidos-api';
 import { CriarPedidoRequest } from '../core/api/pedidos.models';
-import { nomesRepetidos, rotuloCliente } from '../core/rotulo-cliente';
+import { nomesRepetidos, rotuloCliente } from './rotulo-cliente';
 import { gerarUuid } from '../core/uuid';
 import { ProblemaApi } from '../core/api/problema-api.model';
 import { ProdutosApi } from '../core/api/produtos-api';
