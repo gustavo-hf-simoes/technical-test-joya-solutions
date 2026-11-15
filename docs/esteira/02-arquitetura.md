@@ -21,7 +21,7 @@ Só entram aqui restrições **técnicas** do enunciado, ou seja, as que limitam
 | R-07 | Frontend **React ou Angular, com TypeScript** | ENU-L034 | Angular 19 standalone, TypeScript `strict` (`D12`) | `npm --prefix frontend run build` |
 | R-08 | Tela de listagem com filtros e tela **ou modal** de criação | ENU-L036, L037 | Duas rotas: `/pedidos` e `/pedidos/novo` (`D13`) | CA-28 a CA-32 |
 | R-09 | MCP conectado ao **SQL Server** | ENU-L022 | DBHub com o login `claude_mcp`, somente leitura e `SHOWPLAN` (`D16`, spec §6.5) | `claude mcp list`; `LoginMcp_TentaEscrever_PermissaoNegada` |
-| R-10 | Query da Parte 4 corrigida e otimizada, investigada com **plano de execução** | ENU-L040 a L048 | Nenhum índice novo é necessário: os índices da spec §6.3 já atendem a query corrigida (§6). Os planos são capturados pelo MCP | CA-33; `database/parte4/investigacao.md` |
+| R-10 | Query da Parte 4 corrigida e otimizada, investigada com **plano de execução** | ENU-L040 a L048 | Nenhum índice novo é necessário: os índices da spec §6.3 já atendem a query corrigida (§6). Os planos são capturados pelo MCP | CA-33; `database/ranking-query/investigacao.md` |
 | R-11 | Testes unitários no backend, cobrindo regras e validações do pedido | ENU-L054 | Regras no `Core`, sem I/O, testadas com portas substituídas (NSubstitute, `D11`) | `dotnet test backend/tests/Joya.Pedidos.UnitTests` |
 | R-12 | Testes de integração contra **SQL Server real** | ENU-L055 | Testcontainers + `WebApplicationFactory` + Respawn (`D10`), aplicando os **mesmos** scripts com o **mesmo** executor, e a API conectada como `joya_app` ([ADR-0003](../adr/0003-banco-real-nos-testes-de-integracao.md)) | `dotnet test backend/tests/Joya.Pedidos.IntegrationTests` |
 | R-13 | Tudo no Docker, com `docker-compose.yml` **na raiz** | ENU-L061 | Serviços `db`, `db-init`, `api` e `frontend` num único arquivo na raiz | `docker compose config` |
@@ -92,14 +92,14 @@ flowchart BT
     core["<b>Joya.Pedidos.Core</b><br/>entidades · Request/Response · Validators<br/>Services · portas · Errors"]
     infra["<b>Joya.Pedidos.Infrastructure</b><br/>DbContext · configurações EF<br/>repositórios · consultas · UnitOfWork"]
     api["<b>Joya.Pedidos.Api</b><br/>Controllers · ValidationFilter<br/>IExceptionHandler · Program.cs"]
-    unit["UnitTests<br/>(+ Arquitetura/)"]
+    unit["UnitTests<br/>(+ Architecture/)"]
     integ["IntegrationTests"]
 
     infra --> core
     api --> core
     api -- "só composição<br/>(AddInfrastructure)" --> infra
     unit --> core
-    unit -. "só Arquitetura/<br/>(inspeção de assemblies)" .-> api
+    unit -. "só Architecture/<br/>(inspeção de assemblies)" .-> api
     integ --> api
 ```
 
@@ -111,7 +111,7 @@ flowchart BT
 
 Decisões de fronteira que evitam camadas extras:
 
-1. **Portas de leitura no `Core`, projeção na `Infrastructure`.** As consultas (`IPedidoConsultas`, `IRelatorioConsultas`, `IClienteConsultas`, `IProdutoConsultas`) devolvem os `*Response` do `Core`. A implementação projeta com `Select` direto para esses DTOs (regra de ouro 10). Não existe um segundo conjunto de DTOs na `Api`: o controller devolve o `Response` do `Core`, e o contrato é um só.
+1. **Portas de leitura no `Core`, projeção na `Infrastructure`.** As portas de leitura (`IPedidoConsultas`, `IRelatorioConsultas`, `IClienteRepository`, `IProdutoRepository`) devolvem os `*Response` do `Core`. As duas últimas também servem ao fluxo do `POST` (§4) (ajuste da `PROP-16`, `HL-33`). A implementação projeta com `Select` direto para esses DTOs (regra de ouro 10). Não existe um segundo conjunto de DTOs na `Api`: o controller devolve o `Response` do `Core`, e o contrato é um só.
 2. **Um único lugar traduz `Error` em HTTP.** Uma extensão na `Api` (por exemplo, `ResultadoHttp.ParaProblemDetails`) mapeia `Error.Tipo` (`Validacao`, `NaoEncontrado`, `RegraDeNegocio`, `Conflito`) para `400`, `404`, `422` e `409`. Os controllers não escolhem status de erro.
 3. **O mesmo `400` para todo erro de entrada.** O `ValidationFilter` (`D9`) e o `InvalidModelStateResponseFactory` do `[ApiController]` produzem o mesmo corpo `VALIDACAO` da spec §5.2. Assim, JSON malformado, tipo errado, `Idempotency-Key` que não é UUID (ligado como `[FromHeader] Guid?`) e RN-01 a RN-04 têm o mesmo formato.
 4. **Datas de filtro chegam como texto.** `dataInicio` e `dataFim` são `string?` no `Query`. O validator e `Periodo.Criar` aplicam `DateOnly.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, ...)`. O *model binding* de `DateOnly` com a cultura invariante aceitaria `11/13/2026`, o que contraria a spec §5.1. `Periodo` expõe `Inicio` e `FimExclusivo` como `DateTime` UTC (RN-15).
@@ -120,7 +120,7 @@ Decisões de fronteira que evitam camadas extras:
 
 ### Como a regra é provada
 
-Os testes de arquitetura ficam em **`backend/tests/Joya.Pedidos.UnitTests/Arquitetura/`**. Isso confirma a sugestão do PO (T-03.2). Não vale um projeto a mais só para eles. O `UnitTests` passa a referenciar `Api` e `Infrastructure` para carregar os assemblies, e uma regra impede que os testes de regra de negócio usem essa referência.
+Os testes de arquitetura ficam em **`backend/tests/Joya.Pedidos.UnitTests/Architecture/`**. Isso confirma a sugestão do PO (T-03.2). Não vale um projeto a mais só para eles. O `UnitTests` passa a referenciar `Api` e `Infrastructure` para carregar os assemblies, e uma regra impede que os testes de regra de negócio usem essa referência.
 
 | Teste (`RegrasDeArquiteturaTests`) | Regra | Mecanismo |
 |---|---|---|
@@ -129,7 +129,7 @@ Os testes de arquitetura ficam em **`backend/tests/Joya.Pedidos.UnitTests/Arquit
 | `Infrastructure_Dependencias_NaoReferenciaApi` | `Infrastructure` não conhece HTTP | ArchUnitNET e `GetReferencedAssemblies()` sem `Microsoft.AspNetCore*` |
 | `Controllers_Dependencias_NaoAcessamDbContext` | Controller só fala com `Service`/porta | ArchUnitNET: classes `*Controller` não dependem de `Microsoft.EntityFrameworkCore*` nem de `Joya.Pedidos.Infrastructure*` |
 | `Dtos_Declaracao_SaoSealedRecord` | Regra de ouro 2 | Tipos `*Request`, `*Query`, `*Response` são `sealed` e têm o método `<Clone>$` gerado pelo compilador para `record` |
-| `Entidades_Propriedades_NaoTemSetterPublico` | Regra de ouro 2 | Reflexão sobre `Pedido` e `ItemPedido`: nenhum `SetMethod` público |
+| `Entidades_Propriedades_NaoTemSetterPublico` | Regra de ouro 2 | Reflexão sobre `Pedido` e `ItemPedido` (no `Core`) e `Cliente` e `Produto` (na `Infrastructure`): as quatro são encontradas e nenhuma tem `SetMethod` público (ajuste da `PROP-16`) |
 | `MetodosAsync_Assinatura_RecebemCancellationTokenPorUltimo` | Regra de ouro 3 | Reflexão sobre os assemblies de produção: método público ou de interface que devolve `Task`/`ValueTask` e termina em `Async` tem `CancellationToken` como último parâmetro. Ficam de fora os métodos herdados do framework (`IExceptionHandler.TryHandleAsync`, filtros) |
 | `Classes_Declaracao_SaoSealed` | Convenção C# do `CLAUDE.md` | ArchUnitNET: classes concretas não abstratas são `sealed`. Ficam de fora `Program` e os tipos gerados pelo compilador |
 | `TestesDeRegra_Dependencias_NaoUsamInfrastructureNemApi` | Unitário sem I/O | ArchUnitNET: tipos de `Joya.Pedidos.UnitTests` fora de `*.Arquitetura` não dependem de `Infrastructure` nem de `Api` |
@@ -328,7 +328,7 @@ As decisões do `plan.md` (`D1` a `D16`, `HL-01` a `HL-16`) valem como estão e 
 
 Decisões menores que não pedem ADR, porque cabem numa linha e estão nesta seção ou na §3:
 
-- Testes de arquitetura em `backend/tests/Joya.Pedidos.UnitTests/Arquitetura/` (§3), e não em projeto próprio.
+- Testes de arquitetura em `backend/tests/Joya.Pedidos.UnitTests/Architecture/` (§3), e não em projeto próprio.
 - `/health/ready` com um `IHealthCheck` próprio (`CanConnectAsync`), sem o pacote de *health checks* do EF (§2).
 - `Location` relativo com `Created(...)` em vez de `CreatedAtAction` (§2).
 - Datas de filtro recebidas como `string?` e interpretadas com `TryParseExact` (§3).
@@ -407,6 +407,10 @@ Como aplicar:
   `git grep --untracked -n "BaixaEmOrdemCrescenteDeProdutoId" -- backend/tests` → 1 teste, verde
 - **BE-27** · `Location` relativo (§2) · `backend` · Baixa
   `git grep --untracked -n "CreatedAtAction" -- backend/src` → vazio
+- **BE-28** · Um tipo de topo por arquivo em `backend/src` (`PROP-18`, `HL-33`) · `backend` · Baixa
+  `git grep --untracked -cE '^((public|internal|file)[[:space:]]+)?((sealed|static|abstract|readonly)[[:space:]]+)*(partial[[:space:]]+)?(class|record|interface|enum|struct)[[:space:]]' -- 'backend/src/*.cs' | awk -F: '$NF > 1 { print $1 }'` → vazio. Conta, por arquivo, as declarações de tipo na coluna 0 (com *file-scoped namespace*, só os tipos de topo ficam nela; os aninhados são indentados) e lista os arquivos com mais de uma. `Program.cs` passa, porque `public partial class Program;` é o único tipo de topo. Os testes ficam de fora. Usa `git grep` e `awk`, e não `rg`, porque o `rg` não existe no Git Bash do Windows. Conferência no desenho (2026-11-15): contra o `HEAD` (`git grep -cE '<mesma regex>' HEAD -- 'backend/src/*.cs'`), lista exatamente os 4 arquivos de `EST-01`; na árvore de trabalho, já com a divisão do `backend`, sai vazio; a regex acha ao menos um tipo em cada um dos 75 arquivos `.cs` de `backend/src` (`git grep -L` vazio), então não há arquivo escapando por regex estreita demais
+- **BE-29** · Pastas técnicas em inglês, features em português, nenhum nome pela estrutura da prova (`HL-35`) · `backend` · Baixa
+  `find backend/src backend/tests database -type d -not -path '*/bin*' -not -path '*/obj*' | grep -E '/(Apoio|Banco|Persistencia|Configuracoes|Erros|Limites|Arquitetura|Saude|Catalogo|Infra|Parte[0-9]|parte[0-9])$'` → vazio. A revisão também lê a árvore: uma pasta nova precisa ser feature do domínio (português) ou conceito técnico (inglês)
 
 ### Banco
 
@@ -415,7 +419,7 @@ Como aplicar:
 - **DB-02** · Carga idempotente (RNF-04) · `backend` · Alta
   `dotnet test backend/tests/Joya.Pedidos.IntegrationTests --filter "FullyQualifiedName~Carga"` → verde; `docker compose up -d db db-init` duas vezes seguidas → `db-init` sai com 0 nas duas
 - **DB-03** · Nenhuma função sobre `DataPedido` nos scripts, exceto na query original da Parte 4 · `backend` · Alta
-  `git grep --untracked -niE "(YEAR|MONTH|CAST|CONVERT|DATEPART)\s*\(\s*([a-z]+\.)?DataPedido" -- database ':!database/parte4/01-query-original.sql'` → vazio
+  `git grep --untracked -niE "(YEAR|MONTH|CAST|CONVERT|DATEPART)\s*\(\s*([a-z]+\.)?DataPedido" -- database ':!database/ranking-query/01-query-original.sql'` → vazio
 - **DB-04** · Índice filtrado criável (spec §6.2) · `backend` · Alta
   `git grep --untracked -n "QUOTED_IDENTIFIER ON" -- database/02-indices.sql` → presente; `git grep --untracked -nE "sqlcmd.*-I" -- database/init.sh` → presente, com `-b`
 - **DB-05** · RCSI ligado (spec §4.3) · `backend` · Alta
@@ -530,3 +534,13 @@ Nenhum bloqueio para o gate. Perguntas e sugestões para o orquestrador:
 | Achado | Rodada | O que foi feito | Onde (arquivo:linha) | Teste que prova | Status declarado |
 |---|---|---|---|---|---|
 | ARQ-01 | 1 | Corpo do desenho alinhado ao código: serviço `web` → `frontend` (§1 R-13, §2 diagrama, tabela e itens 1 e 3, §4 participante) e schema `ItemPedidoResponse` → `PedidoItemResponse` (§5). Decisão do arquiteto (pendência a): fica `frontend` | `02-arquitetura.md:27,50,59-61,73,78,80,145,258` | `git grep -nw web -- docs/esteira/02-arquitetura.md` vazio | Resolvido (aguarda re-revisão) |
+
+## Rodada 2 — 2026-11-15 — DESENHO (refatoração estrutural, `HL-33`)
+
+Só as alterações aprovadas em [refatoracao-estrutural-1.md](revisoes/refatoracao-estrutural-1.md) §5, feitas no próprio corpo da rodada 1 e marcadas nele:
+
+| PROP | Onde | O que mudou |
+|---|---|---|
+| `PROP-16` | §3, decisão de fronteira 1 | As portas de leitura passam a ter os nomes reais: `IClienteRepository` e `IProdutoRepository` (as antigas portas `*Consultas` de cliente e produto foram fundidas nelas) |
+| `PROP-16` | §3, tabela dos testes, linha `Entidades_Propriedades_NaoTemSetterPublico` | Entidades `Pedido`, `ItemPedido`, `Cliente` e `Produto`, como em `RegrasDeArquiteturaTests` |
+| `PROP-18` (parte do checklist) | §8, item novo `BE-28` | "Um tipo de topo por arquivo em `backend/src`", com `git grep` + `awk` no lugar do `rg` da proposta, que não existe no Git Bash do Windows |

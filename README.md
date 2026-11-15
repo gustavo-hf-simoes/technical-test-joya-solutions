@@ -148,18 +148,18 @@ Também aceitei, como exceção registrada (`HL-24`), remover o *gateway* local 
 - O agente `qa` rodou a query original e a corrigida contra a base de demonstração.
 - O plano da query original mostra o `datepart(year, ...)` como predicado residual, depois de um *seek* que usa só o `ClienteId`.
 - Uma consulta conferiu que nenhum dos 61 pedidos da base em 2026-11-15 tinha `ValorTotal` diferente da soma dos itens.
-- Ao listar os índices, o MCP encontrou o `IDX_Pedidos_DataPedidos`, que não está em nenhum script de `database/`. É um desvio do banco local, que some ao recriar o volume. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/parte4/investigacao.md).
+- Ao listar os índices, o MCP encontrou o `IDX_Pedidos_DataPedidos`, que não está em nenhum script de `database/`. É um desvio do banco local, que some ao recriar o volume. O passo a passo para usar o MCP contra o banco do compose está na seção 10 de [investigacao.md](database/ranking-query/investigacao.md).
 
 ## Parte 4: debug da query
 
-A query do enunciado deveria trazer o ranking dos clientes que mais compraram em 2026, mas estava lenta e errada. A investigação completa, com os planos antes e depois, está em [database/parte4/investigacao.md](database/parte4/investigacao.md).
+A query do enunciado deveria trazer o ranking dos clientes que mais compraram em 2026, mas estava lenta e errada. A investigação completa, com os planos antes e depois, está em [database/ranking-query/investigacao.md](database/ranking-query/investigacao.md).
 
 | Arquivo | Papel |
 |---|---|
-| [01-query-original.sql](database/parte4/01-query-original.sql) | A query do enunciado, sem alteração |
-| [02-query-corrigida.sql](database/parte4/02-query-corrigida.sql) | **A correção entregue** |
-| [03-variante-valor-total.sql](database/parte4/03-variante-valor-total.sql) | Variante para comparação: soma o `ValorTotal` do pedido |
-| [00-carga-volume.sql](database/parte4/00-carga-volume.sql) | Carga determinística para medir: 5 mil clientes, 200 mil pedidos, 600 mil itens |
+| [01-query-original.sql](database/ranking-query/01-query-original.sql) | A query do enunciado, sem alteração |
+| [02-query-corrigida.sql](database/ranking-query/02-query-corrigida.sql) | **A correção entregue** |
+| [03-variante-valor-total.sql](database/ranking-query/03-variante-valor-total.sql) | Variante para comparação: soma o `ValorTotal` do pedido |
+| [00-carga-volume.sql](database/ranking-query/00-carga-volume.sql) | Carga determinística para medir: 5 mil clientes, 200 mil pedidos, 600 mil itens |
 
 ### Os quatro defeitos
 

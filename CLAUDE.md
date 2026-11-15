@@ -24,17 +24,39 @@ Clean Architecture enxuta. As dependências apontam sempre para o `Core`.
 ```text
 backend/src/
   Joya.Pedidos.Core/            Domínio + casos de uso + portas. Sem EF, sem ASP.NET, sem SqlClient.
-    Common/                     Result<T>, Error, PaginaResponse<T>, Periodo
+    Common/                     Result<T>, Error, TipoErro, PaginaResponse<T>, Periodo, PeriodoRegras, IUnitOfWork
     Pedidos/ Relatorios/ Clientes/ Produtos/     Uma pasta por feature: entidade, Request,
                                                  Response, Validator, Service, portas, erros
-  Joya.Pedidos.Infrastructure/  EF Core 8 (DbContext, configurações, repositórios, UnitOfWork)
-  Joya.Pedidos.Api/             Controllers, filtros, Problem Details, composição (Program.cs)
+    Estoque/                    Porta da baixa atômica (IEstoqueRepository, D7)
+    Health/                     Porta da verificação do banco (health check)
+  Joya.Pedidos.Infrastructure/  EF Core 8. Uma pasta por feature, espelhando o Core (repositórios e consultas)
+    Persistence/                DbContext, Configurations/ do EF, UnitOfWork, conversores
+    DependencyInjection.cs      Registro das implementações
+  Joya.Pedidos.Api/             Só HTTP e composição
+    Controllers/                Um por recurso, traduzem Result<T> em HTTP
+    Errors/                     Problem Details, ExceptionHandlers, ValidationFilter
+    Limits/                     Rate limit e tamanho de corpo
+    Health/                     Health check
+    Program.cs                  Só composição
 backend/tests/
   Joya.Pedidos.UnitTests/         Regras e validações, sem I/O (xUnit + NSubstitute + Shouldly)
-  Joya.Pedidos.IntegrationTests/  Endpoints contra SQL Server real (Testcontainers + Respawn)
+    Fakes/ Architecture/          Falsos (relógio, unidade de trabalho); regras de dependência (ArchUnitNET)
+  Joya.Pedidos.IntegrationTests/  Contra SQL Server real (Testcontainers + Respawn)
+    Fixtures/                     Fixture do contêiner, ApiFactory e ajudantes
+    <Feature>/                    Endpoints via ApiFactory (Pedidos/, Relatorios/, Clientes/, Produtos/)
+    Persistence/                  Infrastructure sem HTTP
+    Database/                     Scripts de database/; RankingQuery/: investigação da query de ranking
+    Api/                          Pipeline HTTP (erros, limites, health)
 database/                       Scripts SQL — ÚNICA fonte de verdade do schema (sem migrations)
-frontend/                       Angular 19 standalone
+  ranking-query/                Query de ranking: original, corrigida, carga de volume e investigação
+frontend/src/app/               Angular 19 standalone
+  core/api/                     Serviços *Api (HTTP) e modelos do contrato
+  core/                         Utilitários de plataforma
+  pedidos/                      Telas e regras de apresentação da feature
+  testing/                      Ajudantes de spec
 ```
+
+Um tipo de topo por arquivo, e o namespace segue a pasta (IDE0130 no build). Pastas de **feature** ficam em português (`Pedidos`, `Clientes`); pastas **técnicas** ficam em inglês (`Errors`, `Persistence`, `Fixtures`, `Health`). Nenhum nome segue a estrutura da prova (`HL-35`).
 
 Fluxo de uma requisição: `Controller` → `ValidationFilter` (FluentValidation) → `Service` (regras, devolve `Result<T>`) → portas → `Infrastructure`. O controller só traduz `Result<T>` em HTTP.
 

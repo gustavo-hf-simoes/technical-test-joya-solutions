@@ -28,7 +28,7 @@ Os defeitos descritos no README aparecem nos dados reais, e não só nos testes.
 
 ### 2. Plano de uma variante simplificada da query original (`explain_sql`)
 
-A variante soma `ValorTotal` em vez de `Quantidade * PrecoUnitario` e usa `JOIN` no lugar dos dois `LEFT JOIN` do enunciado. Os defeitos que o plano mostra (função sobre a coluna, agrupamento por nome, ordem crescente) são os mesmos. A query exata está em [01-query-original.sql](../../database/parte4/01-query-original.sql).
+A variante soma `ValorTotal` em vez de `Quantidade * PrecoUnitario` e usa `JOIN` no lugar dos dois `LEFT JOIN` do enunciado. Os defeitos que o plano mostra (função sobre a coluna, agrupamento por nome, ordem crescente) são os mesmos. A query exata está em [01-query-original.sql](../../database/ranking-query/01-query-original.sql).
 
 ```sql
 SELECT c.Nome, SUM(p.ValorTotal) AS Total FROM Clientes c JOIN Pedidos p ON p.ClienteId = c.Id
@@ -42,7 +42,7 @@ No plano estimado:
 - **Agregação:** é um `Stream Aggregate` com `GROUP BY c.Nome`. Clientes homônimos caem no mesmo grupo.
 - **Ordenação:** o `Sort` final está em `Ascending="1"` sobre o total. É o ranking invertido.
 
-O plano confirma, no banco do compose, a conclusão da [investigação](../../database/parte4/investigacao.md): o defeito é a função aplicada à coluna, e não a falta de índice.
+O plano confirma, no banco do compose, a conclusão da [investigação](../../database/ranking-query/investigacao.md): o defeito é a função aplicada à coluna, e não a falta de índice.
 
 ### 3. Coerência dos totais gravados (`execute_sql`)
 

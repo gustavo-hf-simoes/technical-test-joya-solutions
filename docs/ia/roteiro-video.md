@@ -10,7 +10,7 @@
 | 4 | 3:10–4:00 | Custo de IA: o modelo segue a complexidade (Haiku 1/40 do Opus) e o escalonamento é medido | [ADR-0001](../adr/0001-roteamento-de-modelos.md), tabela *Execuções de agentes* em [status.md](../esteira/status.md) |
 | 5 | 4:00–5:00 | **Demo ao vivo:** `/esteira US-xx` delega uma tarefa, o hook `post-edit` compila e testa, o `verificador` confere o gate | Terminal do Claude Code |
 | 6 | 5:00–6:30 | Código: baixa atômica de estoque (RN-xx, CA-10, concorrência), `Result<T>`, um teste de integração com Testcontainers | `IEstoqueRepository.TentarBaixarAsync`, teste CA-10 |
-| 7 | 6:30–7:40 | Parte 4: o que estava errado na query e como investiguei com o MCP (plano de execução, índices, antes e depois) | `database/parte4/`, consulta via MCP `mssql` |
+| 7 | 6:30–7:40 | Parte 4: o que estava errado na query e como investiguei com o MCP (plano de execução, índices, antes e depois) | `database/ranking-query/`, consulta via MCP `mssql` |
 | 8 | 7:40–8:40 | Onde a IA errou e como peguei: CG-01, CG-02 e os achados ARQ/SEC/QA | [diario.md](diario.md), [plan.md](../plan.md) (Correções em código gerado) |
 | 9 | 8:40–9:30 | Entrega: `docker compose up`, CI e CodeQL verdes no PR (a `main` é protegida), testes de arquitetura, Playwright, custo medido e o link do deploy | GitHub Actions, aba *Security*, seção de custo do README, aplicação online |
 
